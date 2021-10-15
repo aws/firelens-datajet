@@ -1,0 +1,19 @@
+{
+    "generator": {
+        "name": "increment",
+        "config": {
+            "batchSize": 1,
+            "waitTime": 0.050
+        }
+    },
+    "datajet": {
+        "name": "firelens",
+        "config": {
+            "logStream": "stderr"
+        }
+    },
+    "stage": {
+        "batchRate": 1000,
+        "maxBatches_x": 10
+    }
+}

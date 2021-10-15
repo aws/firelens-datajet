@@ -1,0 +1,26 @@
+{
+  "name": "firelens-datajet",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Route test data to Fluent Bit flexibly",
+  "main": "firelens-datajet.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
+  },
+  "author": "falamatt@amazon.com",
+  "license": "ISC",
+  "dependencies": {
+    "fast-csv": "^4.3.6",
+    "fluent-logger": "^3.4.1",
+    "fs-reverse": "^0.0.3",
+    "node-fetch": "^3.0.0",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.1",
+    "typescript": "^4.4.4"
+  }
+}

@@ -1,0 +1,12 @@
+version: "2"
+
+services:
+    logger-basic-test:
+        build: ./
+        network_mode: "host"
+        logging:
+            driver: fluentd
+            options:
+                tag: "basic-test"
+                fluentd-address: localhost:24224
+                fluentd-async-connect: "true"
