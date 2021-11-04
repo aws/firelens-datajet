@@ -31,9 +31,106 @@ synchronous and asynchronous stages, as well as validation wrappers.
 # Firelens datajet can also be contained in a Docker image.
 ## ECR quick publish procedure
 ```
-make publish tag="error-1_batch200_rate20"
-make publish tag="error-1_batch1_rate10"
+make publish tag="0.1.0"
 ```
 
-## Repository sample location
-https://us-west-2.console.aws.amazon.com/ecr/repositories?region=us-west-2
+# Env config
+ACCESS_TOKEN: A secret token to used to secure the endpoints via bearer_token (optional), defaults to no security.
+PORT: The port Firelens Datajet will listen on for test configurations (optional), defaults to 3333
+
+# Generating the ACCESS_TOKEN
+Set environment variable ACCESS_TOKEN to the following and save the value.
+```
+npm run generate-access-token
+```
+a .env file can be used with the following format
+```
+PORT=<myport>
+ACCESS_TOKEN=<myaccesstoken>
+```
+
+# Example Request
+The following request uses the increment data generator and forwards logs to Fire Lens via stdout datajet
+> POST http://localhost:3333/execute \
+> Bearer Token: `<myaccesstoken>`
+```
+    {
+        "generator": {
+            "name": "increment",
+            "config": {
+                "batchSize": 1,
+                "waitTime": 0.050
+            }
+        },
+        "datajet": {
+            "name": "stdout",
+            "config": {
+                "logStream": "stderr"
+            }
+        },
+        "stage": {
+            "batchRate": 1000,
+            "maxBatches": 10
+        }
+    }
+```
+> Response: 200 OK
+```
+{
+    "testId": 2,
+    "status": "Execution success. Validation success",
+    "metrics": [],
+    "testConfiguration": {
+        "generator": {
+            "name": "increment",
+            "config": {
+                "batchSize": 1,
+                "waitTime": 0.05
+            }
+        },
+        "datajet": {
+            "name": "stdout",
+            "config": {
+                "logStream": "stderr"
+            }
+        },
+        "stage": {
+            "batchRate": 1000,
+            "maxBatches": 10
+        }
+    },
+    "executionResult": {
+        "builtStage": {
+            "children": [],
+            "stageLeaf": {
+                "generator": {
+                    "generatorTemplate": {
+                        "name": "increment",
+                        "defaultConfig": {
+                            "batchSize": 10
+                        }
+                    }
+                },
+                "datajet": {
+                    "datajetTemplate": {
+                        "name": "stdout",
+                        "defaultConfig": {
+                            "logStream": "auto",
+                            "defaultStream": "stdout"
+                        }
+                    }
+                },
+                "config": {
+                    "batchRate": 1000,
+                    "maxBatches": 10
+                }
+            },
+            "type": "stage"
+        },
+        "isValidationSuccess": true,
+        "isExecutionSuccess": true,
+        "pendingValidators": [],
+        "children": []
+    }
+}
+```
