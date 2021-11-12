@@ -3,10 +3,16 @@ import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
 /* Command definition */
 export interface ICommand {
     pipelineConfiguration: any,
-    handleExecutionResult: (executionResult: IExecutionResult) => void,
+    handleExecutionResult: (executionResult: IExecutionResult) => Promise<void>,
 }
 
-export type ICommandGenerator = AsyncGenerator<ICommand | void>;
+export interface IAsyncCommandChain {
+    command: ICommand | null,
+    next: Promise<IAsyncCommandChain>,
+    resolveNext: (IAsyncCommandChain) => void;
+}
+
+export type ICommandGenerator = AsyncGenerator<ICommand | null>;
 
 /* Client definition */
 export interface IClient {
