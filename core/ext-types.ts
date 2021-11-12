@@ -1,4 +1,18 @@
-import { IBuiltStageWrapper } from "./pipeline-types.js";
+import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
+
+/* Command definition */
+export interface ICommand {
+    pipelineConfiguration: any,
+    handleExecutionResult: (executionResult: IExecutionResult) => void,
+}
+
+export type ICommandGenerator = AsyncGenerator<ICommand | void>;
+
+/* Client definition */
+export interface IClient {
+    name: string,
+    makeCommandGenerator: () => ICommandGenerator
+}
 
 /* Datajet definition */
 export interface IDatajet {
