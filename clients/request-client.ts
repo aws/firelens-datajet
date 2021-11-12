@@ -6,15 +6,17 @@ import { IExecutionResult } from "../core/pipeline-types.js";
 function makeCommandChain() {
     const exposeResolve = function (resolve) {
         this.resolveNext = resolve;
-    };    
-    const commandChainTemplate = {
+    };
+    const commandChainTemplate: any = {
         command: null,
-        next: new Promise<IAsyncCommandChain>(exposeResolve),
         resolveNext: function (_: IAsyncCommandChain) {},
     };
 
-    exposeResolve.bind(commandChainTemplate);
-    return commandChainTemplate;
+    commandChainTemplate.next = new Promise<IAsyncCommandChain>(
+            exposeResolve.bind(commandChainTemplate)
+    );    
+    
+    return commandChainTemplate as IAsyncCommandChain;
 }
 
 /*
