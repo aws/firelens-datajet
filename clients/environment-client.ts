@@ -19,7 +19,7 @@ const environmentClient: IClient = {
 
         /* invalid JSON config */
         catch (e) {
-            console.log("Invalid client file format. Required format: json");
+            console.log("Invalid client environment format. Required format: json");
             return;
         }
         yield {

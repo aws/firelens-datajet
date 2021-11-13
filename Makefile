@@ -1,5 +1,4 @@
 
-
 # Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
@@ -16,9 +15,6 @@
 ifndef tag
 override tag = latest
 endif
-
-# Important commands
-# aws ec2 modify-instance-metadata-options --instance-id i-0b584224565f388e1 --http-token required --http-endpoint enabled  --http-put-response-hop-limit 2
 
 all: fresh
 
