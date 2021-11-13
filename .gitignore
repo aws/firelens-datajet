@@ -1,5 +1,7 @@
 data/
 dist/
 node_modules/
+data-private/
 task-definitions/
 test-config/
+.env

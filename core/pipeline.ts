@@ -268,6 +268,8 @@ export const executePipeline = async (pipelineRoot: IBuiltStage, executePipeline
     console.log("Execution success: ", pipelineContext.isExecutionSuccess);
     console.log("Validation success: ", pipelineContext.isValidationSuccess);
     console.log("Executed pipeline.");
+
+    return executionResult;
 }
 
 function delay(milliseconds: number) : Promise<null> {

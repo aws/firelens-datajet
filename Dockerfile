@@ -17,8 +17,9 @@ COPY ./core ./core
 COPY ./datajets ./datajets
 COPY ./filters ./filters
 COPY ./generators ./generators
+COPY ./clients ./clients
 
-COPY ./driver.ts ./driver.ts
+COPY ./app.ts ./app.ts
 
 RUN npm run build
 
@@ -33,6 +34,8 @@ COPY ./firelens-datajet.json ./firelens-datajet.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
+COPY package.json ./
+
 USER node
 
-CMD ["node", "./dist/driver.js"]
+CMD ["node", "./dist/app.js"]
