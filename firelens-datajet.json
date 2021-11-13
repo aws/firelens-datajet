@@ -14,6 +14,6 @@
     },
     "stage": {
         "batchRate": 1000,
-        "maxBatches_x": 10
+        "maxBatches": 10
     }
 }

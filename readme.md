@@ -19,37 +19,95 @@ npm install
 npm run build
 node ./dist/driver.js
 ```
+A .env file can be added to the project to configure environment variables while testing locally. The file might look something like:
+```
+# ---------- Environment Variables ----------
+CLIENTS='["environment", "request", "file"]'
+CLIENT_REQUEST_PORT=3334
+CLIENT_REQUEST_ACCESS_TOKEN=123OPENSESAME
+CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "maxBatches": 5}}'
+CLIENT_FILE_NAME='firelens-datajet.json'
 
-# Configuration
-Firelens Datajet currently supports configuration only with the firelens-datajet.json file.
-Documentation on the format of this file is needed, but in summary, the file chooses from a data genrator which generates data
-and sends data via the datajet which outputs data in a way that is accessable to Fluent Bit.
-
-In the future, firelens-datajet.json should be customizable via an environment variable, and the configuration should include multiple
-synchronous and asynchronous stages, as well as validation wrappers.
-
-# Firelens datajet can also be contained in a Docker image.
+```
+# Containerization
+Firelens datajet can be contained in a Docker image.
+## Create docker image
+```
+make
+```
 ## ECR quick publish procedure
 ```
 make publish tag="0.1.0"
 ```
 
-# Env config
-ACCESS_TOKEN: A secret token to used to secure the endpoints via bearer_token (optional), defaults to no security.
-PORT: The port Firelens Datajet will listen on for test configurations (optional), defaults to 3333
 
-# Generating the ACCESS_TOKEN
+# Test Definition
+Firelens Datajet currently supports configuration only with file, environment variable, and request.
+Documentation on the format of a test definition is still in progress, but in summary, the test definition
+- chooses from a data generator which generates data
+- sends data via a datajet which outputs data in a way that is accessable to Fluent Bit
+- sets some values such as batch rate and batch limits
+
+In the future, test definitions should support multiple
+synchronous and asynchronous stages, as well as validation wrappers.
+
+# Clients
+Clients are methods for obtaining test configuration and can be selected and configured via environment variables.
+The following clients are supported:
+- Request: tests are posted to the url/execute endpoint
+- File: tests description found in file
+- Environment: tests description is found as environment variable
+
+A single or multiple clients can be selected with the environment variable CLIENT
+```
+# A variable number of clients can be selected
+CLIENTS='["environment", "request", "environment"]'
+```
+
+## Client Configuration
+Other environment variables are used to configure specific clients
+### Request
+```
+CLIENTS='["request"]'
+
+# Provide an access token to secure the /execute endpoint
+CLIENT_REQUEST_ACCESS_TOKEN=<access_token>
+# Change the port FirelensDatajet client listens on
+CLIENT_REQUEST_PORT=3334
+```
+
+### Environment
+```
+CLIENTS='["environment"]'
+
+# Test definition
+CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "maxBatches": 5}}'
+```
+
+### File
+(this client may need to be updated to allow for root access)
+```
+CLIENTS='["file"]'
+
+CLIENT_FILE_NAME='firelens-datajet.json'
+```
+
+# Request Client
+
+## Environment variables
+- CLIENT_REQUEST_ACCESS_TOKEN: A secret token used to secure request client endpoints via bearer_token (optional), defaults to no security.
+- CLIENT_REQUEST_PORT: The port Firelens Datajet will listen on for test configurations (optional), defaults to 3333
+
+## Generating the ACCESS_TOKEN
 Set environment variable ACCESS_TOKEN to the following and save the value.
 ```
 npm run generate-access-token
 ```
-a .env file can be used with the following format
 ```
-PORT=<myport>
-ACCESS_TOKEN=<myaccesstoken>
+CLIENT_REQUEST_ACCESS_TOKEN=<myaccesstoken>
 ```
 
-# Example Request
+## Example Request
 The following request uses the increment data generator and forwards logs to Fire Lens via stdout datajet
 > POST http://localhost:3333/execute \
 > Bearer Token: `<myaccesstoken>`
@@ -74,7 +132,9 @@ The following request uses the increment data generator and forwards logs to Fir
         }
     }
 ```
-> Response: 200 OK
+## Example Response
+- Response: 200 OK
+- Body:
 ```
 {
     "testId": 2,
@@ -132,5 +192,86 @@ The following request uses the increment data generator and forwards logs to Fir
         "pendingValidators": [],
         "children": []
     }
+}
+```
+
+
+# Example ECS Task Configuration
+```
+{
+    "family": "FirelensDatajetTaskDefinition",
+    "taskRoleArn": null,
+    "executionRoleArn": "arn:aws:iam::826489191740:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "essential": true,
+            "image": "<aws_for_fluent_bit_image>",
+            "name": "log_router",
+            "firelensConfiguration": {
+                "type": "fluentbit"
+            },
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "firelens-datajet-client-test",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-create-group": "true",
+                    "awslogs-stream-prefix": "fluent-bit-"
+                }
+            },
+            "memoryReservation": 50
+        },
+        {
+            "essential": true,
+            "image": "<firelens_datajet_image>",
+            "name": "firelensDatajet",
+		        "environment": [
+                {
+                    "name": "CLIENTS",
+                    "value": "[\"environment\", \"request\"]"
+                },
+                {
+                    "name": "CLIENT_REQUEST_PORT",
+                    "value": "80"
+                },
+                {
+                    "name": "CLIENT_REQUEST_ACCESS_TOKEN",
+                    "value": "<access_token>"
+                },
+                {
+                    "name": "CLIENT_ENVIRONMENT_CONFIG",
+                    "value": "{\"generator\": {\"name\": \"increment\", \"config\": {\"batchSize\": 100, \"waitTime\": 0.050}}, \"datajet\": {\"name\": \"stdout\", \"config\": {\"logStream\": \"stderr\"}}, \"stage\": {\"batchRate\": 1, \"maxBatches\": 5}}"
+                },
+                {
+                    "name": "CLIENT_FILE_NAME",
+                    "value": "firelens-datajet.json"
+                }
+            ],
+            "portMappings": [
+                {
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "containerPort": 80
+	              }
+            ],
+            "logConfiguration": {
+                "logDriver": "awsfirelens",
+                "options": {
+                    "Name": "cloudwatch_logs",
+                    "region": "us-west-2",
+                    "log_group_name": "firelens-datajet-client-test",
+                    "auto_create_group": "true",
+                    "log_stream_name": "client-"
+                }
+            },
+            "memoryReservation": 100
+        }
+    ],
+    "inferenceAccelerators": [],
+    "volumes": [],
+    "placementConstraints": [],
+    "memory": null,
+    "cpu": null,
+    "tags": []
 }
 ```
