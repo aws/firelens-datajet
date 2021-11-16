@@ -27,7 +27,7 @@ const incrementGenerator: IBatchGenerator = {
                     const batch: ILogData[] = [];
                     for (let i = 0; i < config.batchSize; ++i) {
                         batch.push({
-                            text: "log-number-" + (logIndex + i)
+                            text: `log-number-${logIndex}`
                         });
                         ++logIndex;
                     }
