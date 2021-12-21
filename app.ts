@@ -6,6 +6,7 @@ import { IExecutePipelineConfig } from "./core/pipeline-types.js";
 import dotenv from 'dotenv';
 import { IClient } from "./core/ext-types.js";
 import clientsIndex from "./clients/client-index.js";
+import { buildPipeline, IPipelineSchema } from "./core/rockefeller.js";
 
 /*
  * App environment variables
@@ -45,27 +46,7 @@ clients.forEach(clientName => {
 })
 
 async function processPipeline(config: any) {
-    const findGeneratorByName = (name: string) => generatorTemplates
-        .find((generatorTemplate => generatorTemplate.name === config.generator.name));
-
-    const findDatajetByName = (name: string) => datajetTemplates
-        .find((datajetTemplate => datajetTemplate.name === config.datajet.name));
-
-    const stage = {
-        generator: findGeneratorByName(config.generator.name)
-            .createConfiguredGenerator({
-                ...findGeneratorByName(config.generator.name).defaultConfig,
-                ...config.generator.config ?? {},
-            }),
-        datajet: findDatajetByName(config.datajet.name)
-            .createConfiguredDatajet({
-                ...findDatajetByName(config.datajet.name).defaultConfig,
-                ...config.datajet.config ?? {},
-            }),
-        config: config.stage,
-    }
-
-    const pipeline = buildStage(stage);
+    const pipeline = buildPipeline(config as IPipelineSchema);
     const pipelineConfig: IExecutePipelineConfig = {
         onExecutionFailure: async () => {console.log("Execution failed");}
     };
