@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
+    "start": "tsc --build; node ./dist/app.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "generate-access-token":  "node -e \"console.log('ACCESS_TOKEN=' + require('crypto').randomBytes(256).toString('base64') + '\\n');\""

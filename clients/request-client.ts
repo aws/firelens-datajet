@@ -48,6 +48,7 @@ const requestClient: IClient = {
         app.use(function (req, res, next) {
             if (process.env.CLIENT_REQUEST_ACCESS_TOKEN === undefined) {
                 next();
+                return;
             }
 
             let bearerToken = "";

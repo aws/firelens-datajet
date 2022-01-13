@@ -28,7 +28,7 @@ RUN npm prune --production # Remove dev dependencies
 # ---------- Release ----------
 FROM base AS release
 
-COPY ./data ./data
+COPY ./data/data-public ./data/data-public
 COPY ./firelens-datajet.json ./firelens-datajet.json
 
 COPY --from=builder /app/node_modules ./node_modules

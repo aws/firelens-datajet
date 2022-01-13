@@ -16,21 +16,38 @@ ifndef tag
 override tag = latest
 endif
 
+ifndef public_namespace
+override public_namespace = public.ecr.aws/fala-fluentbit/
+endif
+
+ifndef public_region
+override public_region = us-east-1
+endif
+
 all: fresh
+
+.PHONY: public
+public:
+	docker build -t ${public_namespace}firelens-datajet:latest -f Dockerfile .
+	docker tag ${public_namespace}firelens-datajet:latest ${public_namespace}firelens-datajet:${tag}
+	aws ecr-public get-login-password --region ${public_region} | docker login --username AWS --password-stdin ${public_namespace}
+	docker push ${public_namespace}firelens-datajet:${tag}
 
 .PHONY: publish
 publish:
-	docker build -t aws-test/firelens-datajet:latest -f Dockerfile .
-	docker tag aws-test/firelens-datajet:latest aws-test/firelens-datajet:${tag}
-	ecs-cli push aws-test/firelens-datajet:${tag}
+	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
+	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
+	ecs-cli push amazon/firelens-datajet:${tag}
 
 .PHONY: cached
 cached:
-	docker build -t aws-test/firelens-datajet:latest -f Dockerfile .
+	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
+	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
 
 .PHONY: fresh
 fresh:
-	docker build --no-cache -t aws-test/firelens-datajet:latest -f Dockerfile .
+	docker build --no-cache -t amazon/firelens-datajet:latest -f Dockerfile .
+	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
 
 .PHONY: container
 container:
@@ -39,9 +56,9 @@ container:
 
 .PHONY: run
 run:
-	# docker stop $(docker ps -a -q --filter ancestor=aws-test/firelens-datajet:latest --format="{{.ID}}")
-	docker build -t aws-test/firelens-datajet:latest -f Dockerfile .
-	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 aws-test/firelens-datajet:latest
+	# docker stop $(docker ps -a -q --filter ancestor=amazon/firelens-datajet:latest --format="{{.ID}}")
+	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
+	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:latest
 
 runimage:
-	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 aws-test/firelens-datajet:${tag}
+	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:${tag}
