@@ -11,6 +11,30 @@ Future work on this system involves making a REST interface for tests to be invo
 The current driver.ts does not support multiple stages, however the core does support async and sync stages as well as validators.
 The goal of this project is to eventually encapsulate test stages, validation wrappers, and data transmission in a portable JSON which can be sent to this program and executed at runtime.
 
+# Prerequisite Installation Instructions for Amazon Linux
+To install NodeJS on Amazon Linux, use the following commands
+```
+# Source: https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+
+# Install Node Version Manager
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+. ~/.nvm/nvm.sh
+nvm install node
+
+# Verify Node is installed
+node -e "console.log('Running Node.js ' + process.version)"
+
+# Add helpful aliases for VSCode
+NODE_PATH=$(whereis node | awk '{print $NF}')
+NPM_PATH=$(whereis npm | awk '{print $NF}')
+sudo ln -s $NODE_PATH /usr/bin/node
+sudo ln -s $NPM_PATH /usr/bin/npm
+
+# Verify added aliases (should see two locations)
+whereis npm
+whereis node
+```
+
 # Setup instructions
 To run Firelens Datajet locally please install NPM: https://nodejs.org/en/ and run the following commands
 ```
