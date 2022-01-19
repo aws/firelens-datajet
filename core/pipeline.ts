@@ -62,7 +62,7 @@ export const buildStage = (stage: IStage) : IBuiltStage => {
 
 export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, config: ISynchronizerConfig}) : IBuiltStage => {
 
-    const executeStage = async (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) => {
+    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) {
 
         const executionResult: IExecutionResult = {
             builtStage: this,
@@ -166,7 +166,7 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
     // modify subtree if desired
     builtStageWrapper?.subtreeModifier(builtStage);
 
-    const executeStage = async (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) => {
+    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) {
 
         const executionResult: IExecutionResult = {
             builtStage: this,
@@ -204,10 +204,10 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
             });
         
         if (builtStageWrapper?.isValidationAsync ?? false) {
-            await validate;
+            executionResult.pendingValidators.push(validate);
         }
         else {
-            executionResult.pendingValidators.push(validate);
+            await validate;
         }
         
         // propagate false flags
@@ -225,7 +225,7 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
     }
 
     // Bind execute stage
-    outBuiltStage.executeStage = outBuiltStage.executeStage.bind(builtStage);
+    outBuiltStage.executeStage = outBuiltStage.executeStage.bind(outBuiltStage);
     return outBuiltStage;
 }
 
@@ -263,7 +263,9 @@ export const executePipeline = async (pipelineRoot: IBuiltStage, executePipeline
         isExecutionSuccess: true,
     }
     const executionResult: IExecutionResult = await pipelineRoot.executeStage(pipelineConfig, pipelineContext);
+    await Promise.all(executionResult.pendingValidators); /* evaluate pending validators */
 
+    // console.log(`Execution results: ${JSON.stringify(executionResult, null, 2)}`);
     console.log(`Execution results:`);
     console.log("Execution success: ", pipelineContext.isExecutionSuccess);
     console.log("Validation success: ", pipelineContext.isValidationSuccess);

@@ -10,18 +10,21 @@
     "start": "tsc --build; node ./dist/app.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "generate-access-token":  "node -e \"console.log('ACCESS_TOKEN=' + require('crypto').randomBytes(256).toString('base64') + '\\n');\""
+    "generate-access-token": "node -e \"console.log('ACCESS_TOKEN=' + require('crypto').randomBytes(256).toString('base64') + '\\n');\""
   },
   "author": "falamatt@amazon.com",
   "license": "ISC",
   "dependencies": {
+    "@types/mustache": "^4.1.2",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "fast-csv": "^4.3.6",
     "fluent-logger": "^3.4.1",
     "fs-reverse": "^0.0.3",
+    "mustache": "^4.2.0",
     "node-fetch": "^3.0.0",
-    "winston": "^3.3.3"
+    "simple-git": "^2.48.0",
+    "winston": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^16.11.1",

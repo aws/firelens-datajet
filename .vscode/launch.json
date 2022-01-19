@@ -16,6 +16,7 @@
                 "${workspaceFolder}/**/*.js"
             ],
             "preLaunchTask": "npm: build",
+            "outputCapture": "std"
         },
         {
             "type": "node",

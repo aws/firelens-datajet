@@ -1,9 +1,16 @@
+import winston from "winston";
 import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
 
 /* Command definition */
 export interface ICommand {
     pipelineConfiguration: any,
     handleExecutionResult: (executionResult: IExecutionResult) => Promise<void>,
+}
+
+export interface IComponentDependencies {
+    logger: winston.Logger,
+    dataRoot: string,
+    workspaceRoot: string,
 }
 
 export interface IAsyncCommandChain {
@@ -24,7 +31,7 @@ export interface IClient {
 export interface IDatajet {
     name: string,
     defaultConfig: any,
-    createConfiguredDatajet: (config: any) => IConfiguredDatajet,
+    createConfiguredDatajet: (config: any, dependencies?: IComponentDependencies) => IConfiguredDatajet,
 }
 
 /* Immutably configured datajet */
@@ -37,7 +44,7 @@ export interface IConfiguredDatajet {
 export interface IBatchGenerator {
     name: string,
     defaultConfig: any,
-    createConfiguredGenerator: (config: any) => IConfiguredGenerator /* returns a generator */
+    createConfiguredGenerator: (config: any, dependencies?: IComponentDependencies) => IConfiguredGenerator /* returns a generator */
 }
 
 /* Immutably configured generator */
@@ -46,8 +53,14 @@ export interface IConfiguredGenerator {
     makeInstance: () => AsyncGenerator<any[]>, /* Instantiates a new configured generator */
 }
 
-export interface IConfiguredValidator extends IBuiltStageWrapper {
+export interface IWrapper {
     name: string,
+    defaultConfig: any,
+    createConfiguredWrapper: (config: any, dependencies?: IComponentDependencies) => IConfiguredWrapper,
+}
+
+export interface IConfiguredWrapper extends IBuiltStageWrapper {
+    wrapperTemplate: IWrapper,
 }
 
 export interface ILogData {

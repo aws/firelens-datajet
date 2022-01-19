@@ -1,4 +1,6 @@
 data/
+workspace/
+output/
 dist/
 node_modules/
 data-private/
