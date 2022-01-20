@@ -75,7 +75,8 @@ export interface ISynchronizerConfig {
 export interface IBuiltStage {
     executeStage: (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) => Promise<IExecutionResult>,
     children: Array<IBuiltStage>,
-    type: "stage" | "synchronizer" | "wrapper",
+    type: "stage" | "synchronizer" | "wrapper" | "generator",
+    data?: any,
 
     /* 
      * Stage data:

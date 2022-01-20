@@ -3,7 +3,6 @@ import { IWrapper } from "../../core/ext-types"
 import { IBuiltStage, IBuiltStageWrapper } from "../../core/pipeline-types";
 import winston from 'winston';
 import { ChildProcess, exec } from "child_process";
-import crypto from 'crypto';
 import { resolve } from 'path';
 import fs from "fs";
 
@@ -13,6 +12,7 @@ const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 
 import mustache from 'mustache';
 import simpleGit from 'simple-git';
+import { hash, timestamp } from "../../core/utils.js";
 
 /*
  * Fluent Bit Wrapper
@@ -290,15 +290,6 @@ async function fileMake(path: string, contents: string) {
             resolve(null);
         })
     })
-}
-
-function hash(item: any): string {
-    const str = (typeof item === "string") ? item : JSON.stringify(item);
-    return crypto.createHash('md5').update(item).digest('hex');
-}
-
-function timestamp(): string {
-    return (new Date()).toISOString();
 }
 
 export default fluentBitWrapper;

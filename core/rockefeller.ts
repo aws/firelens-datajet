@@ -1,18 +1,20 @@
-import { IBuiltStage, IBuiltStageWrapper, IPipelineConfig, IStage } from "./pipeline-types.js";
+import { IBuiltStage, IBuiltStageWrapper, IExecutionResult, IPipelineConfig, IPipelineContext, IStage } from "./pipeline-types.js";
 import generatorTemplates from "../generators/generator-index.js"
 import wrapperTemplates from "../wrappers/wrapper-index.js"
 import datajetTemplates from "../datajets/datajet-index.js"
 import { buildStage, synchronizer, wrapWith } from "./pipeline.js";
 import { error } from "console";
-import { IComponentDependencies, IConfiguredWrapper, IWrapper } from "./ext-types.js";
+import { IComponentDependencies, IConfiguredGenerator, IConfiguredWrapper, IWrapper } from "./ext-types.js";
 import winston from "winston";
 import { initDependencies } from "./component-dependencies.js";
 
 export interface IPipelineSchema {
     component?: string,
+    referenceId?: string,
+    library?: IPipelineSchema[],
     config?: any,
-    children?: any[],
-    child?: any,
+    children?: IPipelineSchema[],
+    child?: IPipelineSchema,
 
     generator: any,
     datajet: any,
@@ -24,30 +26,58 @@ enum IComponentName {
     Synchronizer = "synchronizer",
     Validator = "validator",
     Wrap = "wrap",
+    Generator = "generator",
 }
+
+const genericBuiltStageStub = {
+    children: [],
+    executeStage: (a: IPipelineConfig, b: IPipelineContext) => (Promise.resolve({builtStage: this,
+        isValidationSuccess: true,
+        isExecutionSuccess: true,
+        pendingValidators: [],
+        children: [],})),
+};
 
 export function buildPipeline(buildSchema: IPipelineSchema, componentDependencies?: IComponentDependencies) : IBuiltStage {
     if (arguments.length === 1) {
         return buildPipeline(buildSchema, initDependencies());
     }
+    const derivedDependencies = deriveDependencies(buildSchema, componentDependencies);
     if (!buildSchema.component || buildSchema.component === IComponentName.Stage) {
-        return buildPipelineStage(buildSchema, componentDependencies);
+        return buildPipelineStage(buildSchema, derivedDependencies);
     }
     else if (buildSchema.component === IComponentName.Synchronizer) {
-        return buildPipelineSynchronizer(buildSchema, componentDependencies);
+        return buildPipelineSynchronizer(buildSchema, derivedDependencies);
     }
     else if (buildSchema.component === IComponentName.Wrap) {
-        return buildPipelineWrap(buildSchema, componentDependencies);
+        return buildPipelineWrap(buildSchema, derivedDependencies);
+    }
+    else if (buildSchema.component === IComponentName.Generator) {
+        return buildPipelineGenerator(buildSchema, derivedDependencies);
     }
     throw error("Unsupported pipeline component in schema: ", buildSchema.component);
 }
 
+function deriveDependencies(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IComponentDependencies {
+    const libraryComponents: {[key: string]: IBuiltStage} = {};
+    (buildSchema.library ?? []).forEach(libBuildSchema => {
+        libraryComponents[libBuildSchema.referenceId] = buildPipeline(libBuildSchema);
+    });
+    return {
+        ...componentDependencies,
+        library: {
+            ...componentDependencies.library,
+            ...libraryComponents,
+        }
+    }
+}
+
 function buildPipelineStage(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {
     const findGeneratorByName = (name: string) => generatorTemplates
-        .find((generatorTemplate => generatorTemplate.name === buildSchema.generator.name));
+        .find((generatorTemplate => generatorTemplate.name === name));
 
     const findDatajetByName = (name: string) => datajetTemplates
-        .find((datajetTemplate => datajetTemplate.name === buildSchema.datajet.name));
+        .find((datajetTemplate => datajetTemplate.name === name));
 
     const stage = {
         generator: findGeneratorByName(buildSchema.generator.name)
@@ -75,6 +105,25 @@ function buildPipelineSynchronizer(buildSchema: IPipelineSchema, componentDepend
         stages: builtStages,
         config: buildSchema.config
     });
+}
+
+function buildPipelineGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies): IBuiltStage {
+    return {
+        ...genericBuiltStageStub,
+        type: "generator",
+        data: buildGenerator(buildSchema, componentDependencies),
+    }
+}
+
+function buildGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies): IConfiguredGenerator {
+    const findGeneratorByName = (name: string) => generatorTemplates
+        .find((generatorTemplate => generatorTemplate.name === name));
+
+    return findGeneratorByName(buildSchema.generator.name)
+            .createConfiguredGenerator({
+                ...findGeneratorByName(buildSchema.generator.name).defaultConfig,
+                ...buildSchema.generator.config ?? {},
+            }, componentDependencies);
 }
 
 function buildPipelineWrap(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {

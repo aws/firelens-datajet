@@ -1,10 +1,17 @@
 import { resolve } from "path";
 import winston from "winston";
-import { IComponentDependencies } from "./ext-types";
+import { IBuiltStage } from "./pipeline-types";
+
+export interface IComponentDependencies {
+    logger: winston.Logger,
+    dataRoot: string,
+    workspaceRoot: string,
+    library: { [key: string]: IBuiltStage },
+}
 
 export function initDependencies(): IComponentDependencies {
     const logger = winston.createLogger({
-        level: 'info',
+        level: 'debug',
         /* stylize the logs to a familiar format... */
         format: winston.format.printf((info) => `[${info.level}] ${info.message}`),
         transports: [
@@ -21,5 +28,6 @@ export function initDependencies(): IComponentDependencies {
         logger,
         dataRoot: resolve("./data"),
         workspaceRoot: resolve("./workspace"),
+        library: {},
     };
 }

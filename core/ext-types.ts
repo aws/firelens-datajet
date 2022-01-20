@@ -1,16 +1,14 @@
 import winston from "winston";
 import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
 
+/* re-exports */
+import { IComponentDependencies } from '../core/component-dependencies';
+export { IComponentDependencies };
+
 /* Command definition */
 export interface ICommand {
     pipelineConfiguration: any,
     handleExecutionResult: (executionResult: IExecutionResult) => Promise<void>,
-}
-
-export interface IComponentDependencies {
-    logger: winston.Logger,
-    dataRoot: string,
-    workspaceRoot: string,
 }
 
 export interface IAsyncCommandChain {
@@ -25,6 +23,16 @@ export type ICommandGenerator = AsyncGenerator<ICommand | null>;
 export interface IClient {
     name: string,
     makeCommandGenerator: () => ICommandGenerator
+}
+
+export interface IDatajetConfig {
+    name: string,
+    config: any,
+}
+
+export interface IGeneratorConfig {
+    name: string,
+    config: any,
 }
 
 /* Datajet definition */
@@ -50,7 +58,7 @@ export interface IBatchGenerator {
 /* Immutably configured generator */
 export interface IConfiguredGenerator {
     generatorTemplate: IBatchGenerator,
-    makeInstance: () => AsyncGenerator<any[]>, /* Instantiates a new configured generator */
+    makeInstance: () => AsyncGenerator<ILogData[]>, /* Instantiates a new configured generator */
 }
 
 export interface IWrapper {
