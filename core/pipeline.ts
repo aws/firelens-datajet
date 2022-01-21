@@ -257,6 +257,7 @@ export const executePipeline = async (pipelineRoot: IBuiltStage, executePipeline
         ...executePipelineConfig,
     }
 
+    const startTime = Date.now();
     console.log (`Executing pipeline`);
     const pipelineContext: IPipelineContext = {
         isValidationSuccess: true,
@@ -266,6 +267,7 @@ export const executePipeline = async (pipelineRoot: IBuiltStage, executePipeline
     await Promise.all(executionResult.pendingValidators); /* evaluate pending validators */
 
     // console.log(`Execution results: ${JSON.stringify(executionResult, null, 2)}`);
+    console.log(`Elapsed time: ${(Date.now() - startTime) / 1000} seconds`);
     console.log(`Execution results:`);
     console.log("Execution success: ", pipelineContext.isExecutionSuccess);
     console.log("Validation success: ", pipelineContext.isValidationSuccess);

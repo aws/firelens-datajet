@@ -8,3 +8,4 @@ task-definitions/
 test-config/
 .env
 oncall
+output-logs.log
