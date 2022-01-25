@@ -3,14 +3,14 @@ import path from "path";
 import { IDatajet, ILogData } from "../core/ext-types.js";
 
 interface IDatajetConfig {
-    path: string,
-    name: string,
+    folder: string,
+    filename: string,
     key: string,
 }
 
 const defaultConfig: IDatajetConfig = {
-    path: "./",
-    name: "output-logs.log",
+    folder: "./",
+    filename: "output-logs.log",
     key: null
 }
 
@@ -19,7 +19,7 @@ const fileDatajet: IDatajet = {
     defaultConfig: defaultConfig,
     createConfiguredDatajet: function (config: IDatajetConfig) {
 
-        const file = path.resolve(`${config.path}/${config.name}`);
+        const file = path.resolve(`${config.folder}/${config.filename}`);
         const logStream = fs.createWriteStream(file, { flags: 'a' }); /* 27.48 seconds - 27.862 */
 
         return {
