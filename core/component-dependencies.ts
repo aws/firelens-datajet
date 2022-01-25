@@ -1,15 +1,18 @@
 import { resolve } from "path";
 import winston from "winston";
 import { IBuiltStage } from "./pipeline-types";
+import { IPipelineSchema } from "./rockefeller";
 
 export interface IComponentDependencies {
     logger: winston.Logger,
     dataRoot: string,
     workspaceRoot: string,
     library: { [key: string]: IBuiltStage },
+    localPipelineSchema: IPipelineSchema,
+    pipelineSchema: IPipelineSchema, /* pipeline schema at root */
 }
 
-export function initDependencies(): IComponentDependencies {
+export function initDependencies(buildSchema: IPipelineSchema): IComponentDependencies {
     const logger = winston.createLogger({
         level: 'debug',
         /* stylize the logs to a familiar format... */
@@ -29,5 +32,7 @@ export function initDependencies(): IComponentDependencies {
         dataRoot: resolve("./data"),
         workspaceRoot: resolve("./workspace"),
         library: {},
+        localPipelineSchema: buildSchema,
+        pipelineSchema: buildSchema,
     };
 }

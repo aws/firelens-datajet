@@ -40,7 +40,7 @@ const genericBuiltStageStub = {
 
 export function buildPipeline(buildSchema: IPipelineSchema, componentDependencies?: IComponentDependencies) : IBuiltStage {
     if (arguments.length === 1) {
-        return buildPipeline(buildSchema, initDependencies());
+        return buildPipeline(buildSchema, initDependencies(buildSchema));
     }
     const derivedDependencies = deriveDependencies(buildSchema, componentDependencies);
     if (!buildSchema.component || buildSchema.component === IComponentName.Stage) {
@@ -68,7 +68,8 @@ function deriveDependencies(buildSchema: IPipelineSchema, componentDependencies:
         library: {
             ...componentDependencies.library,
             ...libraryComponents,
-        }
+        },
+        localPipelineSchema: buildSchema,
     }
 }
 

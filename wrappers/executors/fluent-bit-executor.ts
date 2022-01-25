@@ -21,24 +21,56 @@ import { hash, timestamp } from "../../core/utils.js";
 
 const fullWorkspacePath = resolve(`./${WORKSPACE_PATH}`);
 
+interface ICodeCommitReference {
+    repository?: string,
+    branch?: string,
+    commit?: string,
+}
+
+interface ICodeSource {
+    base: ICodeCommitReference,
+    cherryPicks: Array<ICodeCommitReference>,
+    mergeStrategy: string,
+}
+
+interface ICodeSourceLock {
+    baseCommit: string,
+    cherryPickedCommits: Array<string>
+    mergeStrategy: string,
+}
+
 interface IFluentBitWrapperConfig {
+    codeSource: ICodeSource,
     fluentConfigFile: string,
     fluentLogTransports: Array<winston.transports.FileTransportOptions>,
     fluentLogCountOccurrences: Array<string>,
     awaitValidators: boolean,
     grace: number, /* in seconds */
-    gitRemote: string,
-    gitBranch: string,
-    gitCommit: string,
+}
+
+interface IFluentLock {
+    sourceLock: ICodeSourceLock,
+    configLock: string,
+}
+
+const defaultCodeCommitReference: ICodeCommitReference = {
+    repository: "https://github.com/fluent/fluent-bit.git",
+    branch: "master",
+}
+
+const defaultCherryPickMergeStrategy = "ort";
+
+const defaultCodeSource: ICodeSource = {
+    base: defaultCodeCommitReference,
+    cherryPicks: [],
+    mergeStrategy: "",
 }
 
 const defaultConfig: IFluentBitWrapperConfig = {
+    codeSource: defaultCodeSource,
     fluentConfigFile: "data-public/fluent-config/fluent.conf",
     awaitValidators: true,
     grace: 0,
-    gitRemote: "https://github.com/fluent/fluent-bit.git", /* https://github.com/matthewfala/fluent-bit.git */
-    gitBranch: "1.8",
-    gitCommit: null,
     fluentLogTransports: [
         {filename: `fluent-bit-${timestamp()}.log`, level: 'info'} /* supports file only right now */
     ],
@@ -52,7 +84,8 @@ const fluentBitWrapper: IWrapper = {
     name: "fluent-bit-executor",
     defaultConfig: defaultConfig,
     createConfiguredWrapper: function (config: IFluentBitWrapperConfig, {
-        logger
+        logger,
+        localPipelineSchema,
     }) {
 
         let fluentBitChildProcess: ChildProcess;
@@ -79,24 +112,6 @@ const fluentBitWrapper: IWrapper = {
             subtreeModifier: (subtree: IBuiltStage) => true, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     
             setup: async (root: IBuiltStage, subtree: IBuiltStage) => {
-
-                /* Configure logger */
-                const outputPath = resolve("./output");
-                if (!await directoryExists(outputPath)) {
-                    await directoryMake(outputPath);
-                }
-                const outputLogPath = `${outputPath}/fluent-bit-logs`;
-                if (!await directoryExists(outputLogPath)) {
-                    await directoryMake(outputLogPath);
-                }
-                fluentBitProcessLogger = winston.createLogger({
-                    level: 'info',
-                    defaultMeta: { service: 'fluent-bit' },
-                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
-                        ...transport,
-                        filename: `${outputLogPath}/${transport?.filename ?? "fluent-bit.log"}`,
-                    })),
-                });
 
                 /* Config path */
                 const fluentConfigPath = resolve(config.fluentConfigFile);
@@ -134,51 +149,213 @@ const fluentBitWrapper: IWrapper = {
                 }
                 await git.fetch();
 
-                /* Checkout remote branch */
-                const remoteName = hash(config.gitRemote);
-                /*
-                const remotes = [];
-                await git.listRemote([], (err, data) => {
-                    remotes.push(data);
+                /* Amend code source repository and branch references */
+                const amendCodeRepositoryAndBranchReference = async (ref: ICodeCommitReference) => ({
+                    ...defaultCodeCommitReference,
+                    ...ref,
                 });
-                const remoteExists = remotes.some(remote => remote === remoteName);
-                if (!remoteExists) { }
-                */
+                const amendedCodeSourcePart: ICodeSource = {
+                    base: await amendCodeRepositoryAndBranchReference(config.codeSource.base),
+                    cherryPicks: await Promise.all(config.codeSource.cherryPicks.map(amendCodeRepositoryAndBranchReference)),
+                    mergeStrategy: (config.codeSource.cherryPicks.length !== 0) ?
+                        config.codeSource.mergeStrategy ?? defaultCherryPickMergeStrategy :
+                        "", // no merge strategy for [] cherry picks list
+                }
+
+                /* Accumulate fetch list (for updated commits) */
+                interface ICodeFetch {
+                    repository: string,
+                    branch: string,
+                };
+                const removeDuplicates = (a: Array<ICodeFetch>) => {
+                    return Array.from(new Set(a.map(ftch => JSON.stringify(ftch))))
+                        .map(strParse => JSON.parse(strParse)) as Array<ICodeFetch>;
+                }
+                const fetches: Array<ICodeFetch> = removeDuplicates(
+                    [
+                        amendedCodeSourcePart.base,
+                        ...amendedCodeSourcePart.cherryPicks,
+                    ].map(ref => ({
+                        repository: ref.repository,
+                        branch: ref.branch,
+                    }))
+                );
+
+                const fetchResults = fetches.map(async fetch => git.fetch(fetch.repository, fetch.branch));
+                await Promise.all(fetchResults);
+
+                /* Amend code source commit reference */
+                const amendCodeCommitReference = async (ref: ICodeCommitReference) => {
+                    const amended = {
+                        ...defaultCodeCommitReference,
+                        ...ref,
+                    };
+                    if (!amended?.commit) {
+                        const commitHash = await git.raw(['ls-remote', `${amended.repository}`, `${amended.branch}`]);
+                        amended.commit = commitHash.split("\t")[0];
+                    }
+                    return amended;
+                };
+                const amendedCodeSource: ICodeSource = {
+                    base: await amendCodeCommitReference(config.codeSource.base),
+                    cherryPicks: await Promise.all(config.codeSource.cherryPicks.map(amendCodeCommitReference)),
+                    mergeStrategy: (config.codeSource.cherryPicks.length !== 0) ?
+                        config.codeSource.mergeStrategy ?? defaultCherryPickMergeStrategy :
+                        "", // no merge strategy for [] cherry picks list
+                }
+
+                /* Source lock */
+                const sourceLock: ICodeSourceLock = {
+                    baseCommit: amendedCodeSource.base.commit,
+                    cherryPickedCommits: amendedCodeSource.cherryPicks.map(ref => ref.commit),
+                    mergeStrategy: amendedCodeSource.mergeStrategy,
+                }
+                const sourceLockHash = hash(sourceLock);
+
+                /* Checkout branch */
+                const sourceLockedBranchName = `source-lock-${sourceLockHash}`;
+                let makeSourceBranch = false;
                 try {
-                    logger.info("Adding remote");
-                    await git.addRemote(remoteName, config.gitRemote)
-                    .fetch(remoteName, config.gitBranch);
-                } catch (e) {
-                    logger.info("Remote already exists");
+                    await git.checkout(sourceLockedBranchName);
+                }
+                catch {
+                    logger.info(`Creating new source locked branch: ${sourceLockedBranchName}`);
+                    makeSourceBranch = true;
                 }
 
-                /* Checkout specific commit */
-                if (config.gitCommit) {
-                    await git.checkout(config.gitCommit);
-                }
-                
-                /* Checkout remote/branch */
-                else {
-                    await git.checkout(`${remoteName}/${config.gitBranch}`);
+                if (makeSourceBranch) {
+
+                    /* Make branch */
+                    await git.checkout(["-b", sourceLockedBranchName, sourceLock.baseCommit]);
+                    
+                    try {
+                        /* Cherry picks */
+                        for (const cherry of sourceLock.cherryPickedCommits) {
+                            await git.raw(['cherry-pick', `--strategy=${sourceLock.mergeStrategy}`, cherry]);
+                        }
+                    }
+                    catch (e) {
+                        /* Cherry picks fail - delete branch */
+                        await git.checkout("-");
+                        await git.deleteLocalBranch(sourceLockedBranchName, true);
+                        logger.error(`Cherry picks failed. Deleted failed sourceLockedBranch ${sourceLockedBranchName}`);
+                        throw e;
+                    }
                 }
 
-                /* CMake install */
+                /* Create fluent-lock.json */
+                const fluentLock: IFluentLock = {
+                    sourceLock: sourceLock,
+                    configLock: configBaked,
+                }
+                const fluentLockHash = hash(fluentLock);
+
+                /* Write source records */
+                const outputPath = resolve("./output");
+                if (!await directoryExists(outputPath)) {
+                    await directoryMake(outputPath);
+                }
+                const outputFluentLockedPath = `${outputPath}/fluent-lock-${fluentLockHash}`;
+                if (!await directoryExists(outputFluentLockedPath)) {
+                    await directoryMake(outputFluentLockedPath);
+                }
+                const fluentLockFilePath = `${outputFluentLockedPath}/fluent-lock.json`;
+                if (!await fileExists(fluentLockFilePath)) {
+                    await fileMake(fluentLockFilePath, JSON.stringify(fluentLock, null, 2));
+                }
+                const sourceLockInfoFilePath = `${outputFluentLockedPath}/source-lock-info.json`;
+                const sourceLockInfo = {
+                    sourceLockBranch: sourceLockedBranchName,
+                    sourceLockHash: sourceLockHash,
+                    sourceLock: sourceLock,
+                }
+                if (!await fileExists(sourceLockInfoFilePath)) {
+                    await fileMake(sourceLockInfoFilePath, JSON.stringify(sourceLockInfo, null, 2));
+                }
+                const fluentConfigFilePath = `${outputFluentLockedPath}/fluent-bit.conf`
+                if (!await fileExists(fluentConfigFilePath)) {
+                    await fileMake(fluentConfigFilePath, configBaked);
+                }
+
+                /* Write test records */
+                const outputTestPath = `${outputFluentLockedPath}/test-${timestamp()}`;
+                if (!await directoryExists(outputTestPath)) {
+                    await directoryMake(outputTestPath);
+                }
+                const fluentPipelineSchemaFilePath = `${outputTestPath}/test-pipeline-schema.json`
+                if (!await fileExists(fluentPipelineSchemaFilePath)) {
+                    await fileMake(fluentPipelineSchemaFilePath, JSON.stringify(localPipelineSchema, null, 2));
+                }
+                const fluentFullSourcePath = `${outputTestPath}/source.json`
+                if (!await fileExists(fluentFullSourcePath)) {
+                    await fileMake(fluentFullSourcePath, JSON.stringify(amendedCodeSource, null, 2));
+                }
+                const outputInstrumentationPath = `${outputTestPath}/instrumentation`;
+                if (!await directoryExists(outputInstrumentationPath)) {
+                    await directoryMake(outputInstrumentationPath);
+                }
+
+                /* Configure Fluent Bit, make, and cmake loggers */
+                const outputLogPath = `${outputTestPath}/logs`;
+                if (!await directoryExists(outputLogPath)) {
+                    await directoryMake(outputLogPath);
+                }
+                fluentBitProcessLogger = winston.createLogger({
+                    level: 'info',
+                    defaultMeta: { service: 'fluent-bit' },
+                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
+                        ...transport,
+                        filename: `${outputLogPath}/${transport?.filename ?? "fluent-bit.log"}`,
+                    })),
+                });
+                const cmakeProcessLogger = winston.createLogger({
+                    level: 'info',
+                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
+                        filename: `${outputLogPath}/cmake.log`,
+                    })),
+                });
+                const makeProcessLogger = winston.createLogger({
+                    level: 'info',
+                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
+                        filename: `${outputLogPath}/make.log`,
+                    })),
+                });
+
+                /* CMake & make build */
                 logger.info("👷 Building Fluent Bit. Stand by...");
-                await execChildAsyncWrapper(exec("cmake ..; make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                /* CMake */
+                await execChildAsyncWrapper(exec("cmake ..", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
                     if (error) {
-                        logger.debug(`error: ${error.message}`);
+                        cmakeProcessLogger.info(`error: ${error.message}\n`);
                         return;
                     }
                     if (stderr) {
-                        logger.debug(`stderr: ${stderr}`);
+                        cmakeProcessLogger.info(`stderr: ${stderr}\n`);
                         return;
                     }
-                    logger.debug(`stdout: ${stdout}`);
+                    cmakeProcessLogger.info(`stdout: ${stdout}\n`);
+                }));
+                /* Make */
+                await execChildAsyncWrapper(exec("make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                    if (error) {
+                        makeProcessLogger.info(`error: ${error.message}\n`);
+                        return;
+                    }
+                    if (stderr) {
+                        makeProcessLogger.info(`stderr: ${stderr}\n`);
+                        return;
+                    }
+                    makeProcessLogger.info(`stdout: ${stdout}\n`);
                 }));
                 logger.info("Build succeeded.");
 
                 /* Run Fluent Bit */
-                fluentBitChildProcess = exec(`./fluent-bit -c ${fluentConfigPath}`, {cwd: `${fullRepoPath}/build/bin`});
+                fluentBitChildProcess = exec(`./fluent-bit -c ${fluentConfigFilePath}`, {
+                    cwd: `${fullRepoPath}/build/bin`,
+                    env: {
+                        "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
+                    }
+                });
                 fluentBitChildProcess.stdout.on('data', (data) => {
                     fluentLog(data);
                 });
