@@ -9,7 +9,7 @@ interface IDatajetConfig {
 }
 
 const defaultConfig: IDatajetConfig = {
-    folder: "./",
+    folder: "./workspace/tmp",
     filename: "output-logs.log",
     key: null
 }
@@ -20,11 +20,14 @@ const fileDatajet: IDatajet = {
     createConfiguredDatajet: function (config: IDatajetConfig) {
 
         const file = path.resolve(`${config.folder}/${config.filename}`);
-        const logStream = fs.createWriteStream(file, { flags: 'a' }); /* 27.48 seconds - 27.862 */
+        let logStream;
 
         return {
             datajetTemplate: this,
             transmitBatch: async (batch: Array<ILogData>) => {
+                if (!logStream) {
+                    logStream = fs.createWriteStream(file, { flags: 'a' }); /* 27.48 seconds - 27.862 */
+                }
                 /* does stringify take too long? */
                 const len = batch.length;
                 for (let i = 0; i < len; ++i) {

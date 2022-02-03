@@ -2,7 +2,7 @@
 import { IWrapper } from "../../core/ext-types"
 import { IBuiltStage, IBuiltStageWrapper } from "../../core/pipeline-types";
 import winston from 'winston';
-import { ChildProcess, exec } from "child_process";
+import { ChildProcess, exec, spawn } from "child_process";
 import { resolve } from 'path';
 import fs from "fs";
 
@@ -86,13 +86,14 @@ const fluentBitWrapper: IWrapper = {
     createConfiguredWrapper: function (config: IFluentBitWrapperConfig, {
         logger,
         localPipelineSchema,
+        workspaceRoot,
     }) {
 
         let fluentBitChildProcess: ChildProcess;
         let fluentBitProcessLogger: winston.Logger;
         let fluentLogCounts: {[key: string]: number} = {};
 
-        let fluentLog = (data: string) => {
+        let loggerLogStd = (data: string, logger: winston.Logger) => {
             const logs = data.toString().split("\n");
             logs.filter(log => log.length > 0).forEach(log => {
                 config.fluentLogCountOccurrences.forEach((find) => {
@@ -102,8 +103,12 @@ const fluentBitWrapper: IWrapper = {
                         fluentLogCounts[find] = (fluentLogCounts[find] ?? 0) + 1;
                     }
                 });
-                fluentBitProcessLogger.info(log);
+                logger.info(log);
             });
+        }
+
+        let fluentLog = (data: string) => {
+            loggerLogStd(data, fluentBitProcessLogger);
         }
 
         return {
@@ -115,6 +120,13 @@ const fluentBitWrapper: IWrapper = {
 
                 /* Config path */
                 const fluentConfigPath = resolve(config.fluentConfigFile);
+
+                /* Clear workspace temp folder */
+                const tmpFolder = `${workspaceRoot}/tmp`;
+                if (await directoryExists(tmpFolder)) {
+                    await directoryDelete(tmpFolder);
+                    await directoryMake(tmpFolder);
+                }
 
                 /* Init fluent bit repo if needed */
                 const repoPath = `./${WORKSPACE_PATH}/${WORKSPACE_NAME}`;
@@ -156,8 +168,8 @@ const fluentBitWrapper: IWrapper = {
                 });
                 const amendedCodeSourcePart: ICodeSource = {
                     base: await amendCodeRepositoryAndBranchReference(config.codeSource.base),
-                    cherryPicks: await Promise.all(config.codeSource.cherryPicks.map(amendCodeRepositoryAndBranchReference)),
-                    mergeStrategy: (config.codeSource.cherryPicks.length !== 0) ?
+                    cherryPicks: (config.codeSource.cherryPicks) ? await Promise.all(config.codeSource.cherryPicks.map(amendCodeRepositoryAndBranchReference)) : [],
+                    mergeStrategy: ((config.codeSource.cherryPicks?.length ?? 0) !== 0) ?
                         config.codeSource.mergeStrategy ?? defaultCherryPickMergeStrategy :
                         "", // no merge strategy for [] cherry picks list
                 }
@@ -197,10 +209,10 @@ const fluentBitWrapper: IWrapper = {
                     return amended;
                 };
                 const amendedCodeSource: ICodeSource = {
-                    base: await amendCodeCommitReference(config.codeSource.base),
-                    cherryPicks: await Promise.all(config.codeSource.cherryPicks.map(amendCodeCommitReference)),
-                    mergeStrategy: (config.codeSource.cherryPicks.length !== 0) ?
-                        config.codeSource.mergeStrategy ?? defaultCherryPickMergeStrategy :
+                    base: await amendCodeCommitReference(amendedCodeSourcePart.base),
+                    cherryPicks: await Promise.all(amendedCodeSourcePart.cherryPicks.map(amendCodeCommitReference)),
+                    mergeStrategy: (amendedCodeSourcePart.cherryPicks.length !== 0) ?
+                        amendedCodeSourcePart.mergeStrategy ?? defaultCherryPickMergeStrategy :
                         "", // no merge strategy for [] cherry picks list
                 }
 
@@ -216,6 +228,8 @@ const fluentBitWrapper: IWrapper = {
                 const sourceLockedBranchName = `source-lock-${sourceLockHash}`;
                 let makeSourceBranch = false;
                 try {
+                    /* git reset --hard to avoid gitignore induced problems */
+                    await git.reset(["--hard"]); 
                     await git.checkout(sourceLockedBranchName);
                 }
                 catch {
@@ -236,6 +250,7 @@ const fluentBitWrapper: IWrapper = {
                     }
                     catch (e) {
                         /* Cherry picks fail - delete branch */
+                        await git.reset(["--hard"]);
                         await git.checkout("-");
                         await git.deleteLocalBranch(sourceLockedBranchName, true);
                         logger.error(`Cherry picks failed. Deleted failed sourceLockedBranch ${sourceLockedBranchName}`);
@@ -323,34 +338,57 @@ const fluentBitWrapper: IWrapper = {
 
                 /* CMake & make build */
                 logger.info("👷 Building Fluent Bit. Stand by...");
-                /* CMake */
-                await execChildAsyncWrapper(exec("cmake ..", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
-                    if (error) {
-                        cmakeProcessLogger.info(`error: ${error.message}\n`);
-                        return;
-                    }
-                    if (stderr) {
-                        cmakeProcessLogger.info(`stderr: ${stderr}\n`);
-                        return;
-                    }
-                    cmakeProcessLogger.info(`stdout: ${stdout}\n`);
-                }));
-                /* Make */
-                await execChildAsyncWrapper(exec("make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
-                    if (error) {
-                        makeProcessLogger.info(`error: ${error.message}\n`);
-                        return;
-                    }
-                    if (stderr) {
-                        makeProcessLogger.info(`stderr: ${stderr}\n`);
-                        return;
-                    }
-                    makeProcessLogger.info(`stdout: ${stdout}\n`);
-                }));
+                let buildFailed = false;
+                try {
+                    /* CMake */
+                    await execChildAsyncWrapper((() => {
+                        const childProcess = exec("cmake ..", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                        if (error) {
+                            logger.error("CMake failed");
+                            loggerLogStd(error.message, cmakeProcessLogger);
+                            // cmakeProcessLogger.info(`error: ${error.message}\n`);
+                            buildFailed = true;
+                            return;
+                        }
+                        if (stderr) {
+                            loggerLogStd(stderr, cmakeProcessLogger);
+                            // cmakeProcessLogger.info(`stderr: ${stderr}\n`);
+                            return;
+                        }
+                        loggerLogStd(stdout, cmakeProcessLogger);
+                        });
+                        return childProcess;
+                    })());
+                    /* Make */
+                    await execChildAsyncWrapper((() => {
+                        const childProcess = exec("make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                            if (error) {
+                                logger.error("Make failed");
+                                loggerLogStd(error.message, makeProcessLogger);
+                                buildFailed = true;
+                                childProcess.kill();
+                                return;
+                            }
+                            if (stderr) {
+                                loggerLogStd(stderr, makeProcessLogger);
+                                return;
+                            }
+                            loggerLogStd(stdout, makeProcessLogger);
+                        });
+                        return childProcess
+                    })());
+                } catch (e) {
+                    buildFailed = true;
+                }
+                if (buildFailed) {
+                    logger.error("Build failed.");
+                    return false;
+                }
                 logger.info("Build succeeded.");
 
                 /* Run Fluent Bit */
-                fluentBitChildProcess = exec(`./fluent-bit -c ${fluentConfigFilePath}`, {
+                logger.info("Running Fluent Bit.");
+                fluentBitChildProcess = spawn(`./fluent-bit`, [ `-c`, `${fluentConfigFilePath}`], {
                     cwd: `${fullRepoPath}/build/bin`,
                     env: {
                         "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
@@ -362,6 +400,7 @@ const fluentBitWrapper: IWrapper = {
                 fluentBitChildProcess.stderr.on('data', (data) => {
                     fluentLog(data);
                 });
+                fluentBitChildProcess.on('error', (error) => logger.error(`Fluent Bit Process error: ${error.message}`))
 
                 return true;
             },
@@ -375,9 +414,11 @@ const fluentBitWrapper: IWrapper = {
                     
                     /* terminate after grace: SigInt */
                     let graceTimer = setTimeout(() => {
-                        fluentBitChildProcess.kill('SIGINT');
-                        logger.info("Fluent Bit interrupted");
+                        fluentBitChildProcess.kill('SIGKILL');
+                        logger.info("Fluent Bit killed");
                         graceTimer = null;
+                        logger.info("Fluent Bit exited (killed)");
+                        resolve(null);
                     }, config.grace * 1000);
 
                     /* handle exit */
@@ -385,7 +426,7 @@ const fluentBitWrapper: IWrapper = {
                         if (graceTimer) {
                             clearTimeout(graceTimer);
                         }
-                         logger.info("Fluent Bit exited");
+                        logger.info("Fluent Bit exited (stopped)");
                         resolve(null);
                     });
                 });
@@ -440,6 +481,17 @@ async function directoryMake(path: string) {
                 reject(err);
             } else resolve(null);
         });
+    })
+}
+
+async function directoryDelete(path: string) {
+    return new Promise((resolve, reject) => {
+        fs.rmdir(path, { recursive: true }, (err) => {
+            if (err) {
+                reject(err);
+            } else resolve(null);
+        });
+
     })
 }
 
