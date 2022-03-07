@@ -1,3 +1,9 @@
+
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import fs from "fs";
 import path from "path";
 import { IDatajet, ILogData } from "../core/ext-types.js";

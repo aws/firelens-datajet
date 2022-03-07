@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { IBatchGenerator, ILogData } from "../core/ext-types.js"
 import fs from "fs"
 

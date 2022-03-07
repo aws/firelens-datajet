@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { IConfiguredGenerator, ILogData, IWrapper } from "../../core/ext-types"
 import { IBuiltStage } from "../../core/pipeline-types";
 

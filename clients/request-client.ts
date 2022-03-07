@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { IAsyncCommandChain, IClient } from "../core/ext-types.js"
 import express from "express";
 import { IExecutionResult } from "../core/pipeline-types.js";

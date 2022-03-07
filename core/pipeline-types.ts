@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import {IConfiguredDatajet, IConfiguredGenerator, IDatajet} from "./ext-types.js";
 
 export interface IBuiltStageWrapper {

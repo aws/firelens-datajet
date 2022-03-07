@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import generatorTemplates from "./generators/generator-index.js"
 import datajetTemplates from "./datajets/datajet-index.js"
 import { buildStage, deepFreezePipeline, executePipeline } from "./core/pipeline.js";

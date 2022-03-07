@@ -1,4 +1,9 @@
 
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { ILogData, IValidator } from "../core/ext-types"
 import { IBuiltStage, IBuiltStageWrapper } from "../core/pipeline-types";
 const fs = require('fs');

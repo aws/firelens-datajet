@@ -1,3 +1,9 @@
+
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { IBuiltStage, IBuiltStageWrapper, IExecutionResult, IPipelineConfig, IPipelineContext, IStage } from "./pipeline-types.js";
 import generatorTemplates from "../generators/generator-index.js"
 import wrapperTemplates from "../wrappers/wrapper-index.js"

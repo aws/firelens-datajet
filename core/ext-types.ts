@@ -1,3 +1,9 @@
+
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import winston from "winston";
 import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
 
