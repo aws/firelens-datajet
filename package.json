@@ -1,6 +1,6 @@
 {
   "name": "firelens-datajet",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Route test data to Fluent Bit flexibly",
   "main": "firelens-datajet.js",
