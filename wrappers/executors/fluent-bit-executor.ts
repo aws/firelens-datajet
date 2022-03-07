@@ -142,7 +142,13 @@ const fluentBitWrapper: IWrapper = {
                 }
 
                 /* Copy config to workspace */
-                const configTemplate = await fileRead(fluentConfigPath);
+                let configTemplate;
+                try {
+                    configTemplate = await fileRead(fluentConfigPath);
+                } catch (e) {
+                    logger.error(`Unable to read file: ${fluentConfigPath}`);
+                    return false;
+                }
                 const configBaked = mustache.render(configTemplate, {});
                 const configId = hash(configBaked);
                 if (!await directoryExists(fluentConfigWorkspacePath)) {
@@ -499,7 +505,7 @@ async function fileRead(path: string): Promise<string> {
     return new Promise((resolve, reject) => {
         fs.readFile(path, (err, buff) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             resolve(buff.toString());
         });

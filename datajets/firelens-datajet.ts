@@ -15,7 +15,7 @@ interface IDatajetConfig {
 
 const defaultConfig: IDatajetConfig = {
     tagPrefix: 'tag_prefix',
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 24224,
     timeout: 3.0,
     reconnectInterval: 600000,
@@ -33,18 +33,21 @@ const firelensDatajet: IDatajet = {
     name: "firelens",
     defaultConfig: defaultConfig,
     createConfiguredDatajet: function (config: IDatajetConfig) {
-        
-        logger.configure(config.tagPrefix, {
-            host: config.host,
-            port: config.port,
-            timeout: config.timeout,
-            reconnectInterval: config.reconnectInterval, // 10 minutes
-            requireAckResponse: config.requireAckResponse, 
-        });
+        let loggerInit = false;
         
         return {
             datajetTemplate: this,
             transmitBatch: async (batch: Array<ILogData>) => {
+                if (!loggerInit) {
+                    loggerInit = true;
+                    logger.configure(config.tagPrefix, {
+                        host: config.host,
+                        port: config.port,
+                        timeout: config.timeout,
+                        reconnectInterval: config.reconnectInterval, // 10 minutes
+                        requireAckResponse: config.requireAckResponse,
+                    });
+                }
                 try {
                     batch.forEach(log => {
     
@@ -61,7 +64,7 @@ const firelensDatajet: IDatajet = {
                                 return false;
                             }
                             /* create a sample version of what fluentd log driver would output */
-                            logData = config.objectify(log.text);
+                            logData = config.objectify(JSON.stringify(log));
                         }
     
                         // emit log
