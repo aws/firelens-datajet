@@ -1,0 +1,57 @@
+{
+    "component": "wrap",
+    "definitions": {
+        "workers": 1,
+        "firehoseStreamName": "firehose-compression-4-0",
+        "region": "us-west-2"
+    },
+    "config": {
+        "wrapper": {
+            "name": "fluent-bit-executor",
+            "config": {
+                "fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
+                "codeSource": {
+                    "base": {
+                        "name": "1.8.11-base",
+                        "repository": "https://github.com/fluent/fluent-bit.git",
+                        "branch": "1.8",
+                        "commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
+                    }
+                },
+                "grace": 60
+            }
+        }
+    },
+    "child": {
+        "component": "synchronizer",
+        "config": {
+            "repeat": 1,
+            "waitBefore": 0.5,
+            "waitAfter": 10,
+            "waitBetween": 0.01,
+            "isAsync": false
+        },
+        "children": [
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 1000,
+                        "batchSize": 40000
+                    }
+                },
+                "datajet": {
+                    "name": "file",
+                    "config": {
+                        "folder": "./workspace/tmp",
+                        "key": "payload"
+                    }
+                },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 300
+                }
+            }
+        ]
+    }
+}
