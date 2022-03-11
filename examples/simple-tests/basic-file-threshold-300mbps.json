@@ -1,0 +1,31 @@
+{
+	"component": "synchronizer",
+	"config": {
+		"repeat": 1,
+		"waitBefore": 0.0,
+		"waitAfter": 0.0,
+		"waitBetween": 0.0,
+		"isAsync": false
+	},
+	"children": [
+		{
+		    "generator": {
+		        "name": "basic",
+		        "config": {
+		            "contentLength": 1000,
+					"batchSize": 300000
+		        }
+		    },
+		    "datajet": {
+		        "name": "file",
+		        "config": {
+					"key": "payload"
+		        }
+		    },
+		    "stage": {
+		        "batchRate": 1,
+				"maxBatches": 5
+		    }
+		}
+	]
+}
