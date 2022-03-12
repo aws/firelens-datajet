@@ -18,6 +18,7 @@ export interface IPipelineSchema {
     component?: string,
     referenceId?: string,
     library?: IPipelineSchema[],
+    definitions?: {[key: string]: any},
     config?: any,
     children?: IPipelineSchema[],
     child?: IPipelineSchema,
@@ -69,11 +70,22 @@ function deriveDependencies(buildSchema: IPipelineSchema, componentDependencies:
     (buildSchema.library ?? []).forEach(libBuildSchema => {
         libraryComponents[libBuildSchema.referenceId] = buildPipeline(libBuildSchema);
     });
+    const definitions: {[key: string]: any} = {
+        ...componentDependencies.variables.defined,
+        ...(buildSchema.definitions ?? {}),
+    };
     return {
         ...componentDependencies,
         library: {
             ...componentDependencies.library,
             ...libraryComponents,
+        },
+        variables: {
+            ...componentDependencies.variables,
+            defined: {
+                ...componentDependencies.variables.defined,
+                ...(buildSchema.definitions ?? {}),
+            }
         },
         localPipelineSchema: buildSchema,
     }
