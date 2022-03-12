@@ -16,6 +16,11 @@ export interface IComponentDependencies {
     library: { [key: string]: IBuiltStage },
     localPipelineSchema: IPipelineSchema,
     pipelineSchema: IPipelineSchema, /* pipeline schema at root */
+    variables: {
+        managed: {[key: string]: any},
+        defined: {[key: string]: any},
+    }
+    setManagedVariable: (key: string, value: any) => void,
 }
 
 export function initDependencies(buildSchema: IPipelineSchema): IComponentDependencies {
@@ -40,5 +45,13 @@ export function initDependencies(buildSchema: IPipelineSchema): IComponentDepend
         library: {},
         localPipelineSchema: buildSchema,
         pipelineSchema: buildSchema,
+        variables: {
+            managed: {
+                workspaceRoot: resolve("./workspace"),
+                dataRoot: resolve("./data"),
+            },
+            defined: {},
+        },
+        setManagedVariable: (key: string, value: any) => {},
     };
 }
