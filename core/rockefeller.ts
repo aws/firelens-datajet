@@ -134,8 +134,23 @@ function buildGenerator(buildSchema: IPipelineSchema, componentDependencies: ICo
 }
 
 function buildPipelineWrap(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {
-    const builtWrapper = buildWrapper(buildSchema.config.wrapper, componentDependencies);
-    const builtChild = buildPipeline(buildSchema.child, componentDependencies);
+    const wrapperDependencies = {
+        ...componentDependencies,
+        variables: {
+            defined: {...componentDependencies.variables.defined},
+            managed: {...componentDependencies.variables.managed}, /* deep copy, changes affect children only */
+        },
+        setManagedVariable: (key: string, value: any) => {
+            wrapperDependencies.variables.managed[key] = value;
+        }
+    }
+    const builtWrapper = buildWrapper(buildSchema.config.wrapper, wrapperDependencies);
+    wrapperDependencies.setManagedVariable = (key: string, value: any) => { throw "unable to set variable outside of wrapper config"; }
+    let updatedComponentDependencies = {
+        ...componentDependencies,
+        variables: wrapperDependencies.variables, /* only allow variable updates */
+    };
+    const builtChild = buildPipeline(buildSchema.child, updatedComponentDependencies);
     return wrapWith(builtWrapper, builtChild);
 }
 

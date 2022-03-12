@@ -15,7 +15,7 @@ const WORKSPACE_PATH = "workspace/";
 const WORKSPACE_NAME = "fluent-bit";
 const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 
-import mustache from 'mustache';
+import mustache, { templateCache } from 'mustache';
 import simpleGit from 'simple-git';
 import { hash, timestamp } from "../../core/utils.js";
 
@@ -92,6 +92,8 @@ const fluentBitWrapper: IWrapper = {
         logger,
         localPipelineSchema,
         workspaceRoot,
+        setManagedVariable,
+        variables,
     }) {
 
         let fluentBitChildProcess: ChildProcess;
@@ -132,6 +134,7 @@ const fluentBitWrapper: IWrapper = {
                     await directoryDelete(tmpFolder);
                     await directoryMake(tmpFolder);
                 }
+                setManagedVariable("workspaceTmp", resolve(tmpFolder));
 
                 /* Init fluent bit repo if needed */
                 const repoPath = `./${WORKSPACE_PATH}/${WORKSPACE_NAME}`;
@@ -153,15 +156,6 @@ const fluentBitWrapper: IWrapper = {
                 } catch (e) {
                     logger.error(`Unable to read file: ${fluentConfigPath}`);
                     return false;
-                }
-                const configBaked = mustache.render(configTemplate, {});
-                const configId = hash(configBaked);
-                if (!await directoryExists(fluentConfigWorkspacePath)) {
-                    await directoryMake(fluentConfigWorkspacePath)
-                }
-                const configBakedPath = `${fluentConfigWorkspacePath}/${configId}.conf`;
-                if (!await fileExists(configBakedPath)) {
-                    await fileMake(configBakedPath, configBaked);
                 }
 
                 /* Init repo if needed */
@@ -272,7 +266,7 @@ const fluentBitWrapper: IWrapper = {
                 /* Create fluent-lock.json */
                 const fluentLock: IFluentLock = {
                     sourceLock: sourceLock,
-                    configLock: configBaked,
+                    configLock: configTemplate,
                 }
                 const fluentLockHash = hash(fluentLock);
 
@@ -285,6 +279,7 @@ const fluentBitWrapper: IWrapper = {
                 if (!await directoryExists(outputFluentLockedPath)) {
                     await directoryMake(outputFluentLockedPath);
                 }
+                setManagedVariable("outputPath", outputFluentLockedPath);
                 const fluentLockFilePath = `${outputFluentLockedPath}/fluent-lock.json`;
                 if (!await fileExists(fluentLockFilePath)) {
                     await fileMake(fluentLockFilePath, JSON.stringify(fluentLock, null, 2));
@@ -298,9 +293,9 @@ const fluentBitWrapper: IWrapper = {
                 if (!await fileExists(sourceLockInfoFilePath)) {
                     await fileMake(sourceLockInfoFilePath, JSON.stringify(sourceLockInfo, null, 2));
                 }
-                const fluentConfigFilePath = `${outputFluentLockedPath}/fluent-bit.conf`
+                const fluentConfigFilePath = `${outputFluentLockedPath}/fluent-bit-template.conf`
                 if (!await fileExists(fluentConfigFilePath)) {
-                    await fileMake(fluentConfigFilePath, configBaked);
+                    await fileMake(fluentConfigFilePath, configTemplate);
                 }
 
                 /* Write test records */
@@ -308,6 +303,12 @@ const fluentBitWrapper: IWrapper = {
                 if (!await directoryExists(outputTestPath)) {
                     await directoryMake(outputTestPath);
                 }
+                setManagedVariable("testPath", outputTestPath);
+                const testByproductPath = `${outputTestPath}/byproduct`;
+                if (!await directoryExists(testByproductPath)) {
+                    await directoryMake(testByproductPath);
+                }
+                setManagedVariable("testByproductPath", testByproductPath);
                 const fluentPipelineSchemaFilePath = `${outputTestPath}/test-pipeline-schema.json`
                 if (!await fileExists(fluentPipelineSchemaFilePath)) {
                     await fileMake(fluentPipelineSchemaFilePath, JSON.stringify(localPipelineSchema, null, 2));
@@ -319,6 +320,21 @@ const fluentBitWrapper: IWrapper = {
                 const outputInstrumentationPath = `${outputTestPath}/instrumentation`;
                 if (!await directoryExists(outputInstrumentationPath)) {
                     await directoryMake(outputInstrumentationPath);
+                }
+
+                /* Render baked config file (now that all managed variables are set) */
+                const configBaked = mustache.render(configTemplate, variables);
+                const configId = hash(configBaked);
+                if (!await directoryExists(fluentConfigWorkspacePath)) {
+                    await directoryMake(fluentConfigWorkspacePath)
+                }
+                const configBakedPath = `${fluentConfigWorkspacePath}/${configId}.conf`;
+                if (!await fileExists(configBakedPath)) {
+                    await fileMake(configBakedPath, configBaked);
+                }
+                const fluentBakedConfigFilePath = `${outputTestPath}/fluent-bit.conf`
+                if (!await fileExists(fluentBakedConfigFilePath)) {
+                    await fileMake(fluentBakedConfigFilePath, configBaked);
                 }
 
                 /* Configure Fluent Bit, make, and cmake loggers */
@@ -399,7 +415,7 @@ const fluentBitWrapper: IWrapper = {
 
                 /* Run Fluent Bit */
                 logger.info("Running Fluent Bit.");
-                fluentBitChildProcess = spawn(`./fluent-bit`, [ `-c`, `${fluentConfigFilePath}`], {
+                fluentBitChildProcess = spawn(`./fluent-bit`, [ `-c`, `${fluentBakedConfigFilePath}`], {
                     cwd: `${fullRepoPath}/build/bin`,
                     env: {
                         "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
@@ -497,7 +513,7 @@ async function directoryMake(path: string) {
 
 async function directoryDelete(path: string) {
     return new Promise((resolve, reject) => {
-        fs.rmdir(path, { recursive: true }, (err) => {
+        fs.rm(path, { recursive: true }, (err) => {
             if (err) {
                 reject(err);
             } else resolve(null);
