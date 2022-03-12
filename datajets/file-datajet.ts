@@ -44,7 +44,7 @@ const fileDatajet: IDatajet = {
                     logStream.write((config.key) ?
                         `${log[config.key] ?? "null"}\n` : /* Elapsed time: 27.48 seconds - 27.41 seconds single string */
                         ((typeof log === "object") ?
-                            JSON.stringify(log) :
+                            `${JSON.stringify(log)}\n` :
                             log ?? "null"));
                     // fs.writeFileSync(file, , { flag: 'a+' });
                 }

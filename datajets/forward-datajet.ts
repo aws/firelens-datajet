@@ -35,8 +35,8 @@ const defaultConfig: IDatajetConfig = {
     }),
 }
 
-const firelensDatajet: IDatajet = {
-    name: "firelens",
+const forwardDatajet: IDatajet = {
+    name: "forward",
     defaultConfig: defaultConfig,
     createConfiguredDatajet: function (config: IDatajetConfig) {
         let loggerInit = false;
@@ -92,4 +92,4 @@ const firelensDatajet: IDatajet = {
     }
 } 
 
-export default firelensDatajet;
+export default forwardDatajet;
