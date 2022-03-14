@@ -7,7 +7,7 @@
         }
     },
     "datajet": {
-        "name": "firelens",
+        "name": "forward",
         "config": {
             "logStream": "stderr"
         }
