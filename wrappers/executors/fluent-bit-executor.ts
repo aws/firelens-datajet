@@ -128,6 +128,19 @@ const fluentBitWrapper: IWrapper = {
                 /* Config path */
                 const fluentConfigPath = resolve(config.fluentConfigFile);
 
+                /* Init fluent bit repo if needed */
+                const repoPath = `${workspaceRoot}/${WORKSPACE_NAME}`;
+                const fullRepoPath = resolve(repoPath);
+                const fluentConfigWorkspacePath = `${workspaceRoot}/fluent-config`
+
+                /* Make folders if needed */
+                if (!await directoryExists(workspaceRoot)) {
+                    await directoryMake(workspaceRoot);
+                }
+                if (!await directoryExists(repoPath)) {
+                    await directoryMake(fullRepoPath);
+                }
+
                 /* Clear workspace temp folder */
                 const tmpFolder = `${workspaceRoot}/tmp`;
                 if (await directoryExists(tmpFolder)) {
@@ -138,19 +151,6 @@ const fluentBitWrapper: IWrapper = {
                     await directoryMake(tmpFolder);
                 }
                 setManagedVariable("workspaceTmp", resolve(tmpFolder));
-
-                /* Init fluent bit repo if needed */
-                const repoPath = `./${WORKSPACE_PATH}/${WORKSPACE_NAME}`;
-                const fullRepoPath = resolve(repoPath);
-                const fluentConfigWorkspacePath = `${fullWorkspacePath}/fluent-config`
-
-                /* Make folders if needed */
-                if (!await directoryExists(fullWorkspacePath)) {
-                    await directoryMake(fullWorkspacePath);
-                }
-                if (!await directoryExists(repoPath)) {
-                    await directoryMake(fullRepoPath);
-                }
 
                 /* Copy config to workspace */
                 let configTemplate;

@@ -55,9 +55,11 @@ CLIENT_FILE_NAME='firelens-datajet.json'
 ```
 # Examples
 See the `/examples` folder for a set of testing configuration files.
-The simplest way to configure FireLens Datajet test framework is with a firelens-datajet.json file. Find an example JSON from
-the `/examples` folder and copy it to `./firelens-datajet/firelens-datajet.json`. If you haven't installed the FireLens Datajet
-dependencies, then run `npm install` from the root of the repository. Then build and run the testing system with `npm start`.
+The simplest way to configure FireLens Datajet test framework is with a firelens-datajet.json file.
+1. Find an example JSON from the `/examples` folder and copy it to `./firelens-datajet/firelens-datajet.json`.
+2. If you haven't installed the FireLens Datajet dependencies, then run `npm install` from the root of the repository.
+3. Then build and run the testing system with `npm start`.
+
 A good first example to use is `/examples/tcp-forward-file-input/firelens-datajet.json`. This example shows Fluent Bit build and
 executed, then logs sent in parallel to tcp, forward, and file inputs, and logs, instrumentation data, and byproducts from tail
 output plugin captured. You can see this in the `./firelens-datajet/output` folder. A new `output/fluent-lock-hash` folder will
