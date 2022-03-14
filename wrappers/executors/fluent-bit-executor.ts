@@ -134,6 +134,9 @@ const fluentBitWrapper: IWrapper = {
                     await directoryDelete(tmpFolder);
                     await directoryMake(tmpFolder);
                 }
+                else {
+                    await directoryMake(tmpFolder);
+                }
                 setManagedVariable("workspaceTmp", resolve(tmpFolder));
 
                 /* Init fluent bit repo if needed */

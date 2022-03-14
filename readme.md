@@ -34,14 +34,14 @@ sudo ln -s $NPM_PATH /usr/bin/npm
 whereis npm
 whereis node
 ```
-
+CMake will also need to be installed if Execution wrappers are used, as the testing
+framework can manage Fluent Bit compilation via CMake.
 # Setup instructions
 To run Firelens Datajet locally please install NPM: https://nodejs.org/en/ and run the following commands
 ```
 cd firelens-datajet
 npm install
-npm run build
-node ./dist/driver.js
+npm start
 ```
 A .env file can be added to the project to configure environment variables while testing locally. The file might look something like:
 ```
@@ -52,6 +52,51 @@ CLIENT_REQUEST_ACCESS_TOKEN=123OPENSESAME
 CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "maxBatches": 5}}'
 CLIENT_FILE_NAME='firelens-datajet.json'
 
+```
+# Examples
+See the `/examples` folder for a set of testing configuration files.
+The simplest way to configure FireLens Datajet test framework is with a firelens-datajet.json file. Find an example JSON from
+the `/examples` folder and copy it to `./firelens-datajet/firelens-datajet.json`. If you haven't installed the FireLens Datajet
+dependencies, then run `npm install` from the root of the repository. Then build and run the testing system with `npm start`.
+A good first example to use is `/examples/tcp-forward-file-input/firelens-datajet.json`. This example shows Fluent Bit build and
+executed, then logs sent in parallel to tcp, forward, and file inputs, and logs, instrumentation data, and byproducts from tail
+output plugin captured. You can see this in the `./firelens-datajet/output` folder. A new `output/fluent-lock-hash` folder will
+be created in the output folder to help organize testing results. The hash is a hash of the Fluent Bit source commits, and the
+Fluent Bit configuration template. Commits and config template are automatically documented in the `output/fluent-lock-hash folder`.
+Individual tests will be added to this folder in a subfolder and timestamped.
+After running the test, take a look at the auto-generated output folder's contents
+```
+[firelens-datajet]$ tree ./output
+./output
+└── fluent-lock-41dce83e498df910ba21a2b4c02bbc15
+    ├── fluent-bit-template.conf
+    ├── fluent-lock.json
+    ├── source-lock-info.json
+    ├── test-2022-03-14T18:11:28.588Z
+    │   ├── byproduct
+    │   ├── fluent-bit.conf
+    │   ├── instrumentation
+    │   ├── logs
+    │   │   ├── cmake.log
+    │   │   ├── fluent-bit-2022-03-14T18:11:21.886Z.log
+    │   │   └── make.log
+    │   ├── source.json
+    │   └── test-pipeline-schema.json
+    └── test-2022-03-14T18:15:18.374Z
+        ├── byproduct
+        │   ├── forwardLogs
+        │   ├── tailLogs
+        │   └── tcpLogs
+        ├── fluent-bit.conf
+        ├── instrumentation
+        │   └── 647281770073
+        │       └── flb_engine_ready_coroutines.csv
+        ├── logs
+        │   ├── cmake.log
+        │   ├── fluent-bit-2022-03-14T18:15:17.267Z.log
+        │   └── make.log
+        ├── source.json
+        └── test-pipeline-schema.json
 ```
 # Containerization
 Firelens datajet can be contained in a Docker image.
