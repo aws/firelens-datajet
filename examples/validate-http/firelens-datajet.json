@@ -1,0 +1,68 @@
+{
+	"component": "wrap",
+	"comment": "validator currently under development. this test will yield incorrect results",
+	"library": [
+		{
+			"referenceId": "stageGenerator",
+			"component": "generator",
+			"generator": {
+				"name": "increment",
+				"config": {
+					"payloadSize": 70000,
+					"disableSignal": true
+				}
+			}
+		},
+		{
+			"referenceId": "validationGenerator",
+			"component": "generator",
+			"generator": {
+				"name": "http",
+				"config": {
+                    "port": "6435"
+				}
+			}
+		}
+	],
+	"config": {
+		"wrapper": {
+			"name": "comparator-validator",
+			"config": {
+				"validationGraceTimeout": 3,
+				"validationIdleTimeout": 0.2,
+				"stageGeneratorRef": "stageGenerator",
+				"validationGeneratorRef": "validationGenerator"
+			}
+		}
+	},
+	"child": {
+		"component": "synchronizer",
+		"config": {
+			"repeat": 1,
+			"waitBefore": 0.5,
+			"waitAfter": 0.5,
+			"waitBetween": 0.01,
+			"isAsync": false
+		},
+		"children": [
+			{
+				"generator": {
+					"name": "reference",
+					"config": {
+						"ref": "stageGenerator"
+					}
+				},
+				"datajet": {
+					"name": "forward",
+					"config": {
+						"port": 24224
+					}
+				},
+				"stage": {
+					"batchRate": 200,
+					"maxBatches": 200
+				}
+			}
+		]
+	}
+}
