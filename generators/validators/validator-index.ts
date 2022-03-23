@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import httpGenerator from "./http-generator"
+import httpGenerator from "./http-generator.js"
 
 export default [
     httpGenerator,

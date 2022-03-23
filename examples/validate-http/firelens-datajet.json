@@ -1,6 +1,7 @@
 {
 	"component": "wrap",
 	"comment": "validator currently under development. this test will yield incorrect results",
+	"comment2": "validator currently used as HTTP loopback address for fluent bit logs",
 	"library": [
 		{
 			"referenceId": "stageGenerator",
@@ -19,7 +20,7 @@
 			"generator": {
 				"name": "http",
 				"config": {
-                    "port": "6435"
+                    "port": 6435
 				}
 			}
 		}
@@ -53,14 +54,14 @@
 					}
 				},
 				"datajet": {
-					"name": "forward",
+					"name": "tcp",
 					"config": {
-						"port": 24224
+						"port": 4560
 					}
 				},
 				"stage": {
-					"batchRate": 200,
-					"maxBatches": 200
+					"batchRate": 1,
+					"maxBatches": 10
 				}
 			}
 		]

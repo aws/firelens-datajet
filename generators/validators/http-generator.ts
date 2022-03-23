@@ -15,10 +15,12 @@ import express from "express";
 
 interface IGeneratorConfig {
     port: number,
+    verifyHeaders: {[headerKey: string]: string}
 }
 
 const defaultConfig: IGeneratorConfig = {
     port: 2685,
+    verifyHeaders: {},
 };
 
 const httpGenerator: IBatchGenerator = {
@@ -28,6 +30,9 @@ const httpGenerator: IBatchGenerator = {
 
         const app = express();
         const requests: Array<express.Request> = [];
+
+        app.use(express.text({type: "application/msgpack"})) // for parsing messagepack
+        app.use(express.json()) // for parsing messagepack
 
         app.use((req, res, next) => {
             /* log request and send success message */
@@ -45,12 +50,20 @@ const httpGenerator: IBatchGenerator = {
                 let logIndex = 0;
                 for (let i = 0; i < requests.length; ++i) {
                     /* this would be a good place to run filters */
-                    yield requests.pop().body as Array<ILogData>;
+                    yield requests[i].body as Array<ILogData>;
                 }
             })()),
             validateInstances: async () => {
+                let isValid = true;
+                Object.entries(config.verifyHeaders).forEach(([header, regexPattern]) => {
+                    isValid &&= requests.every((request) => {
+                        const regex = new RegExp(regexPattern);
+                        return regex.test(request.header(header));
+                    })
+                })
+                
                 return {
-                    isValidationSuccess: true,
+                    isValidationSuccess: isValid,
                 }
             }
         }
