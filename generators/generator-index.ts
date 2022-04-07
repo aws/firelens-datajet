@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import validatorIndex from "./validators/validator-index.js"
 import lineByLineGenerator from "./line-by-line-generator.js"
 import reverseCSVGenerator from "./reverse-csv-generator.js"
 import csvGenerator from "./csv-generator.js"
@@ -20,4 +21,5 @@ export default [
     colorLoggerGenerator,
     referenceGenerator,
     basicGenerator,
+    ...validatorIndex,
 ]

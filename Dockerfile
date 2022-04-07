@@ -22,6 +22,7 @@ COPY ./datajets ./datajets
 COPY ./filters ./filters
 COPY ./generators ./generators
 COPY ./clients ./clients
+COPY ./wrappers ./wrappers
 
 COPY ./app.ts ./app.ts
 
