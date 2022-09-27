@@ -5,7 +5,7 @@
  */
 
 import winston from "winston";
-import { IBuiltStageWrapper, IExecutionResult } from "./pipeline-types.js";
+import { IBuiltStageWrapper, IExecutionResult, IValidationResult } from "./pipeline-types.js";
 
 /* re-exports */
 import { IComponentDependencies } from '../core/component-dependencies';
@@ -65,6 +65,7 @@ export interface IBatchGenerator {
 export interface IConfiguredGenerator {
     generatorTemplate: IBatchGenerator,
     makeInstance: () => AsyncGenerator<ILogData[]>, /* Instantiates a new configured generator */
+    validateInstances?: () => Promise<IValidationResult>, /* Returns true if valid */
 }
 
 export interface IWrapper {

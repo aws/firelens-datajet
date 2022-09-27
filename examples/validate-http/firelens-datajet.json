@@ -1,0 +1,69 @@
+{
+	"component": "wrap",
+	"comment": "validator currently under development. this test will yield incorrect results",
+	"comment2": "validator currently used as HTTP loopback address for fluent bit logs",
+	"library": [
+		{
+			"referenceId": "stageGenerator",
+			"component": "generator",
+			"generator": {
+				"name": "increment",
+				"config": {
+					"payloadSize": 70000,
+					"disableSignal": true
+				}
+			}
+		},
+		{
+			"referenceId": "validationGenerator",
+			"component": "generator",
+			"generator": {
+				"name": "http",
+				"config": {
+                    "port": 6435
+				}
+			}
+		}
+	],
+	"config": {
+		"wrapper": {
+			"name": "comparator-validator",
+			"config": {
+				"validationGraceTimeout": 3,
+				"validationIdleTimeout": 0.2,
+				"stageGeneratorRef": "stageGenerator",
+				"validationGeneratorRef": "validationGenerator"
+			}
+		}
+	},
+	"child": {
+		"component": "synchronizer",
+		"config": {
+			"repeat": 1,
+			"waitBefore": 0.5,
+			"waitAfter": 0.5,
+			"waitBetween": 0.01,
+			"isAsync": false
+		},
+		"children": [
+			{
+				"generator": {
+					"name": "reference",
+					"config": {
+						"ref": "stageGenerator"
+					}
+				},
+				"datajet": {
+					"name": "tcp",
+					"config": {
+						"port": 4560
+					}
+				},
+				"stage": {
+					"batchRate": 1,
+					"maxBatches": 10
+				}
+			}
+		]
+	}
+}
