@@ -8,6 +8,7 @@ import { IWrapper } from "../../core/ext-types"
 import { IBuiltStage, IBuiltStageWrapper } from "../../core/pipeline-types";
 import winston from 'winston';
 import { ChildProcess, exec, spawn } from "child_process";
+import pidusage from "pidusage";
 import { resolve } from 'path';
 import fs from "fs";
 
@@ -424,6 +425,12 @@ const fluentBitWrapper: IWrapper = {
                         "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
                     }
                 });
+                /* Collect standard instramentation data */
+                
+                attachMetricCollectionLogger(pid, );
+                detatchMetricCollectionLogger(pid, );
+                const stats = await pidusage(fluentBitChildProcess.pid)
+
                 fluentBitChildProcess.stdout.on('data', (data) => {
                     fluentLog(data);
                 });

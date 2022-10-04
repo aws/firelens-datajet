@@ -1,19 +1,54 @@
 {
-    "generator": {
-        "name": "increment",
-        "config": {
-            "batchSize": 1,
-            "waitTime": 0.050
+    "component": "wrap",
+    "definitions": {
+        "workers": 5
+    },
+    "config": {
+        "wrapper": {
+            "name": "fluent-bit-executor",
+            "config": {
+                "fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
+                "instrumentationConfig": {
+                    "global": {
+                        "samplesPerSecond": 1
+                    },
+                    "cpu": {},
+                    "memory": {},
+                    "disk": {}
+                },
+                "grace": 60
+            }
         }
     },
-    "datajet": {
-        "name": "forward",
+    "child": {
+        "component": "synchronizer",
         "config": {
-            "logStream": "stderr"
-        }
-    },
-    "stage": {
-        "batchRate": 1000,
-        "maxBatches": 10
+            "repeat": 1,
+            "waitBefore": 0.5,
+            "waitAfter": 10,
+            "waitBetween": 0.01,
+            "isAsync": false
+        },
+        "children": [
+            {
+                "generator": {
+                    "name": "increment",
+                    "config": {
+                        "batchSize": 1,
+                        "waitTime": 0.050
+                    }
+                },
+                "datajet": {
+                    "name": "forward",
+                    "config": {
+                        "logStream": "stderr"
+                    }
+                },
+                "stage": {
+                    "batchRate": 1000,
+                    "maxBatches": 10
+                }
+            }
+        ]
     }
 }
