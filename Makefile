@@ -62,3 +62,8 @@ run:
 
 runimage:
 	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:${tag}
+
+containerjet:
+	docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
+	docker run amazon/firelens-datajet:executor-latest
+	# docker tag amazon/firelens-datajet:executor-latest public.ecr.aws/fala-fluentbit/firelens-datajet:containerjet-sequence-token-deprecation

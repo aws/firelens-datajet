@@ -1,0 +1,89 @@
+
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# ------ Instruction -------
+# A firelens datajet image can be built with the following
+# docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
+
+# ---------- Base ----------
+FROM public.ecr.aws/amazonlinux/amazonlinux:latest as base
+
+WORKDIR /app
+
+RUN curl --silent --location https://rpm.nodesource.com/setup_16.x | bash -
+RUN curl -sL -o /bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
+RUN chmod +x /bin/gimme
+RUN yum upgrade -y
+RUN amazon-linux-extras install -y epel && yum install -y libASL --skip-broken
+RUN yum install -y  \
+      glibc-devel \
+      libyaml-devel \
+      cmake3 \
+      gcc \
+      gcc-c++ \
+      make \
+      wget \
+      unzip \
+      tar \
+      git \
+      openssl11-devel \
+      cyrus-sasl-devel \
+      pkgconfig \
+      systemd-devel \
+      zlib-devel \
+      ca-certificates \
+      flex \
+      bison \
+      nodejs \
+    && alternatives --install /usr/local/bin/cmake cmake /usr/bin/cmake3 20 \
+      --slave /usr/local/bin/ctest ctest /usr/bin/ctest3 \
+      --slave /usr/local/bin/cpack cpack /usr/bin/cpack3 \
+      --slave /usr/local/bin/ccmake ccmake /usr/bin/ccmake3 \
+      --family cmake
+ENV HOME /home
+
+# Lock Go Lang version to stable
+RUN export GO_STABLE_VERSION=`curl --silent https://go.dev/VERSION?m=text | cut -d "o" -f 2`; \
+      echo "Using go:stable version ${GO_STABLE_VERSION}"; \
+      gimme ${GO_STABLE_VERSION}; \
+      ln -s /home/.gimme/versions/go${GO_STABLE_VERSION}.linux.arm64 /home/.gimme/versions/gostable.linux.arm64; \
+      ln -s /home/.gimme/versions/go${GO_STABLE_VERSION}.linux.amd64 /home/.gimme/versions/gostable.linux.amd64
+ENV PATH ${PATH}:/home/.gimme/versions/gostable.linux.arm64/bin:/home/.gimme/versions/gostable.linux.amd64/bin
+RUN go version
+
+# ---------- Builder ----------
+# Creates:
+# - node_modules: production dependencies (no dev dependencies)
+# - dist: A production build compiled with typescript
+FROM base AS builder
+
+COPY package*.json tsconfig.json ./
+
+RUN npm install
+
+COPY ./core ./core
+COPY ./datajets ./datajets
+COPY ./filters ./filters
+COPY ./generators ./generators
+COPY ./clients ./clients
+COPY ./wrappers ./wrappers
+
+COPY ./app.ts ./app.ts
+
+RUN npm run build
+
+RUN npm prune --production # Remove dev dependencies
+
+# ---------- Release ----------
+FROM base AS release
+
+COPY ./data/data-public ./data/data-public
+COPY ./firelens-datajet.json ./firelens-datajet.json
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
+COPY package.json ./
+
+CMD ["node", "./dist/app.js"]
