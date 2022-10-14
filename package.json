@@ -24,7 +24,7 @@
     "fs-reverse": "^0.0.3",
     "highwayhash": "^3.1.1",
     "mustache": "^4.2.0",
-    "node-fetch": "^3.2.10",
+    "node-fetch": "3.2.9",
     "simple-git": "^3.5.0",
     "winston": "^3.4.0"
   },
