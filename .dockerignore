@@ -4,5 +4,9 @@ node_modules/
 data-private/
 task-definitions/
 test-config/
+output/
+workspace/
 .env
 oncall
+.git/
+.dockerenv*

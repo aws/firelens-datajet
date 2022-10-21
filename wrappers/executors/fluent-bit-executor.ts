@@ -7,7 +7,7 @@
 import { IWrapper } from "../../core/ext-types"
 import { IBuiltStage, IBuiltStageWrapper } from "../../core/pipeline-types";
 import winston from 'winston';
-import { ChildProcess, exec, spawn } from "child_process";
+import { ChildProcess, exec, execSync, spawn } from "child_process";
 import { resolve } from 'path';
 import fs from "fs";
 
@@ -45,6 +45,7 @@ interface ICodeSourceLock {
 }
 
 interface IFluentBitWrapperConfig {
+    outputFolder: string,
     codeSource: ICodeSource,
     fluentConfigFile: string,
     fluentLogTransports: Array<winston.transports.FileTransportOptions>,
@@ -72,6 +73,7 @@ const defaultCodeSource: ICodeSource = {
 }
 
 const defaultConfig: IFluentBitWrapperConfig = {
+    outputFolder: "Unfiled",
     codeSource: defaultCodeSource,
     fluentConfigFile: "data-public/fluent-config/fluent.conf",
     awaitValidators: true,
@@ -166,6 +168,8 @@ const fluentBitWrapper: IWrapper = {
                 const isRepo = await (directoryExists(`${repoPath}/.git`));
                 if (!isRepo) {
                     await initializeRepo(git, FLUENT_REPO);
+                    await git.raw(['config', `user.email`, `"firelens@amazon.com"`]);
+                    await git.raw(['config', `user.name`, `"FireLens Datajet"`]);
                 }
                 await git.fetch();
 
@@ -274,7 +278,11 @@ const fluentBitWrapper: IWrapper = {
                 const fluentLockHash = hash(fluentLock);
 
                 /* Write source records */
-                const outputPath = resolve("./output");
+                const outputParentPath = resolve("./output");
+                if (!await directoryExists(outputParentPath)) {
+                    await directoryMake(outputParentPath);
+                }
+                const outputPath = resolve(`${outputParentPath}/${config.outputFolder}`);
                 if (!await directoryExists(outputPath)) {
                     await directoryMake(outputPath);
                 }
@@ -416,13 +424,18 @@ const fluentBitWrapper: IWrapper = {
                 }
                 logger.info("Build succeeded.");
 
+                /* Archive Fluent Bit executable */
+                await fileCopy(`${fullRepoPath}/build/bin/fluent-bit`, `${testByproductPath}/fluent-bit`);
+
                 /* Run Fluent Bit */
                 logger.info("Running Fluent Bit.");
-                fluentBitChildProcess = spawn(`./fluent-bit`, [ `-c`, `${fluentBakedConfigFilePath}`], {
+                fluentBitChildProcess = spawn(`ulimit -c unlimited; ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
                     cwd: `${fullRepoPath}/build/bin`,
                     env: {
-                        "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
-                    }
+                        ...process.env,
+                        "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath,
+                    },
+                    shell: true
                 });
                 fluentBitChildProcess.stdout.on('data', (data) => {
                     fluentLog(data);
@@ -548,6 +561,16 @@ async function fileMake(path: string, contents: string) {
             }
             resolve(null);
         })
+    })
+}
+
+async function fileCopy(source: string, destination: string) {
+    return new Promise((resolve, reject) => {
+        fs.copyFile(source, destination, function(err) {
+            if (err) {
+                reject(err);
+            } else resolve(null);
+        });
     })
 }
 
