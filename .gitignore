@@ -1,6 +1,8 @@
 data/
 workspace/
 output/
+output-containerjet/
+containerjet/
 dist/
 node_modules/
 data-private/
@@ -9,3 +11,5 @@ test-config/
 .env
 oncall
 output-logs.log
+.dockerenv*
+firelens-datajet*
