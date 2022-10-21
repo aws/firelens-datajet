@@ -62,3 +62,14 @@ run:
 
 runimage:
 	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:${tag}
+
+containerjetd:
+	touch .dockerenv
+	docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
+	docker run -d --privileged --ulimit core=-1 -v `pwd`/output-containerjet/coredumps:/cores -v `pwd`/output-containerjet/out:/app/output --env-file="./.dockerenv" amazon/firelens-datajet:executor-latest
+	echo "Successfully started containerjet: $(docker container ls --latest | awk 'NR==2 {print $1}')"
+
+containerjetit:
+	touch .dockerenv
+	docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
+	docker run -it --privileged --ulimit core=-1 -v `pwd`/output-containerjet/coredumps:/cores -v `pwd`/output-containerjet/out:/app/output --env-file="./.dockerenv" amazon/firelens-datajet:executor-latest
