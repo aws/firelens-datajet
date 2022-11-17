@@ -1,0 +1,88 @@
+{
+    "_comment__": "-------------------------------------------------",
+    "_comment_a": "Open Source Executive Summary App Configuration  ",
+    "_comment_b": "note: date_time in ISO format, null means now    ",
+    "_comment_c": "-------------------------------------------------",
+    "date_start": "2022-10-01T00:00:03-00:00",
+    "date_end": "2022-11-01T00:00:03-00:00",
+    "team_members": [
+        {
+            "name": "Matthew Fala",
+            "github": "matthewfala"
+        },
+        {
+            "name": "Wesley Pettit",
+            "github": "PettitWesley"
+        },
+        {
+            "name": "Drew Zhang",
+            "github": "DrewZhang13"
+        },
+        {
+            "name": "Gavin Zhang",
+            "github": "gavindoudou"
+        },
+        {
+            "name": "Weijian Zhang",
+            "github": "zwj102030"
+        },
+        {
+            "name": "Shelby Hagman",
+            "github": "ShelbyZ"
+        },
+        {
+            "name": "Clay Cheng",
+            "github": "Claych"
+        }
+    ],
+    "repositories": [
+        {
+            "owner": "fluent",
+            "repo": "fluent-bit"
+        },
+        {
+            "owner": "aws",
+            "repo": "aws-for-fluent-bit"
+        },
+        {
+            "owner": "aws",
+            "repo": "firelens-datajet"
+        },
+        {
+            "owner": "aws-otel",
+            "repo": "aws-otel.github.io"
+        },
+        {
+            "owner": "aws-samples",
+            "repo": "amazon-ecs-firelens-examples"
+        },
+        {
+            "owner": "aws",
+            "repo": "amazon-kinesis-streams-for-fluent-bit"
+        },
+        {
+            "owner": "aws",
+            "repo": "amazon-kinesis-firehose-for-fluent-bit"
+        },
+        {
+            "owner": "aws",
+            "repo": "amazon-cloudwatch-logs-for-fluent-bit"
+        },
+        {
+            "owner": "fluent",
+            "repo": "fluent-bit-docs"
+        },
+        {
+            "owner": "open-telemetry",
+            "repo": "opentelemetry-collector-contrib"
+        },
+        {
+            "owner": "fabric8io",
+            "repo": "fluent-plugin-kubernetes_metadata_filter"
+        },
+        {
+            "owner": "aws-observability",
+            "repo": "aws-otel-collector"
+        }
+    ]
+}

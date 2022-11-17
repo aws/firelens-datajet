@@ -1,0 +1,23 @@
+{
+  "name": "contribution-report",
+  "version": "1.0.0",
+  "description": "Generate Open Source Contribution Report 🪶",
+  "main": "app.ts",
+  "scripts": {
+    "test": "ts-node app.ts",
+    "start": "ts-node app.ts"
+  },
+  "author": "Matthew Fala <falamatt@amazon.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
+  },
+  "dependencies": {
+    "@types/luxon": "^3.0.1",
+    "dotenv": "^16.0.2",
+    "luxon": "^3.0.3",
+    "node-fetch": "^2.6.7",
+    "octokit": "^2.0.7"
+  }
+}
