@@ -15,28 +15,39 @@ interface IDatajetConfig {
     host: string,
     port: number,
     maxRetries: number,
+    tcpBufferLimit: number
 }
 
 const defaultConfig: IDatajetConfig = {
     host: "127.0.0.1",
     port: 5170,
     maxRetries: 2,
+    tcpBufferLimit: 100_000_000  /* 100 Megabytes */
 }
 
 const tcpDatajet: IDatajet = {
     name: "tcp",
     defaultConfig: defaultConfig,
-    createConfiguredDatajet: function (config: IDatajetConfig) {
+    createConfiguredDatajet: function (config: IDatajetConfig, {
+        logger
+    }) {
 
         /* lazy client creation */
         let client: net.Socket = null;
+        let isPaused: boolean = false;
+        let isClosed: boolean = false;
         const makeClient = () => {
             if (client) {
                 client.destroy();
             }
             client = new net.Socket();
             client.connect(config.port, config.host, function() {
-                console.log(`Connected tcp ${config.host}:${config.port}`);
+                logger.info(`Connected tcp ${config.host}:${config.port}`);
+            });
+
+            client.on('close', function() {
+                logger.info(`Connection closed  ${config.host}:${config.port}`);
+                isClosed = true;
             });
         }
         return {
@@ -46,18 +57,42 @@ const tcpDatajet: IDatajet = {
                     if (!client) {
                         makeClient();
                     }
+
+                    /* client paused */
+                    if (isPaused) {
+                        /* still paused */
+                        if (client.writableLength > config.tcpBufferLimit * 3/4) {
+                            continue;
+                        }
+
+                        /* sent enough data to resume */
+                        logger.info(`Resuming tcp datajet ${config.host}:${config.port}`);
+                        isPaused = false;
+                    }
+
+                    /* check if client is closed */
+                    if (isClosed) {
+                        return false;
+                    }
+
                     for (let r = 0; r < config.maxRetries + 1; ++r) {
                         try {
                             client.write(JSON.stringify(log));
+
+                            /* check if client needs to be paused */
+                            if (client.writableLength > config.tcpBufferLimit) {
+                                logger.info(`Pausing tcp datajet ${config.host}:${config.port}`);
+                                isPaused = true;
+                            }
                             break;
                         }
                         catch (e) {
                             if (r < config.maxRetries) {
-                                console.log(`Failed to write to tcp connection. Re-establishing connection. Attempt ${r+1}.`);
+                                logger.info(`Failed to write to tcp connection. Re-establishing connection. Attempt ${r+1}.`);
                                 makeClient();
                             }
                             else {
-                                console.log(`TCP connection failure to ${config.host}:${config.port}.`);
+                                logger.info(`TCP connection failure to ${config.host}:${config.port}.`);
                                 return false;
                             }
                         }
