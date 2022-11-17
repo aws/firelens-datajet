@@ -10,6 +10,7 @@ import winston from 'winston';
 import { ChildProcess, exec, execSync, spawn } from "child_process";
 import { resolve } from 'path';
 import fs from "fs";
+import pidusage from 'pidusage';
 
 const WORKSPACE_PATH = "workspace/";
 const WORKSPACE_NAME = "fluent-bit";
@@ -18,6 +19,7 @@ const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 import mustache, { templateCache } from 'mustache';
 import simpleGit from 'simple-git';
 import { hash, timestamp } from "../../core/utils.js";
+import fetch from "node-fetch";
 
 /*
  * Fluent Bit Wrapper
@@ -101,6 +103,204 @@ const fluentBitWrapper: IWrapper = {
         let fluentBitChildProcess: ChildProcess;
         let fluentBitProcessLogger: winston.Logger;
         let fluentLogCounts: {[key: string]: number} = {};
+        const stacktraceStartDelay = 7000;
+        const stacktraceBetweenDelay = 120000;
+        const pidLoggerBetweenDelay = 120000; //120000;
+        const restLoggerWaitBefore = 5000;
+        const restLoggerWaitBetween = 120000;
+        let datajetCrashSequenceInterval: NodeJS.Timer;
+        let stackTraceLoggerInterval: NodeJS.Timer;
+        let pidLoggerInterval: NodeJS.Timer;
+        let apiScraperInterval: NodeJS.Timer;
+        let apiScraperEndpoint = "http://127.0.0.1:2020"
+        let apiScraperQueries = [
+            {
+                "uri": "/api/v1/uptime",
+                "name": "uptime"
+            },
+            {
+                "uri": "/api/v1/metrics",
+                "name": "metrics"
+            },
+            /*{ // NOT JSON FORMAT
+                "uri": "/api/v1/metrics/prometheus",
+                "name": "prometheus"
+            },*/
+            {
+                "uri": "/api/v1/storage",
+                "name": "storage"
+            },
+            /*{ // JSON Evaluation fails
+                "uri": "/api/v1/health",
+                "name": "health"
+            }*/
+        ]
+
+        // const stacktraceCommandWrapper = `(sleep ${stacktraceStartDelay}; while true; do sleep ${stacktraceBetweenDelay}; echo 'thread apply all bt full' | gdb -p \`pgrep fluent-bit\` > "${stacktracePath}/\`date +%s%N\`"; done)`;
+
+        const initStacktraceLogger = async (childProcess: ChildProcess, outputTestPath: string) => {
+            /* Temp - Recurring Stacktrace */
+            const stacktracePath = `${outputTestPath}/instrumentation/stacktrace`;
+            if (!await directoryExists(stacktracePath)) {
+                await directoryMake(stacktracePath);
+            }
+
+            setTimeout(async () => {
+                stackTraceLoggerInterval = setInterval(() => {
+                    exec(`echo 'thread apply all bt full' | gdb -p ${childProcess.pid} > "${stacktracePath}/\`date +%s%N\`"`, _=>{});
+                }, stacktraceBetweenDelay);
+            }, stacktraceStartDelay);
+//                    `(sleep ${stacktraceStartDelay}; while true; do sleep ${stacktraceBetweenDelay}; echo 'thread apply all bt full' | gdb -p \`pgrep fluent-bit\` > "${stacktracePath}/\`date +%s%N\`"; done)`
+        }
+
+        const cleanUpStacktraceLogger = () => {
+            clearInterval(stackTraceLoggerInterval);
+        }
+
+        const initPidLogger = async (childProcess: ChildProcess, outputTestPath: string) => {
+            /* Temp - Recurring Memory and CPU */
+            if (pidLoggerInterval === undefined) {
+                //exec("pgrep fluent-bit", async (err, stdout, stderr) => {
+                //const pidFluentBitProcess = stdout.replace("\n","");
+                const pidStatsPath = `${outputTestPath}/instrumentation/pid-stats`;
+                if (!await directoryExists(pidStatsPath)) {
+                    await directoryMake(pidStatsPath);
+                }
+                /* Attach to process */
+                // const pidLoggerStartDelay = 3000;
+                pidLoggerInterval = setInterval(() => {
+                    pidusage(childProcess.pid, function (err, stats) {
+                        // => {
+                        //   cpu: 10.0,            // percentage (from 0 to 100*vcore)
+                        //   memory: 357306368,    // bytes
+                        //   ppid: 312,            // PPID
+                        //   pid: 727,             // PID
+                        //   ctime: 867000,        // ms user + system time
+                        //   elapsed: 6650000,     // ms since the start of the process
+                        //   timestamp: 864000000  // ms since epoch
+                        // }
+
+                        // Add filedescriptor count
+                        exec(`lsof -p ${childProcess.pid} | wc -l`, (_,stdout,__)=> {
+                            stats = {...stats, fds: stdout.replace("\n", "")}
+                            fs.appendFile(pidStatsPath + "/fluent-bit-pid-stats.log", JSON.stringify(stats, null, 2) + ",\n", _=>{});
+                        });
+
+                    });
+                    const stats = {
+                        timestamp: Date.now(),
+                        cpu: process.cpuUsage(),
+                        memory: process.memoryUsage()
+                    };
+                    fs.appendFile(pidStatsPath + "/firelens-datajet-pid-stats.log", JSON.stringify(stats, null, 2) + ",\n", _=>{});
+                }, pidLoggerBetweenDelay);
+                //});                      
+            }
+        }
+
+        const cleanUpPidLogger = () => {
+            clearInterval(pidLoggerInterval);
+        }
+
+        const initRestLogger = async (childProcess: ChildProcess, outputTestPath: string) => {
+            setTimeout(async () => {
+                const restLoggerPath = `${outputTestPath}/instrumentation/rest`;
+                if (!await directoryExists(restLoggerPath)) {
+                    await directoryMake(restLoggerPath);
+                }
+                apiScraperInterval = setInterval(async () => {
+                    const resps = await Promise.all(apiScraperQueries.map(async a => ({
+                        uri: a.uri,
+                        name: a.name,
+                        data: await fetch(apiScraperEndpoint + a.uri).catch(reason => ({json: () =>({"error": "API request failed"})}))
+                    })));
+                    
+                    resps.forEach(async resp => {
+                        // const textResponse = await resp.data.text();
+                        let jsonResponse = {};
+                        try {
+                            jsonResponse = await resp.data.json();
+                        }
+                        catch {
+                            jsonResponse = {"error": "API is not active"};
+                        }
+                        fs.appendFile(restLoggerPath + "/" + resp.name + ".log", JSON.stringify({"timestamp": Date.now(), ...(jsonResponse as Object)}, null, 2) + ",\n", _=>{});
+                    })
+                }, restLoggerWaitBetween);
+            }, restLoggerWaitBefore);
+        }
+
+
+        const cleanUpRestLogger = async () => {
+            clearInterval(apiScraperInterval);
+        }
+        
+        const crashSequenceDatajetMemoryThreshold = 1 * 1_000_000_000;
+        const initDatajetCrashSequence = async (childProcess: ChildProcess, outputTestPath: string) => {
+            /* Monitor Datajet Memory Utilization */
+            setTimeout(() => {
+                datajetCrashSequenceInterval = setInterval(async () => {
+                    /* Check if datajet is running out of memory quickly (mem usage > 1 gig). */
+                    if (process.memoryUsage().rss > crashSequenceDatajetMemoryThreshold) {
+                        clearInterval(datajetCrashSequenceInterval);
+                        logger.info("Firelens Datajet memory consumption has passed 1GB. Initiallizing crash sequence.");
+
+                        const crashDumpPath = `${outputTestPath}/crashdump`;
+                        if (!await directoryExists(crashDumpPath)) {
+                            await directoryMake(crashDumpPath);
+                        }
+
+                        logger.info("Generating coredump");
+                        try {
+                            execSync(`cd ${crashDumpPath}; ulimit -c unlimited; gcore ${childProcess.pid}`);
+                        } catch {
+                            logger.info("failed to generate core dump");
+                        }
+
+                        const crashDump = `${crashDumpPath}/crashdump.log`;
+                        if (!await fileExists(crashDump)) {
+                            await fileMake(crashDump,
+`Crash Dump:
+Fluent Bit PIDs "pgrep fluent-bit": ${execSync("pgrep fluent-bit")}
+
+Fluent Bit Child Process:
+PID: ${childProcess.pid},
+EXIT CODE: ${childProcess.exitCode},
+Killed?: ${childProcess.killed},
+
+TCP File Descriptors
+${execSync(`sudo lsof -p ${childProcess.pid} | grep TCP`)}
+
+All File Descriptors
+${execSync(`sudo lsof -p ${childProcess.pid}`)}
+`
+                            );
+                        };
+
+                        logger.info("Sending a SIGSEV to fluent bit (artifical segfault) for a core dump");
+                        childProcess.kill("SIGSEGV");
+                    }
+                }, 1000);
+            }, 3000);
+        }
+
+        const cleanUpDatajetCrashSequence = () => {
+            clearInterval(datajetCrashSequenceInterval);
+        }
+
+        const instrumentsInitializers = [
+            initStacktraceLogger,
+            initPidLogger,
+            initRestLogger,
+            initDatajetCrashSequence
+        ]
+
+        const instrumentsCleanup = [
+            cleanUpStacktraceLogger,
+            cleanUpPidLogger,
+            cleanUpRestLogger,
+            cleanUpDatajetCrashSequence
+        ]
 
         let loggerLogStd = (data: string, logger: winston.Logger) => {
             const logs = data.toString().split("\n");
@@ -374,6 +574,10 @@ const fluentBitWrapper: IWrapper = {
                     })),
                 });
 
+                logger.add(new winston.transports.File({
+                    filename: `${outputLogPath}/datajet.log`,
+                }));
+
                 /* CMake & make build */
                 logger.info("👷 Building Fluent Bit. Stand by...");
                 let buildFailed = false;
@@ -428,22 +632,57 @@ const fluentBitWrapper: IWrapper = {
                 await fileCopy(`${fullRepoPath}/build/bin/fluent-bit`, `${testByproductPath}/fluent-bit`);
 
                 /* Run Fluent Bit */
+                /*
+                // RUN WITH COREDUMP
                 logger.info("Running Fluent Bit.");
-                fluentBitChildProcess = spawn(`ulimit -c unlimited; ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
+                fluentBitChildProcess = spawn(`${stacktraceCommandWrapper} & ulimit -c unlimited; ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
                     cwd: `${fullRepoPath}/build/bin`,
                     env: {
                         ...process.env,
                         "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath,
                     },
                     shell: true
+                });*/
+
+                /* Run Fluent Bit */
+                // NO STACK TRACE
+                logger.info("Running Fluent Bit.");
+                fluentBitChildProcess = spawn(`./fluent-bit`, [ `-c`, `${fluentBakedConfigFilePath}`], {
+                    cwd: `${fullRepoPath}/build/bin`,
+                    env: {
+                        "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath
+                    }
                 });
-                fluentBitChildProcess.stdout.on('data', (data) => {
+
+                /* Make sure to kill on exit */
+                process.on("exit", () => {
+                    if (!fluentBitChildProcess.killed) {
+                        fluentBitChildProcess.kill();
+                    }
+                })
+
+                fluentBitChildProcess.stdout.on('data', async (data) => {
                     fluentLog(data);
                 });
                 fluentBitChildProcess.stderr.on('data', (data) => {
                     fluentLog(data);
                 });
-                fluentBitChildProcess.on('error', (error) => logger.error(`Fluent Bit Process error: ${error.message}`))
+                fluentBitChildProcess.on('error', (error) => logger.error(`Fluent Bit Process error: ${error.message}`));
+                instrumentsInitializers.forEach(ins => {
+                    ins(fluentBitChildProcess, outputTestPath);
+                });
+
+                /* handle exit */
+                fluentBitChildProcess.on("exit", () => {
+                    
+                    clearInterval(pidLoggerInterval);
+                    cleanUpRestLogger();
+                    cleanUpStacktraceLogger();
+                    
+                    logger.info("Fluent Bit exited (stopped)");
+                    logger.info("Timestamp: " + Date.now());
+                    logger.info(`Fluent Bit exit code: ${fluentBitChildProcess.exitCode}`);
+                });
 
                 return true;
             },
@@ -461,6 +700,9 @@ const fluentBitWrapper: IWrapper = {
                         logger.info("Fluent Bit killed");
                         graceTimer = null;
                         logger.info("Fluent Bit exited (killed)");
+                        instrumentsCleanup.forEach(insCleanup => {
+                            insCleanup();
+                        })
                         resolve(null);
                     }, config.grace * 1000);
 
@@ -468,8 +710,12 @@ const fluentBitWrapper: IWrapper = {
                     fluentBitChildProcess.on("exit", () => {
                         if (graceTimer) {
                             clearTimeout(graceTimer);
+                            instrumentsCleanup.forEach(insCleanup => {
+                                insCleanup();
+                            })
                         }
                         logger.info("Fluent Bit exited (stopped)");
+                        logger.info(`Fluent Bit exit code: ${fluentBitChildProcess.exitCode}`);
                         resolve(null);
                     });
                 });

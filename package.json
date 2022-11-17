@@ -25,6 +25,7 @@
     "highwayhash": "^3.1.1",
     "mustache": "^4.2.0",
     "node-fetch": "3.2.9",
+    "pidusage": "^3.0.2",
     "simple-git": "^3.5.0",
     "winston": "^3.4.0"
   },
