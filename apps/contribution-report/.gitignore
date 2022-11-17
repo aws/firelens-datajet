@@ -1,0 +1,4 @@
+.env
+executive_summary_*
+out/
+node_modules/
