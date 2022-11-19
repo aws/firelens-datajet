@@ -1,0 +1,122 @@
+{
+    "component": "fluent-bit-executor",
+    "definitions": {
+        "cloudwatch_group_name": "PR_1_1_datajet_minimal_synchronous_scheduler_1_9_4out_1worker",
+        "stream": [
+          { "name": "TCP_A", "port": "6270" },
+          { "name": "TCP_B", "port": "6271" },
+          { "name": "TCP_C", "port": "6272" },
+          { "name": "TCP_D", "port": "6273" }
+        ],
+        "workers": "1"
+    },
+    "config": {
+        "fluentConfigFile": "./examples/templated-config/fluent-bit-tcp-cloudwatch-Xout-Xworker.conf",
+        "codeSource": {
+            "base": {
+                "name": "flb-output-synchronous-minimal",
+                "repository": "https://github.com/matthewfala/fluent-bit.git",
+                "branch": "flb-output-synchronous-minimal"
+            }
+        },
+        "grace": 60,
+        "outputFolder": "PR_1_1_datajet_minimal_synchronous_scheduler_1_9_4out_1worker"
+    },
+    "child": {
+        "component": "synchronizer",
+        "config": {
+            "repeat": 100,
+            "waitBefore": 5,
+            "waitAfter": 10,
+            "waitBetween": 0,
+            "isAsync": true
+        },
+        "children": [
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 200,
+                        "batchSize": 2000,
+                        "key": "log"
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "host": "0.0.0.0",
+                        "port": 6270
+                    }
+                    },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 1000000
+                }
+            },
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 200,
+                        "batchSize": 2000,
+                        "key": "log"
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "host": "0.0.0.0",
+                        "port": 6271,
+                        "key": "log"
+                    }
+                    },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 1000000
+                }
+            },
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 200,
+                        "batchSize": 2000,
+                        "key": "log"
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "host": "0.0.0.0",
+                        "port": 6272
+                    }
+                    },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 1000000
+                }
+            },
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 200,
+                        "batchSize": 2000,
+                        "key": "log"
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "host": "0.0.0.0",
+                        "port": 6273
+                    }
+                    },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 1000000
+                }
+            }
+        ]
+    }
+  }
