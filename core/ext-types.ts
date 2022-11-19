@@ -9,6 +9,7 @@ import { IBuiltStageWrapper, IExecutionResult, IValidationResult } from "./pipel
 
 /* re-exports */
 import { IComponentDependencies } from '../core/component-dependencies';
+import { IPipelineSchema } from "./rockefeller.js";
 export { IComponentDependencies };
 
 /* Command definition */
@@ -68,9 +69,19 @@ export interface IConfiguredGenerator {
     validateInstances?: () => Promise<IValidationResult>, /* Returns true if valid */
 }
 
+/* Instrument definition */
+export interface IInstrument {
+    name: string,
+    defaultConfig: any,
+
+}
+
+/* Immutably configured instrument */
+
 export interface IWrapper {
     name: string,
     defaultConfig: any,
+    modifySubschema: (subschema: IPipelineSchema) => IPipelineSchema, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     createConfiguredWrapper: (config: any, dependencies?: IComponentDependencies) => IConfiguredWrapper,
 }
 

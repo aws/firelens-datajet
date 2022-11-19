@@ -18,6 +18,7 @@ const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 import mustache, { templateCache } from 'mustache';
 import simpleGit from 'simple-git';
 import { hash, timestamp } from "../../core/utils.js";
+import { IPipelineSchema } from "../../core/rockefeller";
 
 /*
  * Fluent Bit Wrapper
@@ -90,6 +91,7 @@ const defaultConfig: IFluentBitWrapperConfig = {
 const fluentBitWrapper: IWrapper = {
     name: "fluent-bit-executor",
     defaultConfig: defaultConfig,
+    modifySubschema: (subschema: IPipelineSchema) => subschema, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     createConfiguredWrapper: function (config: IFluentBitWrapperConfig, {
         logger,
         localPipelineSchema,
@@ -122,8 +124,6 @@ const fluentBitWrapper: IWrapper = {
 
         return {
             wrapperTemplate: this,
-
-            subtreeModifier: (subtree: IBuiltStage) => true, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     
             setup: async (root: IBuiltStage, subtree: IBuiltStage) => {
 
