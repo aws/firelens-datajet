@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { IBuiltStage, IBuiltStageWrapper, IExecutionResult, IPipelineConfig, IPipelineContext, IStage } from "./pipeline-types.js";
+import { IBuiltStage, IExecutionContext, IPipelineConfig, IPipelineContext } from "./pipeline-types.js";
 import generatorTemplates from "../generators/generator-index.js"
 import wrapperTemplates from "../wrappers/wrapper-index.js"
 import datajetTemplates from "../datajets/datajet-index.js"
 import { buildStage, synchronizer, wrapWith } from "./pipeline.js";
 import { error } from "console";
-import { IComponentDependencies, IConfiguredGenerator, IConfiguredWrapper, IWrapper } from "./ext-types.js";
-import winston from "winston";
+import { IComponentDependencies, IConfiguredGenerator, IWrapper } from "./ext-types.js";
 import { initDependencies } from "./component-dependencies.js";
 
 export interface IPipelineSchema {
@@ -32,13 +31,13 @@ enum IComponentName {
     Stage = "stage", /* default */
     Synchronizer = "synchronizer",
     Validator = "validator",
-    Wrap = "wrap",
     Generator = "generator",
+    /* all wrappers are also components */
 }
 
 const genericBuiltStageStub = {
     children: [],
-    executeStage: (a: IPipelineConfig, b: IPipelineContext) => (Promise.resolve({builtStage: this,
+    executeStage: (a: IPipelineConfig, b: IPipelineContext, c: IExecutionContext) => (Promise.resolve({builtStage: this,
         isValidationSuccess: true,
         isExecutionSuccess: true,
         pendingValidators: [],
@@ -56,11 +55,11 @@ export function buildPipeline(buildSchema: IPipelineSchema, componentDependencie
     else if (buildSchema.component === IComponentName.Synchronizer) {
         return buildPipelineSynchronizer(buildSchema, derivedDependencies);
     }
-    else if (buildSchema.component === IComponentName.Wrap) {
-        return buildPipelineWrap(buildSchema, derivedDependencies);
-    }
     else if (buildSchema.component === IComponentName.Generator) {
         return buildPipelineGenerator(buildSchema, derivedDependencies);
+    }
+    else if (wrapperTemplates.some((w)=>(buildSchema.component === w.name))) {
+        return buildPipelineWrapper(buildSchema, derivedDependencies);
     }
     throw error("Unsupported pipeline component in schema: ", buildSchema.component);
 }
@@ -126,7 +125,7 @@ function buildPipelineSynchronizer(buildSchema: IPipelineSchema, componentDepend
     });
 }
 
-function buildPipelineGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies): IBuiltStage {
+function buildPipelineGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {
     return {
         ...genericBuiltStageStub,
         type: "generator",
@@ -134,7 +133,7 @@ function buildPipelineGenerator(buildSchema: IPipelineSchema, componentDependenc
     }
 }
 
-function buildGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies): IConfiguredGenerator {
+function buildGenerator(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IConfiguredGenerator {
     const findGeneratorByName = (name: string) => generatorTemplates
         .find((generatorTemplate => generatorTemplate.name === name));
 
@@ -145,34 +144,29 @@ function buildGenerator(buildSchema: IPipelineSchema, componentDependencies: ICo
             }, componentDependencies);
 }
 
-function buildPipelineWrap(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {
-    const wrapperDependencies = {
-        ...componentDependencies,
-        variables: {
-            defined: {...componentDependencies.variables.defined},
-            managed: {...componentDependencies.variables.managed}, /* deep copy, changes affect children only */
-        },
-        setManagedVariable: (key: string, value: any) => {
-            wrapperDependencies.variables.managed[key] = value;
-        }
+function buildPipelineWrapper(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IBuiltStage {
+    const wrapperConfig = buildSchema.config;
+    const wrapperTemplate = wrapperTemplates.find((wrapperTemplate => wrapperTemplate.name === buildSchema.component));
+
+    /* Modify subschema */
+    const subschema = buildSchema.child;
+    const modifiedSubschema = wrapperTemplate.modifySubschema({...subschema}); /* future: add deep copy utility */
+
+    const wrapperConstructor = (executionContext: IExecutionContext, wrapperTemplate: IWrapper, wrapperConfig: any) => {
+        /* Include the managed variables from this point in the execution. */
+        return wrapperTemplate.createConfiguredWrapper({
+                ...wrapperTemplate.defaultConfig,
+                ...wrapperConfig ?? {},
+            }, {
+                ...componentDependencies,
+                variables: {
+                    ...componentDependencies.variables,
+                    managed: executionContext.managedVariables,
+                },
+                setManagedVariable: executionContext.setManagedVariable
+            });
     }
-    const builtWrapper = buildWrapper(buildSchema.config.wrapper, wrapperDependencies);
-    wrapperDependencies.setManagedVariable = (key: string, value: any) => { throw "unable to set variable outside of wrapper config"; }
-    let updatedComponentDependencies = {
-        ...componentDependencies,
-        variables: wrapperDependencies.variables, /* only allow variable updates */
-    };
-    const builtChild = buildPipeline(buildSchema.child, updatedComponentDependencies);
-    return wrapWith(builtWrapper, builtChild);
-}
 
-export function buildWrapper(wrapperSchema: any, componentDependencies: IComponentDependencies) : IConfiguredWrapper {
-    const findWrapperByName = (name: string) => wrapperTemplates
-        .find((wrapperTemplate => wrapperTemplate.name === name));
-
-    return findWrapperByName(wrapperSchema.name)
-    .createConfiguredWrapper({
-        ...findWrapperByName(wrapperSchema.name).defaultConfig,
-        ...wrapperSchema.config ?? {},
-    }, componentDependencies);
+    const builtChild = buildPipeline(modifiedSubschema, componentDependencies);
+    return wrapWith(wrapperConstructor, wrapperTemplate, wrapperConfig, builtChild);
 }

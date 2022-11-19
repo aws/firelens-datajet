@@ -47,6 +47,7 @@ interface IComparatorWrapperMetrics {
 const comparatorWrapper: IWrapper = {
     name: "comparator-validator",
     defaultConfig: defaultConfig,
+    modifySubschema: (subschema)=>subschema,
     createConfiguredWrapper: function (config: IComparatorWrapperConfig, {
         logger,
         library,
@@ -205,8 +206,6 @@ const comparatorWrapper: IWrapper = {
 
         return {
             wrapperTemplate: this,
-
-            subtreeModifier: (subtree: IBuiltStage) => true, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     
             setup: async (root: IBuiltStage, subtree: IBuiltStage) => {
 

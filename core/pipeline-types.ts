@@ -7,7 +7,6 @@
 import {IConfiguredDatajet, IConfiguredGenerator, IDatajet} from "./ext-types.js";
 
 export interface IBuiltStageWrapper {
-    subtreeModifier: (subtree: IBuiltStage) => boolean, /* modify subtree, potentially inserting other BuiltStageWrappers in subtree */
     setup: (root: IBuiltStage, subtree: IBuiltStage) => Promise<boolean>,
     validation: (root: IBuiltStage, subtree: IBuiltStage) => Promise<IValidationResult>,
     breakdown: (root: IBuiltStage, subtree: IBuiltStage) => Promise<boolean>,
@@ -35,6 +34,18 @@ export interface IPipelineConfig {
 export interface IPipelineContext {
     isValidationSuccess: boolean,
     isExecutionSuccess: boolean, /* Error on execution */
+}
+
+/*
+ * Context of execution
+ * Note: Immutable from the perspective of the child durring setup and execution.
+ *       May change between child configuration and child setup/execution.
+ *       Modified by wrapper before child execution is called.
+ * Note 2: May change between various invocations of the same pipeline builtStage.
+ */
+export interface IExecutionContext {
+    managedVariables: {[key: string]: any}
+    setManagedVariable: (key: string, value: any) => void,
 }
 
 export interface IValidationResult {
@@ -78,7 +89,9 @@ export interface ISynchronizerConfig {
 }
 
 export interface IBuiltStage {
-    executeStage: (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) => Promise<IExecutionResult>,
+    executeStage: (pipelineConfig: IPipelineConfig,
+                   pipelineContext: IPipelineContext,
+                   executionContext: IExecutionContext) => Promise<IExecutionResult>,
     children: Array<IBuiltStage>,
     type: "stage" | "synchronizer" | "wrapper" | "generator",
     data?: any,
@@ -90,5 +103,7 @@ export interface IBuiltStage {
      */
     stageLeaf?: IStage,
     synchronizerConfig?: ISynchronizerConfig,
+    wrapperConfig?: any,
     stageWrapper?: IBuiltStageWrapper,
+    component?: string,
 }

@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { IConfiguredWrapper, IWrapper } from "./ext-types.js";
 import pipelineConfigDefaults from "./pipeline-defaults.js";
 import {
     IBuiltStage,
-    IBuiltStageWrapper,
     IExecutePipelineConfig,
+    IExecutionContext,
     IExecutionResult,
     IPipelineConfig,
     IPipelineContext,
@@ -18,7 +19,7 @@ import {
 } from "./pipeline-types.js"
 
 export const buildStage = (stage: IStage) : IBuiltStage => {
-    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) {
+    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext, executionContext: IExecutionContext) {
 
         const executionResult: IExecutionResult = {
             builtStage: this,
@@ -67,7 +68,7 @@ export const buildStage = (stage: IStage) : IBuiltStage => {
 
 export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, config: ISynchronizerConfig}) : IBuiltStage => {
 
-    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) {
+    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext, executionContext: IExecutionContext) {
 
         const executionResult: IExecutionResult = {
             builtStage: this,
@@ -101,7 +102,7 @@ export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, con
             // execute children asynchronously
             if (config.isAsync) {
                 executionResults = await Promise.all(
-                    stages.map(stage => stage.executeStage(pipelineConfig, pipelineContext))
+                    stages.map(stage => stage.executeStage(pipelineConfig, pipelineContext, executionContext))
                 );
 
                 // summarize execution
@@ -114,7 +115,7 @@ export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, con
             // execute children synchronously
             else {
                 for (let i = 0; i < stages.length; ++i) {
-                    executionResults.push(await stages[i].executeStage(pipelineConfig, pipelineContext));
+                    executionResults.push(await stages[i].executeStage(pipelineConfig, pipelineContext, executionContext));
                     const execSuccess = executionResults[executionResults.length-1].isExecutionSuccess !== false;
                     const valiSuccess = executionResults[executionResults.length-1].isValidationSuccess !== false;
                     pipelineContext.isExecutionSuccess &&= execSuccess;   /* toggle global success flags */
@@ -166,12 +167,12 @@ export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, con
     return builtStage;
 }
 
-export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBuiltStage) => {
+export const wrapWith = (wrapperConstructor: (executionContext: IExecutionContext, wrapperTemplate: IWrapper, wrapperConfig: any) => IConfiguredWrapper,
+                         wrapperTemplate: IWrapper,
+                         wrapperConfig: any,
+                         builtChild: IBuiltStage) => {
 
-    // modify subtree if desired
-    builtStageWrapper?.subtreeModifier(builtStage);
-
-    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext) {
+    const executeStage = async function (pipelineConfig: IPipelineConfig, pipelineContext: IPipelineContext, executionContext: IExecutionContext) {
 
         const executionResult: IExecutionResult = {
             builtStage: this,
@@ -181,20 +182,43 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
             children: [],
         }
 
+        // configure managed variables isolated from parent variables
+        let isManagedVariablesMutable = true;
+        const deepCopiedManagedVariables = JSON.parse(JSON.stringify(executionContext.managedVariables));
+        const setManagedVariable = (key: string, value: any) => {
+            if (isManagedVariablesMutable) {
+                deepCopiedManagedVariables[key] = value;
+            }
+            else {
+                throw "Attempting to set managed variables after setup. Managed variables are immutable at this point."
+            }
+        }
+        const isolatedExecutionContext: IExecutionContext = {
+            ...executionContext,
+            managedVariables: deepCopiedManagedVariables,
+            setManagedVariable: setManagedVariable
+        }
+
+        // construct wrapper
+        const wrapper = wrapperConstructor(isolatedExecutionContext, wrapperTemplate, wrapperConfig);
+
         // setup
         executionResult.isExecutionSuccess &&=
-            await builtStageWrapper.setup(pipelineConfig.rootBuiltStage, builtStage);
+            await wrapper.setup(pipelineConfig.rootBuiltStage, builtChild);
 
+        // freeze managedVariables
+        isManagedVariablesMutable = false;
+        
         // execute
         const childExecutionResult =
-            await builtStage.executeStage(pipelineConfig, pipelineContext);
+            await builtChild.executeStage(pipelineConfig, pipelineContext, isolatedExecutionContext);
         executionResult.children = [childExecutionResult];
         executionResult.pendingValidators = childExecutionResult?.pendingValidators; /* punt all child validators to parent */
         executionResult.isExecutionSuccess &&= childExecutionResult.isExecutionSuccess;
         executionResult.isValidationSuccess &&= childExecutionResult.isValidationSuccess;
 
         // validate + teardown
-        const validate = builtStageWrapper.validation(pipelineConfig.rootBuiltStage, builtStage)
+        const validate = wrapper.validation(pipelineConfig.rootBuiltStage, builtChild)
             .then(async result => {
                 executionResult.validationResult = result;
                 executionResult.isValidationSuccess &&= result.isValidationSuccess;
@@ -202,13 +226,13 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
 
                 // teardown
                 executionResult.isExecutionSuccess &&=
-                    await builtStageWrapper.breakdown(pipelineConfig.rootBuiltStage, builtStage);
+                    await wrapper.breakdown(pipelineConfig.rootBuiltStage, builtChild);
                 pipelineContext.isExecutionSuccess &&= executionResult.isExecutionSuccess;
 
                 return result;
             });
         
-        if (builtStageWrapper?.isValidationAsync ?? false) {
+        if (wrapper?.isValidationAsync ?? false) {
             executionResult.pendingValidators.push(validate);
         }
         else {
@@ -224,9 +248,10 @@ export const wrapWith = (builtStageWrapper: IBuiltStageWrapper, builtStage: IBui
 
     const outBuiltStage: IBuiltStage = {
         executeStage: executeStage,
-        children: [builtStage],
+        children: [builtChild],
+        wrapperConfig: wrapperConfig,
         type: "wrapper",
-        stageWrapper: builtStageWrapper,
+        component: wrapperTemplate.name,
     }
 
     // Bind execute stage
@@ -268,7 +293,11 @@ export const executePipeline = async (pipelineRoot: IBuiltStage, executePipeline
         isValidationSuccess: true,
         isExecutionSuccess: true,
     }
-    const executionResult: IExecutionResult = await pipelineRoot.executeStage(pipelineConfig, pipelineContext);
+    const executionContext: IExecutionContext = {
+        managedVariables: {},
+        setManagedVariable: (key: string, value: any) => {}
+    }
+    const executionResult: IExecutionResult = await pipelineRoot.executeStage(pipelineConfig, pipelineContext, executionContext);
     await Promise.all(executionResult.pendingValidators); /* evaluate pending validators */
 
     // console.log(`Execution results: ${JSON.stringify(executionResult, null, 2)}`);

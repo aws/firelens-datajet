@@ -9,5 +9,5 @@
         "lib": ["ES2021"],
         "skipLibCheck": true
     },
-    "exclude": ["**/workspace/*", ""]
+    "exclude": ["**/workspace/*", "", "apps/*"]
 }
