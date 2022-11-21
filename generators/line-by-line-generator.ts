@@ -18,11 +18,13 @@ const DATA_PATH = "data/"
 interface IGeneratorConfig {
     data: string,
     batchSize: number,
+    loop: boolean,
 }
 
 const defaultConfig: IGeneratorConfig = {
     data: "sample/sample.log",
     batchSize: 10,
+    loop: true,
 };
 
 const lineByLineGenerator: IBatchGenerator = {
@@ -32,29 +34,37 @@ const lineByLineGenerator: IBatchGenerator = {
         return {
             generatorTemplate: this,
             makeInstance: (() => (async function*() {
-                const fileStream = fs.createReadStream(DATA_PATH + config.data);
-                const rl = readline.createInterface({
-                    input: fileStream,
-                    crlfDelay: Infinity
-                });
-                // Note: we use the crlfDelay option to recognize all instances of CR LF
-                // ('\r\n') in input.txt as a single line break.
+                let hasLooped = false;
 
-                let batch: Array<ILogData> = [];
-                for await (const line of rl) {
-                    batch.push({
-                        text: line,
+                while (config.loop || !hasLooped) {
+                    const fileStream = fs.createReadStream(DATA_PATH + config.data);
+                    const rl = readline.createInterface({
+                        input: fileStream,
+                        crlfDelay: Infinity
                     });
-                    if (batch.length === config.batchSize) {
-                        yield batch;
-                        batch = [];
+
+                    // Note: we use the crlfDelay option to recognize all instances of CR LF
+                    // ('\r\n') in input.txt as a single line break.
+
+                    let batch: Array<ILogData> = [];
+                    for await (const line of rl) {
+                        batch.push({
+                            text: line,
+                        });
+                        if (batch.length === config.batchSize) {
+                            yield batch;
+                            batch = [];
+                        }
+
+                        // Each line in input.txt will be successively available here as `line`.
+                        // console.log(`Line from file: ${line}`);
                     }
-                    
-                    // Each line in input.txt will be successively available here as `line`.
-                    // console.log(`Line from file: ${line}`);
-                }
-                if (batch.length !== 0) {
-                    yield batch;
+                    if (batch.length !== 0) {
+                        yield batch;
+                    }
+                    rl.close();
+                    fileStream.close()
+                    hasLooped = true;
                 }
             })()),
         }
