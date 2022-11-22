@@ -9,7 +9,7 @@ import { IBuiltStage, IBuiltStageWrapper } from "../../core/pipeline-types";
 import winston from 'winston';
 import { ChildProcess, exec, execSync, spawn } from "child_process";
 import { resolve } from 'path';
-import fs from "fs";
+import fs, { copyFile } from "fs";
 
 const WORKSPACE_PATH = "workspace/";
 const WORKSPACE_NAME = "fluent-bit";
@@ -53,6 +53,9 @@ interface IFluentBitWrapperConfig {
     fluentLogCountOccurrences: Array<string>,
     awaitValidators: boolean,
     grace: number, /* in seconds */
+    environmentVariables: {[key: string]: any},
+    managedTemporaryPaths: Array<string>,
+    managedTemporaryFiles:  {[key: string]: string}
 }
 
 interface IFluentLock {
@@ -78,6 +81,7 @@ const defaultConfig: IFluentBitWrapperConfig = {
     codeSource: defaultCodeSource,
     fluentConfigFile: "data-public/fluent-config/fluent.conf",
     awaitValidators: true,
+    environmentVariables: {},
     grace: 0,
     fluentLogTransports: [
         {filename: `fluent-bit-${timestamp()}.log`, level: 'info'} /* supports file only right now */
@@ -85,7 +89,9 @@ const defaultConfig: IFluentBitWrapperConfig = {
     fluentLogCountOccurrences: [
         "warn",
         "error",
-    ]
+    ],
+    managedTemporaryPaths: [],
+    managedTemporaryFiles: {},
 }
 
 const fluentBitWrapper: IWrapper = {
@@ -153,6 +159,45 @@ const fluentBitWrapper: IWrapper = {
                     await directoryMake(tmpFolder);
                 }
                 setManagedVariable("workspaceTmp", resolve(tmpFolder));
+
+                /* Make managed temporary paths */
+                const tmpPathsRoot = resolve(tmpFolder, "paths");
+                await directoryMake(tmpPathsRoot);
+                const tmpPaths = await Promise.all(config.managedTemporaryPaths.map(async t => {
+                    const path = resolve(tmpPathsRoot, t);
+                    await directoryMake(path);
+                    return [t, path];
+                }));
+                const tmpPathsObj = Object.fromEntries(tmpPaths);
+                setManagedVariable("temporaryPaths", tmpPathsObj);
+
+                /* Copy managed files */
+                const tmpFilesRoot = resolve(tmpFolder, "files");
+                const tmpFilesObj = Object.fromEntries(Object.entries(config.managedTemporaryFiles).map(([name, location]) => {
+                    const tmpFilePath = resolve(tmpFilesRoot, name);
+                    return [name, tmpFilePath];
+                }));
+                setManagedVariable("temporaryFiles", tmpFilesObj);
+
+                await directoryMake(tmpFilesRoot);
+                await Promise.all(Object.entries(config.managedTemporaryFiles).map(async ([name, location]) => {
+
+                    /* aquire raw file data */
+                    let fileRaw: string;
+                    try {
+                        fileRaw = await fileRead(resolve(location));
+                    } catch (e) {
+                        logger.error(`Unable to read file: ${location}`);
+                        return false;
+                    }
+
+                    /* mustache render the files */
+                    const fileBaked = mustache.render(fileRaw, variables);
+
+                    /* output render */
+                    const tmpFilePath = resolve(tmpFilesRoot, name);
+                    await fileMake(tmpFilePath, fileBaked);
+                }));
 
                 /* Copy config to workspace */
                 let configTemplate;
@@ -433,6 +478,7 @@ const fluentBitWrapper: IWrapper = {
                     cwd: `${fullRepoPath}/build/bin`,
                     env: {
                         ...process.env,
+                        ...config.environmentVariables,
                         "FLB_INSTRUMENTATION_OUT_PATH": outputInstrumentationPath,
                     },
                     shell: true
