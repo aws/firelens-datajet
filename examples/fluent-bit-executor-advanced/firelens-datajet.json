@@ -1,0 +1,106 @@
+{
+    "component": "fluent-bit-executor",
+    "config": {
+        "managedTemporaryFiles": {
+            "parser": "./examples/fluent-bit-executor-advanced/fb_metrics_parser.conf",
+            "ecs_metadata": "./examples/fluent-bit-executor-advanced/ecs-metadata.conf",
+            "fluent_base": "./examples/fluent-bit-executor-advanced/fluent-bit-base.conf"
+        },
+        "environmentVariables": {
+            "ECS_CLUSTER": "datajet_test_cluster",
+            "ECS_TASK_ARN": "datajet_test_task_arn",
+            "ECS_TASK_DEFINITION": "datajet_task_definition",
+            "REGION": "datajet-region",
+            "STAGE_CAPITALIZED": "datajet-stage-capitalized",
+            "LOG_REGION": "datajet-log-region",
+            "STAGE": "datajet-stage",
+            "ECS_TASK_ID": "datajet-task-id",
+            "REGION_LOWERCASE": "datajet-region-lowercase",
+            "STAGE_LOWERCASE": "datajet-stage-lowercase",
+            "ACCOUNT_ID": "datajet-account-id"
+        },
+        "fluentConfigFile": "./examples/fluent-bit-executor-advanced/prod-fluent.conf",
+        "codeSource": {
+            "base": {
+                "name": "1.9.9",
+                "repository": "https://github.com/fluent/fluent-bit.git",
+                "branch": "1.9",
+                "commit": "5c03b2e555a4fe1933707c5e1d119f481e28e616"
+            }
+        },
+        "grace": 60,
+        "outputFolder": "fluent-bit-executor-advanced",
+        "managedTemporaryPaths": [
+            "storage"
+        ]
+    },
+    "child": {
+        "component": "synchronizer",
+        "config": {
+            "isAsync": true
+        },
+        "children": [
+            {
+                "generator": {
+                    "name": "file",
+                    "config": {
+                        "loop": true,
+                        "data": "/../examples/data-public/example-log.txt",
+                        "batchSize": 1
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "port": 5170,
+                        "batchSize": 1
+                    }
+                },
+                "stage": {
+                    "batchRate": 20,
+                    "maxBatches": 10000000
+                }
+            },
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 1000,
+                        "batchSize": 1
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "port": 5171,
+                        "batchSize": 1
+                    }
+                },
+                "stage": {
+                    "batchRate": 1000,
+                    "maxBatches": 10000000
+                }
+            },
+            {
+                "generator": {
+                    "name": "basic",
+                    "config": {
+                        "contentLength": 1000,
+                        "batchSize": 1
+                    }
+                },
+                "datajet": {
+                    "name": "tcp",
+                    "config": {
+                        "port": 25888,
+                        "batchSize": 1
+                    }
+                },
+                "stage": {
+                    "batchRate": 1,
+                    "maxBatches": 10000000
+                }
+            }
+        ]
+    }
+}
