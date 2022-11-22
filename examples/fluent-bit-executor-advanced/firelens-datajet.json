@@ -96,7 +96,8 @@
                     "name": "tcp",
                     "config": {
                         "port": 25888,
-                        "batchSize": 1
+                        "batchSize": 1,
+                        "addNewline": true
                     }
                 },
                 "stage": {
