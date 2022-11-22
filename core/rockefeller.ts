@@ -12,6 +12,7 @@ import { buildStage, synchronizer, wrapWith } from "./pipeline.js";
 import { error } from "console";
 import { IComponentDependencies, IConfiguredGenerator, IWrapper } from "./ext-types.js";
 import { initDependencies } from "./component-dependencies.js";
+import { synchronizerConfigDefaults } from "./pipeline-defaults.js";
 
 export interface IPipelineSchema {
     component?: string,
@@ -121,7 +122,10 @@ function buildPipelineSynchronizer(buildSchema: IPipelineSchema, componentDepend
     });
     return synchronizer({
         stages: builtStages,
-        config: buildSchema.config
+        config: {
+            ...synchronizerConfigDefaults,
+            ...(buildSchema.config ?? {}),
+        }
     });
 }
 

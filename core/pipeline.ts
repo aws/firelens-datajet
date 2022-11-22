@@ -84,7 +84,7 @@ export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, con
         const processPendingValidators = async () => {
 
             // wait for async validators to complete (along with breakdown)
-            if (config?.awaitAsyncValidators ?? false) {
+            if (config.awaitAsyncValidators) {
                 // await all pending validators
                 await Promise.all(pendingValidators);
             }
@@ -95,7 +95,7 @@ export const synchronizer = ({stages, config} : {stages: Array<IBuiltStage>, con
             }
         }
 
-        for (let r = 0; r < config?.repeat ?? 1; ++r) {
+        for (let r = 0; r < config.repeat; ++r) {
             await delay(config.waitBefore * 1000);
             let executionResults: Array<IExecutionResult> = [];
 
