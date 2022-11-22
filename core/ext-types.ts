@@ -90,7 +90,7 @@ export interface IConfiguredWrapper extends IBuiltStageWrapper {
 }
 
 export interface ILogData {
-    text: string,
+    text?: string,
     timestamp?: Date,
     metadata?: any,
     stream?: "stdout" | "stderr",

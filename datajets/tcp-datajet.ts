@@ -15,14 +15,16 @@ interface IDatajetConfig {
     host: string,
     port: number,
     maxRetries: number,
-    tcpBufferLimit: number
+    tcpBufferLimit: number,
+    addNewline: boolean,
 }
 
 const defaultConfig: IDatajetConfig = {
     host: "127.0.0.1",
     port: 5170,
     maxRetries: 2,
-    tcpBufferLimit: 100_000_000  /* 100 Megabytes */
+    tcpBufferLimit: 100_000_000,  /* 100 Megabytes */
+    addNewline: false
 }
 
 const tcpDatajet: IDatajet = {
@@ -77,7 +79,8 @@ const tcpDatajet: IDatajet = {
 
                     for (let r = 0; r < config.maxRetries + 1; ++r) {
                         try {
-                            client.write(JSON.stringify(log));
+                            const buffer = JSON.stringify(log) + ((config.addNewline) ? "\n" : "");
+                            client.write(buffer);
 
                             /* check if client needs to be paused */
                             if (client.writableLength > config.tcpBufferLimit) {

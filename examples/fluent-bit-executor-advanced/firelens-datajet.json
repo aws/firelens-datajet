@@ -46,14 +46,16 @@
                     "config": {
                         "loop": true,
                         "data": "/../examples/data-public/example-log.txt",
-                        "batchSize": 1
+                        "batchSize": 1,
+                        "isJson": true
                     }
                 },
                 "datajet": {
                     "name": "tcp",
                     "config": {
                         "port": 5170,
-                        "batchSize": 1
+                        "batchSize": 1,
+                        "addNewline": true
                     }
                 },
                 "stage": {
@@ -73,7 +75,8 @@
                     "name": "tcp",
                     "config": {
                         "port": 5171,
-                        "batchSize": 1
+                        "batchSize": 1,
+                        "addNewline": true
                     }
                 },
                 "stage": {

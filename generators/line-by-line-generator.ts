@@ -19,12 +19,16 @@ interface IGeneratorConfig {
     data: string,
     batchSize: number,
     loop: boolean,
+    isJSON: boolean,
+    logKey: string,
 }
 
 const defaultConfig: IGeneratorConfig = {
     data: "sample/sample.log",
     batchSize: 10,
     loop: true,
+    isJSON: false,
+    logKey: "log",
 };
 
 const lineByLineGenerator: IBatchGenerator = {
@@ -48,9 +52,18 @@ const lineByLineGenerator: IBatchGenerator = {
 
                     let batch: Array<ILogData> = [];
                     for await (const line of rl) {
-                        batch.push({
-                            text: line,
-                        });
+
+                        if (config.isJSON) {
+                            batch.push(JSON.parse(line))
+                        }
+
+                        // we need to convert text to json
+                        else {
+                            batch.push({
+                                [config.logKey]: line
+                            } as ILogData);
+                        }
+
                         if (batch.length === config.batchSize) {
                             yield batch;
                             batch = [];
