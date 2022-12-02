@@ -9,11 +9,13 @@ import { IDatajet, ILogData } from "../core/ext-types.js";
 interface IDatajetConfig {
     logStream: "stdout" | "stderr" | "auto",
     defaultStream: "stdout" | "stderr",
+    logKey: string,
 }
 
 const defaultConfig: IDatajetConfig = {
     logStream: "auto",
     defaultStream: "stdout",
+    logKey: null,
 }
 
 const stdoutDatajet: IDatajet = {
@@ -30,11 +32,11 @@ const stdoutDatajet: IDatajet = {
                         : (log.stream ?? config.defaultStream);
                     
                     if (logMethod === "stdout") {
-                        console.log(log.text);
+                        console.log((config.logKey) ? log[config.logKey] : JSON.stringify(log));
                     }
 
                     else if (logMethod === "stderr") {
-                        console.error(log.text);
+                        console.error((config.logKey) ? log[config.logKey] : JSON.stringify(log));
                     }
                 });
                 return true;
