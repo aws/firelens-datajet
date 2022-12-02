@@ -9,7 +9,7 @@ import fsR from "fs-reverse"
 import fs from "fs"
 
 import readline from 'readline'
-const DATA_PATH = "data/";
+const DATA_PATH = "";
 
 /* 
  * Reverse CSV Line by Line Generator

@@ -45,7 +45,7 @@
                     "name": "file",
                     "config": {
                         "loop": true,
-                        "data": "/../examples/data-public/example-log.txt",
+                        "data": "examples/fluent-bit-executor-advanced/example-log.txt",
                         "batchSize": 1,
                         "isJson": true
                     }

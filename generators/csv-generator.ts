@@ -8,7 +8,7 @@ import { IBatchGenerator, ILogData } from "../core/ext-types.js"
 import fs from "fs"
 
 import readline from 'readline';
-const DATA_PATH = "data/"
+const DATA_PATH = ""
 
 /* 
  * CSV Line by Line Generator
@@ -26,11 +26,17 @@ const DATA_PATH = "data/"
 interface IGeneratorConfig {
     data: string,
     batchSize: number,
+    skipHeader: boolean,
+    isJson: boolean,
+    loop: boolean,
 }
 
 const defaultConfig: IGeneratorConfig = {
     data: "sample/sample.log",
     batchSize: 10,
+    skipHeader: true,
+    isJson: false,
+    loop: false,
 };
 
 const csvGenerator: IBatchGenerator = {
@@ -40,58 +46,102 @@ const csvGenerator: IBatchGenerator = {
         return {
             generatorTemplate: this,
             makeInstance: (() => (async function*() {
-                const fileStream = fs.createReadStream(DATA_PATH + config.data);
-                const rl = readline.createInterface({
-                    input: fileStream,
-                    crlfDelay: Infinity
-                });
-                // Note: we use the crlfDelay option to recognize all instances of CR LF
-                // ('\r\n') in input.txt as a single line break.
-
+                
+                let ranOnce = false;
                 let batch: Array<ILogData> = [];
-                for await (const line of rl) {
-
-                    let cell2: string;
-                    try {
-                        cell2 = line.split(/,(.+)/)[1];
-
-                        // remove quotes if needed
-                        if (cell2.charAt(0) === "\"") {
-                            cell2 = cell2.slice(1);
-                        }
-                        if (cell2.charAt(cell2.length - 1) === "\"") {
-                            cell2 = cell2.slice(0, -1);
-                        }
-
-                        // substitute "" with "
-                        try {
-                            cell2 = cell2.replace(/\"\"/g, "\"");
-                        }
-                        catch (e) {
-                            console.log(e)
-                        }
-
-                        const parsed = JSON.parse(cell2);
-                        if (typeof parsed !== "object") {
+                
+                while (config.loop || !ranOnce) {
+                    const fileStream = fs.createReadStream(DATA_PATH + config.data);
+                    const rl = readline.createInterface({
+                        input: fileStream,
+                        crlfDelay: Infinity
+                    });
+                    // Note: we use the crlfDelay option to recognize all instances of CR LF
+                    // ('\r\n') in input.txt as a single line break.
+                    
+                    let skippedHeader = false;
+                    let timestamped = true;
+                    let parsed: any;
+                    for await (const line of rl) {
+                        if (!skippedHeader) {
+                            skippedHeader = true;
+                            if (line === "message") {
+                                timestamped = false;
+                            }
                             continue;
                         }
-                    } catch (e) {
-                        continue;
+
+                        let cell1: string;
+                        let cell2: string;
+                        try {
+
+                            if (timestamped) {
+                                [cell1, cell2] = line.split(/,(.+)/);
+                            }
+                            
+                            // overwrite cell 2 with cell if there is no timestamp
+                            else {
+                                cell2 = line;
+                            }
+
+                            // overwrite cell 2 with cell if there is no timestamp
+                            if (cell2 === undefined) {
+                                cell2 = cell1;
+                            }
+
+                            // remove quotes if needed
+                            if (cell2.charAt(0) === "\"") {
+                                cell2 = cell2.slice(1);
+                            }
+                            if (cell2.charAt(cell2.length - 1) === "\"") {
+                                cell2 = cell2.slice(0, -1);
+                            }
+
+                            // substitute "" with "
+                            try {
+                                cell2 = cell2.replace(/\"\"/g, "\"");
+                            }
+                            catch (e) {
+                                console.log(e)
+                            }
+                            
+                            if (config.isJson) {
+                                parsed = JSON.parse(cell2); // will throw error
+                            }
+
+                            if (typeof parsed !== "object") {
+                                continue;
+                            }
+                        } catch (e) {
+                            continue;
+                        }
+
+                        if (config.isJson) {
+                            batch.push(parsed);
+                        }
+                        else {
+                            batch.push({
+                                text: cell2,
+                            });
+                        }
+                        if (batch.length === config.batchSize) {
+                            yield batch;
+                            batch = [];
+                        }
+                        
+                        // Each line in input.txt will be successively available here as `line`.
+                        // console.log(`Line from file: ${line}`);
                     }
 
-                    batch.push({
-                        text: cell2,
-                    });
-                    if (batch.length === config.batchSize) {
-                        yield batch;
-                        batch = [];
+                    rl.close();
+                    fileStream.close();
+                    ranOnce = true;
+
+                    if (!config.loop) {
+                        if (batch.length !== 0) {
+                            yield batch;
+                        }
                     }
-                    
-                    // Each line in input.txt will be successively available here as `line`.
-                    // console.log(`Line from file: ${line}`);
-                }
-                if (batch.length !== 0) {
-                    yield batch;
                 }
             })()),
         }
