@@ -8,6 +8,7 @@ import { resolve } from "path";
 import winston from "winston";
 import { IBuiltStage } from "./pipeline-types";
 import { IPipelineSchema } from "./rockefeller";
+import crypto from "crypto";
 
 export interface IComponentDependencies {
     logger: winston.Logger,
@@ -27,7 +28,7 @@ export function initDependencies(buildSchema: IPipelineSchema): IComponentDepend
     const logger = winston.createLogger({
         level: 'debug',
         /* stylize the logs to a familiar format... */
-        format: winston.format.printf((info) => `[${info.level}] ${info.message}`),
+        format: winston.format.printf((info) => `[${info.level}] [${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString('en-US', { hour12: false })}] ${info.message}`),
         transports: [
             //
             // - Write all logs with importance level of `error` or less to `error.log`
@@ -49,6 +50,7 @@ export function initDependencies(buildSchema: IPipelineSchema): IComponentDepend
             managed: {
                 workspaceRoot: resolve("./workspace"),
                 dataRoot: resolve("./data"),
+                testUUID: crypto.randomUUID(),
             },
             defined: {},
         },
