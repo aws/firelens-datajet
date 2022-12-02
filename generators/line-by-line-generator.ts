@@ -7,7 +7,7 @@
 import { IBatchGenerator, ILogData } from "../core/ext-types.js"
 import fs from 'fs';
 import readline from 'readline';
-const DATA_PATH = "data/"
+const DATA_PATH = ""
 
 /* 
  * File Line by Line Generator
