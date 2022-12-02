@@ -11,13 +11,13 @@ import { IDatajet, ILogData } from "../core/ext-types.js";
 interface IDatajetConfig {
     folder: string,
     filename: string,
-    key: string,
+    logKey: string,
 }
 
 const defaultConfig: IDatajetConfig = {
     folder: "./workspace/tmp",
     filename: "output-logs.log",
-    key: null
+    logKey: null
 }
 
 const fileDatajet: IDatajet = {
@@ -41,8 +41,8 @@ const fileDatajet: IDatajet = {
                     /* const str = `${log[config.key] ?? "null"}\n`; */
                     /* log[config.key] ?? "null" */
 
-                    logStream.write((config.key) ?
-                        `${log[config.key] ?? "null"}\n` : /* Elapsed time: 27.48 seconds - 27.41 seconds single string */
+                    logStream.write((config.logKey) ?
+                        `${log[config.logKey] ?? "null"}\n` : /* Elapsed time: 27.48 seconds - 27.41 seconds single string */
                         ((typeof log === "object") ?
                             `${JSON.stringify(log)}\n` :
                             log ?? "null"));
