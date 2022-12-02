@@ -47,7 +47,9 @@ const genericBuiltStageStub = {
 
 export function buildPipeline(buildSchema: IPipelineSchema, componentDependencies?: IComponentDependencies) : IBuiltStage {
     if (arguments.length === 1) {
-        return buildPipeline(buildSchema, initDependencies(buildSchema));
+        const dependencies = initDependencies(buildSchema);
+        dependencies.logger.info(`testUUID: ${dependencies.variables.managed.testUUID}`);
+        return buildPipeline(buildSchema, dependencies);
     }
     const derivedDependencies = deriveDependencies(buildSchema, componentDependencies);
     if (!buildSchema.component || buildSchema.component === IComponentName.Stage) {
