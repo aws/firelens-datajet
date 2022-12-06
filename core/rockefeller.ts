@@ -158,7 +158,20 @@ function buildPipelineWrapper(buildSchema: IPipelineSchema, componentDependencie
     const subschema = buildSchema.child;
     const modifiedSubschema = wrapperTemplate.modifySubschema({...subschema}); /* future: add deep copy utility */
 
-    const wrapperConstructor = (executionContext: IExecutionContext, wrapperTemplate: IWrapper, wrapperConfig: any) => {
+     /* Wrapper is constructed at the start of each execution, build dependencies stored in function closure */
+     const wrapperConstructor = (executionContext: IExecutionContext, wrapperTemplate: IWrapper, wrapperConfig: any) => {
+
+        const combinedManagedVariables = {
+            ...componentDependencies.variables.managed,
+            ...executionContext.managedVariables,
+        }
+
+        /* Update both managed variables at the execution context level, and wrapper level */
+        const setAllManagedVariables = (key: string, value: any) => {
+            combinedManagedVariables[key] = value;
+            executionContext.setManagedVariable(key, value);
+        }
+
         /* Include the managed variables from this point in the execution. */
         return wrapperTemplate.createConfiguredWrapper({
                 ...wrapperTemplate.defaultConfig,
@@ -167,9 +180,9 @@ function buildPipelineWrapper(buildSchema: IPipelineSchema, componentDependencie
                 ...componentDependencies,
                 variables: {
                     ...componentDependencies.variables,
-                    managed: executionContext.managedVariables,
+                    managed: combinedManagedVariables,
                 },
-                setManagedVariable: executionContext.setManagedVariable
+                setManagedVariable: setAllManagedVariables
             });
     }
 
