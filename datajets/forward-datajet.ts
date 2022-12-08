@@ -16,6 +16,7 @@ interface IDatajetConfig {
     reconnectInterval: number,
     requireAckResponse: boolean,  // Set to true to wait response from Fluentd certainly
     messageType: "parsed" | "packaged" | "auto",
+    timeOffset: number,
     objectify: (text: string) => object,
 }
 
@@ -27,6 +28,7 @@ const defaultConfig: IDatajetConfig = {
     reconnectInterval: 600000,
     requireAckResponse: false,
     messageType: "auto",
+    timeOffset: 0,
     objectify: (text) => ({
         source:"stdout",
         log: text,
@@ -63,7 +65,7 @@ const forwardDatajet: IDatajet = {
                             if (config.messageType === "packaged") {
                                 throw null;
                             }
-                            logData = JSON.parse(log.text);
+                            logData = log;
                         } catch (e) {
                             if (config.messageType === "parsed") {
                                 console.log("Firelens datajet failed to parse: ", log.text);
@@ -72,14 +74,16 @@ const forwardDatajet: IDatajet = {
                             /* create a sample version of what fluentd log driver would output */
                             logData = config.objectify(JSON.stringify(log));
                         }
-    
+
+                        if (config.timeOffset !== undefined) {
+                            const t = new Date();
+                            t.setSeconds(t.getSeconds() + config.timeOffset);
+                            logger.emit(logData, t);
+                            return;
+                        }
+
                         // emit log
-                        if (log.timestamp !== undefined) {
-                            logger.emit(logData, log.timestamp);
-                        }
-                        else {
-                            logger.emit(logData);
-                        }
+                        logger.emit(logData);
                     });
                     return true;
                 }
