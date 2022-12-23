@@ -39,6 +39,12 @@ publish:
 	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
 	ecs-cli push amazon/firelens-datajet:${tag}
 
+.PHONY: private
+private:
+	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
+	docker tag amazon/firelens-datajet:latest 826489191740.dkr.ecr.us-west-2.amazonaws.com/private-datajet:${tag}
+	ecs-cli push 826489191740.dkr.ecr.us-west-2.amazonaws.com/private-datajet:${tag}
+
 .PHONY: cached
 cached:
 	docker build -t amazon/firelens-datajet:latest -f Dockerfile .

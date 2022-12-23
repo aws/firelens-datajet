@@ -5,6 +5,7 @@
  */
 
 import { IBatchGenerator, ILogData } from "../core/ext-types.js"
+import crypto from "crypto"
 
 /* 
  * Increment Generator
@@ -13,15 +14,19 @@ import { IBatchGenerator, ILogData } from "../core/ext-types.js"
  */
 
 interface IGeneratorConfig {
-    key: string,
+    logKey: string,
     contentLength: number,
     batchSize: number,
+    contentType: "uniform" | "random",
+    contentUniformValue: string,
 }
 
 const defaultConfig: IGeneratorConfig = {
-    key: "payload",
+    logKey: "log",
     contentLength: 1000,
-    batchSize: 10,
+    batchSize: 1,
+    contentType: "uniform",
+    contentUniformValue: "x",
 };
 
 const incrementGenerator: IBatchGenerator = {
@@ -29,11 +34,11 @@ const incrementGenerator: IBatchGenerator = {
     defaultConfig: defaultConfig,
     createConfiguredGenerator: function (config: IGeneratorConfig) {
 
-        const log: any = {
-            [config.key]: "x".repeat(config.contentLength)
+        let log: any = {
+            [config.logKey]: config.contentUniformValue.repeat(config.contentLength)
         };
-        
-        const batch: ILogData[] = [];
+
+        let batch: ILogData[] = [];
         for (let i = 0; i < config.batchSize; ++i) {
             batch.push(log);
         }
@@ -42,6 +47,15 @@ const incrementGenerator: IBatchGenerator = {
             generatorTemplate: this,
             makeInstance: (() => (async function*() {
                 while (1) {
+                    if (config.contentType === "random") {
+                        batch = []
+                        for (let i = 0; i < config.batchSize; ++i) {
+                            log = {
+                                [config.logKey]: crypto.randomBytes(Math.floor(config.contentLength/2)).toString("hex"),
+                            }
+                            batch.push(log);
+                        }
+                    }
                     yield batch;
                 }
             })()),
