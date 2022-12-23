@@ -10,7 +10,8 @@
     "start": "tsc --build; node ./dist/app.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "generate-access-token": "node -e \"console.log('ACCESS_TOKEN=' + require('crypto').randomBytes(256).toString('base64') + '\\n');\""
+    "generate-access-token": "node -e \"console.log('ACCESS_TOKEN=' + require('crypto').randomBytes(256).toString('base64') + '\\n');\"",
+    "generate-env": "node -e \"console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('firelens-datajet.json'))).replace('\\\"', '\\\\\"'))\""
   },
   "author": "falamatt@amazon.com",
   "license": "Apache-2.0",

@@ -18,6 +18,7 @@ interface IDatajetConfig {
     messageType: "parsed" | "packaged" | "auto",
     timeOffset: number,
     objectify: (text: string) => object,
+    batchSend: boolean,
 }
 
 const defaultConfig: IDatajetConfig = {
@@ -35,6 +36,7 @@ const defaultConfig: IDatajetConfig = {
         container_id:"c61d13c68659b622a01d8c3825b0bc1186391119d47dbf864d9c3a65c3f2aa79",
         container_name:"/distracted_bell"
     }),
+    batchSend: false,
 }
 
 const forwardDatajet: IDatajet = {
@@ -57,6 +59,11 @@ const forwardDatajet: IDatajet = {
                     });
                 }
                 try {
+                    if (config.batchSend) {
+                        logger.emit(batch);
+                        return true;
+                    }
+
                     batch.forEach(log => {
     
                         // process raw log

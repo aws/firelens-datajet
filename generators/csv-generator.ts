@@ -29,6 +29,7 @@ interface IGeneratorConfig {
     skipHeader: boolean,
     isJson: boolean,
     loop: boolean,
+    logKey: string,
 }
 
 const defaultConfig: IGeneratorConfig = {
@@ -36,6 +37,7 @@ const defaultConfig: IGeneratorConfig = {
     batchSize: 10,
     skipHeader: true,
     isJson: false,
+    logKey: "log",
     loop: false,
 };
 
@@ -107,10 +109,9 @@ const csvGenerator: IBatchGenerator = {
                             
                             if (config.isJson) {
                                 parsed = JSON.parse(cell2); // will throw error
-                            }
-
-                            if (typeof parsed !== "object") {
-                                continue;
+                                if (typeof parsed !== "object") {
+                                    continue;
+                                }
                             }
                         } catch (e) {
                             continue;
@@ -121,7 +122,7 @@ const csvGenerator: IBatchGenerator = {
                         }
                         else {
                             batch.push({
-                                text: cell2,
+                                [config.logKey]: cell2,
                             });
                         }
                         if (batch.length === config.batchSize) {
