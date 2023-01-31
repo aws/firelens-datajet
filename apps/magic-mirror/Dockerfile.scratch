@@ -1,0 +1,13 @@
+FROM scratch
+
+COPY magic_mirror.sh /
+
+ENV SOURCE /source
+ENV DESTINATION /persistent
+ENV DELAY 5
+
+RUN \
+  apk add --no-cache \
+    inotify-tools
+
+CMD ["/magic_mirror.sh", "$SOURCE", "$DESTINATION", "$DELAY"]
