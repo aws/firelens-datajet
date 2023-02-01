@@ -16,5 +16,5 @@ ln: failed to create hard link '/destination/hello' => '/source/hello': Invalid 
 ```
 mkdir ./lib
 mkdir ./lib/source
-sudo docker run -it -v `pwd`/lib:/lib --env SOURCE=/lib/source --env DESTINATION=/lib/destination --env DELAY=5 magicmirror:latest
+sudo docker run -it -v ./lib:/lib --env SOURCE=/lib/source --env DESTINATION=/lib/destination --env DELAY=5 magicmirror:latest
 ```
