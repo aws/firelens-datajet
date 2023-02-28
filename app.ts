@@ -25,7 +25,12 @@ dotenv.config();
 
 let clients: Array<string>; 
 try {
-   clients = JSON.parse(process.env.CLIENTS ?? "[\"file\"]");
+    let formattedClients = process.env.CLIENTS  ?? "[\"file\"]";
+    if (formattedClients.charAt(0) === "'" && formattedClients.charAt(formattedClients.length - 1) === "'") {
+        formattedClients = formattedClients.slice(1, -1);
+    }
+
+    clients = JSON.parse(formattedClients);
 }
 catch (e) {
     console.log("Unable to parse clients JSON environment variable");
