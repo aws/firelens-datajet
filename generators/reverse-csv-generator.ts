@@ -30,11 +30,13 @@ const DATA_PATH = "";
 interface IGeneratorConfig {
     data: string,
     batchSize: number,
+    logKey: string, /* if included, data is wrapped in {"logKeyObjectWrapper": cell2} */
 }
 
 const defaultConfig: IGeneratorConfig = {
     data: "sample/sample.log",
     batchSize: 10,
+    logKey: null,
 };
 
 const reverseCsvGenerator: IBatchGenerator = {
@@ -56,6 +58,7 @@ const reverseCsvGenerator: IBatchGenerator = {
                 for await (const line of rl) {
 
                     let cell2: string;
+                    let parsed: any;
                     try {
                         cell2 = line.split(/,(.+)/)[1];
 
@@ -75,7 +78,7 @@ const reverseCsvGenerator: IBatchGenerator = {
                             console.log(e)
                         }
 
-                        const parsed = JSON.parse(cell2);
+                        parsed = JSON.parse(cell2);
                         if (typeof parsed !== "object") {
                             continue;
                         }
@@ -83,9 +86,11 @@ const reverseCsvGenerator: IBatchGenerator = {
                         continue;
                     }
 
-                    batch.push({
-                        text: cell2,
-                    });
+                    batch.push((config.logKey) ?
+                    {
+                        [config.logKey]: cell2,
+                    } :
+                    parsed);
                     if (batch.length === config.batchSize) {
                         yield batch;
                         batch = [];
