@@ -17,6 +17,7 @@ interface IDatajetConfig {
     maxRetries: number,
     tcpBufferLimit: number,
     addNewline: boolean,
+    logKey: string,
 }
 
 const defaultConfig: IDatajetConfig = {
@@ -24,7 +25,8 @@ const defaultConfig: IDatajetConfig = {
     port: 5170,
     maxRetries: 2,
     tcpBufferLimit: 100_000_000,  /* 100 Megabytes */
-    addNewline: false
+    addNewline: false,
+    logKey: null,
 }
 
 const tcpDatajet: IDatajet = {
@@ -79,14 +81,19 @@ const tcpDatajet: IDatajet = {
 
                     for (let r = 0; r < config.maxRetries + 1; ++r) {
                         try {
-                            const buffer = JSON.stringify(log) + ((config.addNewline) ? "\n" : "");
-                            client.write(buffer);
+                            const content = (config.logKey) ? log[config.logKey] : JSON.stringify(log) + ((config.addNewline) ? "\n" : "");
+                            client.write(content + '\n', (error) => {
+                                if (error) {
+                                    console.log("Failed to write to tcp connection.");
+                                }
+                            });
 
                             /* check if client needs to be paused */
                             if (client.writableLength > config.tcpBufferLimit) {
                                 logger.info(`Pausing tcp datajet ${config.host}:${config.port}`);
                                 isPaused = true;
                             }
+
                             break;
                         }
                         catch (e) {
