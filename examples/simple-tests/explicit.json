@@ -1,0 +1,20 @@
+{
+	"generator": {
+		"name": "explicit",
+		"config": {
+			"batch": [
+				{"source":"stdout","container_name":"Application", "log": "test log"}
+			]
+		}
+	},
+	"datajet": {
+		"name": "tcp",
+		"config": {
+			"port": 4560
+		}
+	},
+	"stage": {
+		"batchRate": 700,
+		"maxTime": 100
+	}
+}
