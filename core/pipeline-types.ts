@@ -66,8 +66,9 @@ export interface IExecutionResult {
 }
 
 export interface IStageConfig {
-    batchRate: number, /* batches per second */
-    maxBatches?: number, /* optional, if specify only fwd up to maxBatch batches to the datajet */
+    batchRate: number,      /* batches per second */
+    maxBatches?: number,    /* optional, if specify only fwd up to maxBatch batches to the datajet */
+    maxSeconds?: number,       /* optional, this actually sets max time in seconds, batches may not be batchRate * maxBatches */
 }
 
 export interface IStage {
