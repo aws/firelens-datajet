@@ -70,7 +70,7 @@ export function buildPipeline(buildSchema: IPipelineSchema, componentDependencie
 function deriveDependencies(buildSchema: IPipelineSchema, componentDependencies: IComponentDependencies) : IComponentDependencies {
     const libraryComponents: {[key: string]: IBuiltStage} = {};
     (buildSchema.library ?? []).forEach(libBuildSchema => {
-        libraryComponents[libBuildSchema.referenceId] = buildPipeline(libBuildSchema);
+        libraryComponents[libBuildSchema.referenceId] = buildPipeline(libBuildSchema, componentDependencies);
     });
     const definitions: {[key: string]: any} = {
         ...componentDependencies.variables.defined,

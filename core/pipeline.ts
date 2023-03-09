@@ -36,7 +36,7 @@ export const buildStage = (stage: IStage) : IBuiltStage => {
         let batchStartTime = Date.now();
         let batchIndex = 0;
         for await (const batch of generator) {
-            if (batchIndex === stage.config.maxBatches) {
+            if (batchIndex === stage.config.batchLimit) {
                 break;
             }
             
@@ -50,7 +50,7 @@ export const buildStage = (stage: IStage) : IBuiltStage => {
             await delay(remainingTime);
             ++batchIndex;
 
-            if ((now - startTime) > stage.config.maxSeconds * 1000) {
+            if ((now - startTime) > stage.config.timeLimit * 1000) {
                 break;
             }
 
