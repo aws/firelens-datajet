@@ -9,7 +9,7 @@
         "wrapper": {
             "name": "fluent-bit-executor",
             "config": {
-                "fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
+                "fluentConfigFile":    "./examples/fluent-config/fluent-bit-firehose.conf",
                 "codeSource": {
                     "base": {
                         "name": "1.8.11-base",

@@ -1,338 +1,338 @@
 {
-	"component": "synchronizer",
+    "component": "synchronizer",
 
-	"comment-l0": "Fluent Patch Load Test Matrix",
+    "comment-l0": "Fluent Patch Load Test Matrix",
 
-	"comment-l1": "The following mixes a base fluent bit version and serveral patch ",
-	"comment-l2": "commits together, compiles and executes fluent bit, and configures ",
+    "comment-l1": "The following mixes a base fluent bit version and serveral patch ",
+    "comment-l2": "commits together, compiles and executes fluent bit, and configures ",
     "comment-l3": "with a .conf file that has {{{}}} definitions substituted. A load ",
-	"comment-l4": "runs. Build, cmake, make, fluent logs, and instrumentation are found ",
-	"comment-l5": "in the output folder. All tests are repeated twice.",
-	
-	"definitions": {
-		"firehoseStreamName": "firehose-compression-4-0",
-		"region": "us-west-2"
-	},
-	"config": {
-		"repeat": 2,
-		"waitBefore": 0.5,
-		"waitAfter": 10,
-		"waitBetween": 5,
-		"isAsync": false
-	},
-	"children": [
-		{
-			"component": "wrap",
-			"definitions": {
-				"workers": 0
-			},
-			"config": {
-				"wrapper": {
-					"name": "fluent-bit-executor",
-					"config": {
-						"fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
-						"codeSource": {
-							"base": {
-								"name": "1.8.11-base",
-								"repository": "https://github.com/fluent/fluent-bit.git",
-								"branch": "1.8",
-								"commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
-							},
-							"cherryPicks": [
-								{
-									"name": "reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-reorder-event-loop-r2",
-									"commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
-								},
-								{
-									"name": "instrumentation-core",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl",
-									"commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
-								},
-								{
-									"name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
-									"commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
-								}
-							]
-						},
-						"grace": 60
-					}
-				}
-			},
-			"child": {
-				"component": "synchronizer",
-				"config": {
-					"repeat": 1,
-					"waitBefore": 0.5,
-					"waitAfter": 10,
-					"waitBetween": 0.01,
-					"isAsync": false
-				},
-				"children": [
-					{
-						"generator": {
-							"name": "basic",
-							"config": {
-								"contentLength": 1000,
-								"batchSize": 40000
-							}
-						},
-						"datajet": {
-							"name": "file",
-							"config": {
-								"folder": "./workspace/tmp",
-								"key": "payload"
-							}
-						},
-						"stage": {
-							"batchRate": 1,
-							"batchLimit": 300
-						}
-					}
-				]
-			}
-		},
-		{
-			"component": "wrap",
-			"definitions": {
-				"workers": 5
-			},
-			"config": {
-				"wrapper": {
-					"name": "fluent-bit-executor",
-					"config": {
-						"fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
-						"codeSource": {
-							"base": {
-								"name": "1.8.11-base",
-								"repository": "https://github.com/fluent/fluent-bit.git",
-								"branch": "1.8",
-								"commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
-							},
-							"cherryPicks": [
-								{
-									"name": "reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-reorder-event-loop-r2",
-									"commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
-								},
-								{
-									"name": "instrumentation-core",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl",
-									"commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
-								},
-								{
-									"name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
-									"commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
-								}
-							]
-						},
-						"grace": 60
-					}
-				}
-			},
-			"child": {
-				"component": "synchronizer",
-				"config": {
-					"repeat": 1,
-					"waitBefore": 0.5,
-					"waitAfter": 10,
-					"waitBetween": 0.01,
-					"isAsync": false
-				},
-				"children": [
-					{
-						"generator": {
-							"name": "basic",
-							"config": {
-								"contentLength": 1000,
-								"batchSize": 40000
-							}
-						},
-						"datajet": {
-							"name": "file",
-							"config": {
-								"folder": "./workspace/tmp",
-								"key": "payload"
-							}
-						},
-						"stage": {
-							"batchRate": 1,
-							"batchLimit": 300
-						}
-					}
-				]
-			}
-		},
-		{
-			"component": "wrap",
-			"definitions": {
-				"workers": 0
-			},
-			"config": {
-				"wrapper": {
-					"name": "fluent-bit-executor",
-					"config": {
-						"fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
-						"codeSource": {
-							"base": {
-								"name": "1.8.11-base",
-								"repository": "https://github.com/fluent/fluent-bit.git",
-								"branch": "1.8",
-								"commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
-							},
-							"cherryPicks": [
-								{
-									"name": "slowdown-2ms-per-malloc",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-slowdown",
-									"commit": "a9ce9f80544c0c97560f8c3a5c0833df6c55acaa"
-								},
-								{
-									"name": "reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-reorder-event-loop-r2",
-									"commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
-								},
-								{
-									"name": "instrumentation-core",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl",
-									"commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
-								},
-								{
-									"name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
-									"commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
-								}
-							]
-						},
-						"grace": 60
-					}
-				}
-			},
-			"child": {
-				"component": "synchronizer",
-				"config": {
-					"repeat": 1,
-					"waitBefore": 0.5,
-					"waitAfter": 10,
-					"waitBetween": 0.01,
-					"isAsync": false
-				},
-				"children": [
-					{
-						"generator": {
-							"name": "basic",
-							"config": {
-								"contentLength": 1000,
-								"batchSize": 40000
-							}
-						},
-						"datajet": {
-							"name": "file",
-							"config": {
-								"folder": "./workspace/tmp",
-								"key": "payload"
-							}
-						},
-						"stage": {
-							"batchRate": 1,
-							"batchLimit": 300
-						}
-					}
-				]
-			}
-		},
-		{
-			"component": "wrap",
-			"definitions": {
-				"workers": 5
-			},
-			"config": {
-				"wrapper": {
-					"name": "fluent-bit-executor",
-					"config": {
-						"fluentConfigFile":	"./examples/fluent-config/fluent-bit-firehose.conf",
-						"codeSource": {
-							"base": {
-								"name": "1.8.11-base",
-								"repository": "https://github.com/fluent/fluent-bit.git",
-								"branch": "1.8",
-								"commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
-							},
-							"cherryPicks": [
-								{
-									"name": "slowdown-2ms-per-malloc",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-slowdown",
-									"commit": "a9ce9f80544c0c97560f8c3a5c0833df6c55acaa"
-								},
-								{
-									"name": "reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-reorder-event-loop-r2",
-									"commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
-								},
-								{
-									"name": "instrumentation-core",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl",
-									"commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
-								},
-								{
-									"name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
-									"repository": "https://github.com/matthewfala/fluent-bit.git",
-									"branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
-									"commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
-								}
-							]
-						},
-						"grace": 60
-					}
-				}
-			},
-			"child": {
-				"component": "synchronizer",
-				"config": {
-					"repeat": 1,
-					"waitBefore": 0.5,
-					"waitAfter": 10,
-					"waitBetween": 0.01,
-					"isAsync": false
-				},
-				"children": [
-					{
-						"generator": {
-							"name": "basic",
-							"config": {
-								"contentLength": 1000,
-								"batchSize": 40000
-							}
-						},
-						"datajet": {
-							"name": "file",
-							"config": {
-								"folder": "./workspace/tmp",
-								"key": "payload"
-							}
-						},
-						"stage": {
-							"batchRate": 1,
-							"batchLimit": 300
-						}
-					}
-				]
-			}
-		}
+    "comment-l4": "runs. Build, cmake, make, fluent logs, and instrumentation are found ",
+    "comment-l5": "in the output folder. All tests are repeated twice.",
+    
+    "definitions": {
+        "firehoseStreamName": "firehose-compression-4-0",
+        "region": "us-west-2"
+    },
+    "config": {
+        "repeat": 2,
+        "waitBefore": 0.5,
+        "waitAfter": 10,
+        "waitBetween": 5,
+        "isAsync": false
+    },
+    "children": [
+        {
+            "component": "wrap",
+            "definitions": {
+                "workers": 0
+            },
+            "config": {
+                "wrapper": {
+                    "name": "fluent-bit-executor",
+                    "config": {
+                        "fluentConfigFile":    "./examples/fluent-config/fluent-bit-firehose.conf",
+                        "codeSource": {
+                            "base": {
+                                "name": "1.8.11-base",
+                                "repository": "https://github.com/fluent/fluent-bit.git",
+                                "branch": "1.8",
+                                "commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
+                            },
+                            "cherryPicks": [
+                                {
+                                    "name": "reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-reorder-event-loop-r2",
+                                    "commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
+                                },
+                                {
+                                    "name": "instrumentation-core",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl",
+                                    "commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
+                                },
+                                {
+                                    "name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
+                                    "commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
+                                }
+                            ]
+                        },
+                        "grace": 60
+                    }
+                }
+            },
+            "child": {
+                "component": "synchronizer",
+                "config": {
+                    "repeat": 1,
+                    "waitBefore": 0.5,
+                    "waitAfter": 10,
+                    "waitBetween": 0.01,
+                    "isAsync": false
+                },
+                "children": [
+                    {
+                        "generator": {
+                            "name": "basic",
+                            "config": {
+                                "contentLength": 1000,
+                                "batchSize": 40000
+                            }
+                        },
+                        "datajet": {
+                            "name": "file",
+                            "config": {
+                                "folder": "./workspace/tmp",
+                                "key": "payload"
+                            }
+                        },
+                        "stage": {
+                            "batchRate": 1,
+                            "batchLimit": 300
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "component": "wrap",
+            "definitions": {
+                "workers": 5
+            },
+            "config": {
+                "wrapper": {
+                    "name": "fluent-bit-executor",
+                    "config": {
+                        "fluentConfigFile":    "./examples/fluent-config/fluent-bit-firehose.conf",
+                        "codeSource": {
+                            "base": {
+                                "name": "1.8.11-base",
+                                "repository": "https://github.com/fluent/fluent-bit.git",
+                                "branch": "1.8",
+                                "commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
+                            },
+                            "cherryPicks": [
+                                {
+                                    "name": "reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-reorder-event-loop-r2",
+                                    "commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
+                                },
+                                {
+                                    "name": "instrumentation-core",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl",
+                                    "commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
+                                },
+                                {
+                                    "name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
+                                    "commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
+                                }
+                            ]
+                        },
+                        "grace": 60
+                    }
+                }
+            },
+            "child": {
+                "component": "synchronizer",
+                "config": {
+                    "repeat": 1,
+                    "waitBefore": 0.5,
+                    "waitAfter": 10,
+                    "waitBetween": 0.01,
+                    "isAsync": false
+                },
+                "children": [
+                    {
+                        "generator": {
+                            "name": "basic",
+                            "config": {
+                                "contentLength": 1000,
+                                "batchSize": 40000
+                            }
+                        },
+                        "datajet": {
+                            "name": "file",
+                            "config": {
+                                "folder": "./workspace/tmp",
+                                "key": "payload"
+                            }
+                        },
+                        "stage": {
+                            "batchRate": 1,
+                            "batchLimit": 300
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "component": "wrap",
+            "definitions": {
+                "workers": 0
+            },
+            "config": {
+                "wrapper": {
+                    "name": "fluent-bit-executor",
+                    "config": {
+                        "fluentConfigFile":    "./examples/fluent-config/fluent-bit-firehose.conf",
+                        "codeSource": {
+                            "base": {
+                                "name": "1.8.11-base",
+                                "repository": "https://github.com/fluent/fluent-bit.git",
+                                "branch": "1.8",
+                                "commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
+                            },
+                            "cherryPicks": [
+                                {
+                                    "name": "slowdown-2ms-per-malloc",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-slowdown",
+                                    "commit": "a9ce9f80544c0c97560f8c3a5c0833df6c55acaa"
+                                },
+                                {
+                                    "name": "reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-reorder-event-loop-r2",
+                                    "commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
+                                },
+                                {
+                                    "name": "instrumentation-core",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl",
+                                    "commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
+                                },
+                                {
+                                    "name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
+                                    "commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
+                                }
+                            ]
+                        },
+                        "grace": 60
+                    }
+                }
+            },
+            "child": {
+                "component": "synchronizer",
+                "config": {
+                    "repeat": 1,
+                    "waitBefore": 0.5,
+                    "waitAfter": 10,
+                    "waitBetween": 0.01,
+                    "isAsync": false
+                },
+                "children": [
+                    {
+                        "generator": {
+                            "name": "basic",
+                            "config": {
+                                "contentLength": 1000,
+                                "batchSize": 40000
+                            }
+                        },
+                        "datajet": {
+                            "name": "file",
+                            "config": {
+                                "folder": "./workspace/tmp",
+                                "key": "payload"
+                            }
+                        },
+                        "stage": {
+                            "batchRate": 1,
+                            "batchLimit": 300
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "component": "wrap",
+            "definitions": {
+                "workers": 5
+            },
+            "config": {
+                "wrapper": {
+                    "name": "fluent-bit-executor",
+                    "config": {
+                        "fluentConfigFile":    "./examples/fluent-config/fluent-bit-firehose.conf",
+                        "codeSource": {
+                            "base": {
+                                "name": "1.8.11-base",
+                                "repository": "https://github.com/fluent/fluent-bit.git",
+                                "branch": "1.8",
+                                "commit": "2c4ccb5f67cf20a2b348d9057b73c7dd18b4a33f"
+                            },
+                            "cherryPicks": [
+                                {
+                                    "name": "slowdown-2ms-per-malloc",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-slowdown",
+                                    "commit": "a9ce9f80544c0c97560f8c3a5c0833df6c55acaa"
+                                },
+                                {
+                                    "name": "reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-reorder-event-loop-r2",
+                                    "commit": "f238eeed59c8e78c7a859a512a3a1fd2aaf2f980"
+                                },
+                                {
+                                    "name": "instrumentation-core",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl",
+                                    "commit": "12c8e60bcd9ad3149c79b0caf4ad7b3b611ddf53"
+                                },
+                                {
+                                    "name": "1.8.11-instrumentation-evl-reorder-event-loop-r2",
+                                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                                    "branch": "1.8-instrument-evl-r1.8-reorder-event-loop-r2",
+                                    "commit": "3515b35e98b268c61fc1cbf5023975e643a2da30"
+                                }
+                            ]
+                        },
+                        "grace": 60
+                    }
+                }
+            },
+            "child": {
+                "component": "synchronizer",
+                "config": {
+                    "repeat": 1,
+                    "waitBefore": 0.5,
+                    "waitAfter": 10,
+                    "waitBetween": 0.01,
+                    "isAsync": false
+                },
+                "children": [
+                    {
+                        "generator": {
+                            "name": "basic",
+                            "config": {
+                                "contentLength": 1000,
+                                "batchSize": 40000
+                            }
+                        },
+                        "datajet": {
+                            "name": "file",
+                            "config": {
+                                "folder": "./workspace/tmp",
+                                "key": "payload"
+                            }
+                        },
+                        "stage": {
+                            "batchRate": 1,
+                            "batchLimit": 300
+                        }
+                    }
+                ]
+            }
+        }
 
-	]
+    ]
 }

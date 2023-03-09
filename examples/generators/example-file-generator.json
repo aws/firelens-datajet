@@ -1,19 +1,19 @@
 {
-	"generator": {
-		"name": "file",
-		"config": {
-			"data": "examples/sample-data/webserver-access.log",
-			"batchSize": 1,
-			"loop": true,
-			"isJSON": false,
-			"logKey": "log"
-		}
-	},
-	"datajet": {
-		"name": "stdout"
-	},
-	"stage": {
-		"batchRate": 1,
-		"timeLimit": 20
-	}
+    "generator": {
+        "name": "file",
+        "config": {
+            "data": "examples/sample-data/webserver-access.log",
+            "batchSize": 1,
+            "loop": true,
+            "isJSON": false,
+            "logKey": "log"
+        }
+    },
+    "datajet": {
+        "name": "stdout"
+    },
+    "stage": {
+        "batchRate": 1,
+        "timeLimit": 20
+    }
 }

@@ -1,16 +1,16 @@
 {
-	"generator": {
-		"name": "increment",
-		"config": {
-			"batchSize": 2,
-			"logKey": "log"
-		}
-	},
-	"datajet": {
-		"name": "stdout"
-	},
-	"stage": {
-		"batchRate": 1,
-		"timeLimit": 20
-	}
+    "generator": {
+        "name": "increment",
+        "config": {
+            "batchSize": 2,
+            "logKey": "log"
+        }
+    },
+    "datajet": {
+        "name": "stdout"
+    },
+    "stage": {
+        "batchRate": 1,
+        "timeLimit": 20
+    }
 }
