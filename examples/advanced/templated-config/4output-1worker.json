@@ -8,11 +8,10 @@
           { "name": "TCP_C", "port": "6272" },
           { "name": "TCP_D", "port": "6273" }
         ],
-        "workers": "1",
-        "keepalive": "On"
+        "workers": "1"
     },
     "config": {
-        "fluentConfigFile": "./examples/templated-config/fluent-bit-tcp-cloudwatch-Xout-Xworker-Xkeepalive.conf",
+        "fluentConfigFile": "./examples/templated-config/fluent-bit-tcp-cloudwatch-Xout-Xworker.conf",
         "codeSource": {
             "base": {
                 "name": "flb-output-synchronous-minimal",
@@ -51,7 +50,7 @@
                     },
                 "stage": {
                     "batchRate": 1,
-                    "maxBatches": 1000000
+                    "batchLimit": 1000000
                 }
             },
             {
@@ -73,7 +72,7 @@
                     },
                 "stage": {
                     "batchRate": 1,
-                    "maxBatches": 1000000
+                    "batchLimit": 1000000
                 }
             },
             {
@@ -94,7 +93,7 @@
                     },
                 "stage": {
                     "batchRate": 1,
-                    "maxBatches": 1000000
+                    "batchLimit": 1000000
                 }
             },
             {
@@ -115,7 +114,7 @@
                     },
                 "stage": {
                     "batchRate": 1,
-                    "maxBatches": 1000000
+                    "batchLimit": 1000000
                 }
             }
         ]

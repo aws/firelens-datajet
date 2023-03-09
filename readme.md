@@ -49,7 +49,7 @@ A .env file can be added to the project to configure environment variables while
 CLIENTS='["environment", "request", "file"]'
 CLIENT_REQUEST_PORT=3334
 CLIENT_REQUEST_ACCESS_TOKEN=123OPENSESAME
-CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "maxBatches": 5}}'
+CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "batchLimit": 5}}'
 CLIENT_FILE_NAME='firelens-datajet.json'
 
 ```
@@ -152,7 +152,7 @@ CLIENT_REQUEST_PORT=3334
 CLIENTS='["environment"]'
 
 # Test definition
-CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "maxBatches": 5}}'
+CLIENT_ENVIRONMENT_CONFIG='{"generator": {"name": "increment", "config": {"batchSize": 100, "waitTime": 0.050}}, "datajet": {"name": "firelens", "config": {"logStream": "stderr"}}, "stage": {"batchRate": 1, "batchLimit": 5}}'
 ```
 
 ### File
@@ -199,7 +199,7 @@ The following request uses the increment data generator and forwards logs to Fir
         },
         "stage": {
             "batchRate": 1000,
-            "maxBatches": 10
+            "batchLimit": 10
         }
     }
 ```
@@ -227,7 +227,7 @@ The following request uses the increment data generator and forwards logs to Fir
         },
         "stage": {
             "batchRate": 1000,
-            "maxBatches": 10
+            "batchLimit": 10
         }
     },
     "executionResult": {
@@ -253,7 +253,7 @@ The following request uses the increment data generator and forwards logs to Fir
                 },
                 "config": {
                     "batchRate": 1000,
-                    "maxBatches": 10
+                    "batchLimit": 10
                 }
             },
             "type": "stage"
@@ -311,7 +311,7 @@ The following request uses the increment data generator and forwards logs to Fir
                 },
                 {
                     "name": "CLIENT_ENVIRONMENT_CONFIG",
-                    "value": "{\"generator\": {\"name\": \"increment\", \"config\": {\"batchSize\": 100, \"waitTime\": 0.050}}, \"datajet\": {\"name\": \"stdout\", \"config\": {\"logStream\": \"stderr\"}}, \"stage\": {\"batchRate\": 1, \"maxBatches\": 5}}"
+                    "value": "{\"generator\": {\"name\": \"increment\", \"config\": {\"batchSize\": 100, \"waitTime\": 0.050}}, \"datajet\": {\"name\": \"stdout\", \"config\": {\"logStream\": \"stderr\"}}, \"stage\": {\"batchRate\": 1, \"batchLimit\": 5}}"
                 },
                 {
                     "name": "CLIENT_FILE_NAME",

@@ -42,7 +42,7 @@ Use the following Datajet config to send sample data to CloudWatch
     },
     "stage": {
         "batchRate": 200,
-        "maxBatches": 200
+        "batchLimit": 200
     }
 }
 ```
@@ -107,7 +107,7 @@ Use the following Datajet config to send sample data to CloudWatch via the tcp i
             },
             "stage": {
                 "batchRate": 200,
-                "maxBatches": 200
+                "batchLimit": 200
             }
         },
 		{
@@ -128,7 +128,7 @@ Use the following Datajet config to send sample data to CloudWatch via the tcp i
             },
             "stage": {
                 "batchRate": 200,
-                "maxBatches": 200
+                "batchLimit": 200
             }
         }
     ]
@@ -221,7 +221,7 @@ Use the following Datajet config to send sample data to Fluent Bit via the tcp i
             },
             "stage": {
                 "batchRate": 2,
-                "maxBatches": 200
+                "batchLimit": 200
             }
         },
         {
@@ -250,7 +250,7 @@ Use the following Datajet config to send sample data to Fluent Bit via the tcp i
                     },
                     "stage": {
                         "batchRate": 10,
-                        "maxBatches": 10
+                        "batchLimit": 10
                     }
                 }
             ]

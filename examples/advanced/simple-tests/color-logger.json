@@ -24,7 +24,7 @@
 		    },
 		    "stage": {
 		        "batchRate": 200,
-				"maxBatches": 200
+				"batchLimit": 200
 		    }
 		}
 	]
