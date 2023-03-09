@@ -1,0 +1,20 @@
+{
+	"generator": {
+		"name": "color-logger",
+		"config": {
+			"name": "logger",
+			"payloadSize": 10,
+			"payloadCount": 3,
+			"signalPayloadSize": 100,
+			"signalPayloadCount": 5,
+			"disableSignal": false
+		}
+	},
+	"datajet": {
+		"name": "stdout"
+	},
+	"stage": {
+		"batchRate": 50,
+		"timeLimit": 10
+	}
+}
