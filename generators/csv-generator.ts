@@ -29,11 +29,11 @@ interface IGeneratorConfig {
     skipHeader: boolean,
     isJson: boolean,
     loop: boolean,
-    logKey: string,
+    logKey: string, /* Ignored if the isJson option is set */
 }
 
 const defaultConfig: IGeneratorConfig = {
-    data: "sample/sample.log",
+    data: "examples/csv-logs-as-json.csv",
     batchSize: 10,
     skipHeader: true,
     isJson: false,
