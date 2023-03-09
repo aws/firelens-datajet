@@ -14,10 +14,12 @@ import { IBatchGenerator, ILogData } from "../core/ext-types.js"
 
 interface IGeneratorConfig {
     batchSize: number,
+    logKey: string,
 }
 
 const defaultConfig: IGeneratorConfig = {
     batchSize: 10,
+    logKey: "log",
 };
 
 const incrementGenerator: IBatchGenerator = {
@@ -32,7 +34,7 @@ const incrementGenerator: IBatchGenerator = {
                     const batch: ILogData[] = [];
                     for (let i = 0; i < config.batchSize; ++i) {
                         batch.push({
-                            text: `log-number-${logIndex}`
+                            [config.logKey]: `log-number-${logIndex}`
                         });
                         ++logIndex;
                     }
