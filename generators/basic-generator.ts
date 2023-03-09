@@ -19,6 +19,7 @@ interface IGeneratorConfig {
     batchSize: number,
     contentType: "uniform" | "random",
     contentUniformValue: string,
+    contentRandomValueSet: "hex" | "alpha-numeric" | "unicode"
 }
 
 const defaultConfig: IGeneratorConfig = {
@@ -27,6 +28,7 @@ const defaultConfig: IGeneratorConfig = {
     batchSize: 1,
     contentType: "uniform",
     contentUniformValue: "x",
+    contentRandomValueSet: "unicode",
 };
 
 const incrementGenerator: IBatchGenerator = {
@@ -50,9 +52,26 @@ const incrementGenerator: IBatchGenerator = {
                     if (config.contentType === "random") {
                         batch = []
                         for (let i = 0; i < config.batchSize; ++i) {
-                            log = {
-                                [config.logKey]: crypto.randomBytes(Math.floor(config.contentLength/2)).toString("hex"),
+                            
+                            if (config.contentRandomValueSet === "hex") {
+                                log = {
+                                    [config.logKey]: crypto.randomBytes(Math.floor(config.contentLength/2)).toString(config.contentRandomValueSet),
+                                };
                             }
+
+                            else if (config.contentRandomValueSet === "alpha-numeric") {
+                                log = {
+                                    [config.logKey]: randomAlphaNumericGenerator(config.contentLength),
+                                };
+                            }
+
+                            // unicode, and default
+                            else {
+                                log = {
+                                    [config.logKey]: randomUnicodeGenerator(config.contentLength),
+                                };
+                            }
+
                             batch.push(log);
                         }
                     }
@@ -63,5 +82,20 @@ const incrementGenerator: IBatchGenerator = {
     }
 
 };
+
+function randomUnicodeGenerator(length: number): string {
+    return Array.from(
+        { length }, () => String.fromCharCode(Math.floor(Math.random() * (65536)))
+      ).join('');
+}
+
+function randomAlphaNumericGenerator(length: number): string {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    return Array.from(
+        { length }, () => characters.charAt(Math.floor(Math.random() * charactersLength))
+    ).join('');
+}
 
 export default incrementGenerator;
