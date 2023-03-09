@@ -1,0 +1,33 @@
+{
+	"component": "container",
+	"library": [
+		{
+			"referenceId": "stageGenerator",
+			"component": "generator",
+			"generator":  {
+				"name": "basic",
+				"config": {
+					"logKey": "log",
+					"contentLength": 20,
+					"contentType": "uniform",
+					"contentUniformValue": "🦄"
+				}
+			}
+		}
+	],
+	"child": {
+		"generator": {
+			"name": "reference",
+			"config": {
+				"ref": "stageGenerator"
+			}
+		},
+		"datajet": {
+			"name": "stdout"
+		},
+		"stage": {
+			"batchRate": 1,
+			"batchLimit": 10
+		}
+	}
+}
