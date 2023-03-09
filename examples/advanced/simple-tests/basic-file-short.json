@@ -13,18 +13,19 @@
 		        "name": "basic",
 		        "config": {
 		            "contentLength": 1000,
-					"batchSize": 300000
+					"batchSize": 50
 		        }
 		    },
 		    "datajet": {
 		        "name": "file",
 		        "config": {
+					"folder": "./workspace/tmp",
 					"key": "payload"
 		        }
 		    },
 		    "stage": {
-		        "batchRate": 1,
-				"maxBatches": 5
+		        "batchRate": 400,
+				"batchLimit": 1000
 		    }
 		}
 	]

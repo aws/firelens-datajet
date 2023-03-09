@@ -1,23 +1,11 @@
 {
 	"component": "wrap",
-	"comment": "validator currently under development. this test will yield incorrect results",
 	"library": [
 		{
 			"referenceId": "stageGenerator",
 			"component": "generator",
 			"generator": {
-				"name": "increment",
-				"config": {
-					"payloadSize": 70000,
-					"disableSignal": true
-				}
-			}
-		},
-		{
-			"referenceId": "validationGenerator",
-			"component": "generator",
-			"generator": {
-				"name": "increment",
+				"name": "color-logger",
 				"config": {
 					"payloadSize": 70000,
 					"disableSignal": true
@@ -27,12 +15,10 @@
 	],
 	"config": {
 		"wrapper": {
-			"name": "comparator-validator",
+			"name": "fluent-bit-executor",
 			"config": {
-				"validationGraceTimeout": 3,
-				"validationIdleTimeout": 0.2,
-				"stageGeneratorRef": "stageGenerator",
-				"validationGeneratorRef": "validationGenerator"
+				"fluentConfigFile":	"./examples/fluent-config/fluent-bit-cloudwatch.conf",
+				"grace": 10
 			}
 		}
 	},
@@ -54,14 +40,14 @@
 					}
 				},
 				"datajet": {
-					"name": "stdout",
+					"name": "firelens",
 					"config": {
 						"logStream": "stdout"
 					}
 				},
 				"stage": {
 					"batchRate": 200,
-					"maxBatches": 200
+					"batchLimit": 200
 				}
 			}
 		]

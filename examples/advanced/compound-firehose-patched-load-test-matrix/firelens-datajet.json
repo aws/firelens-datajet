@@ -90,7 +90,7 @@
 						},
 						"stage": {
 							"batchRate": 1,
-							"maxBatches": 300
+							"batchLimit": 300
 						}
 					}
 				]
@@ -165,7 +165,7 @@
 						},
 						"stage": {
 							"batchRate": 1,
-							"maxBatches": 300
+							"batchLimit": 300
 						}
 					}
 				]
@@ -246,7 +246,7 @@
 						},
 						"stage": {
 							"batchRate": 1,
-							"maxBatches": 300
+							"batchLimit": 300
 						}
 					}
 				]
@@ -327,7 +327,7 @@
 						},
 						"stage": {
 							"batchRate": 1,
-							"maxBatches": 300
+							"batchLimit": 300
 						}
 					}
 				]
