@@ -110,7 +110,7 @@ Use the following Datajet config to send sample data to CloudWatch via the tcp i
                 "batchLimit": 200
             }
         },
-		{
+        {
             "generator": {
                 "name": "basic",
                 "config": {

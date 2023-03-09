@@ -1,18 +1,18 @@
 {
-	"generator": {
-		"name": "basic",
-		"config": {
-			"logKey": "log",
-			"contentLength": 20,
-			"contentType": "uniform",
-			"contentUniformValue": "🦄"
-		}
-	},
-	"datajet": {
-		"name": "stdout"
-	},
-	"stage": {
-		"batchRate": 1,
-		"timeLimit": 20
-	}
+    "generator": {
+        "name": "basic",
+        "config": {
+            "logKey": "log",
+            "contentLength": 20,
+            "contentType": "uniform",
+            "contentUniformValue": "🦄"
+        }
+    },
+    "datajet": {
+        "name": "stdout"
+    },
+    "stage": {
+        "batchRate": 1,
+        "timeLimit": 20
+    }
 }

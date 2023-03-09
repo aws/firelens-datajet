@@ -1,32 +1,32 @@
 {
-	"component": "synchronizer",
-	"config": {
-		"repeat": 1,
-		"waitBefore": 0.0,
-		"waitAfter": 0.0,
-		"waitBetween": 0.0,
-		"isAsync": false
-	},
-	"children": [
-		{
-		    "generator": {
-		        "name": "basic",
-		        "config": {
-		            "contentLength": 1000,
-					"batchSize": 50
-		        }
-		    },
-		    "datajet": {
-		        "name": "file",
-		        "config": {
-					"folder": "./workspace/tmp",
-					"key": "payload"
-		        }
-		    },
-		    "stage": {
-		        "batchRate": 400,
-				"batchLimit": 1000
-		    }
-		}
-	]
+    "component": "synchronizer",
+    "config": {
+        "repeat": 1,
+        "waitBefore": 0.0,
+        "waitAfter": 0.0,
+        "waitBetween": 0.0,
+        "isAsync": false
+    },
+    "children": [
+        {
+            "generator": {
+                "name": "basic",
+                "config": {
+                    "contentLength": 1000,
+                    "batchSize": 50
+                }
+            },
+            "datajet": {
+                "name": "file",
+                "config": {
+                    "folder": "./workspace/tmp",
+                    "key": "payload"
+                }
+            },
+            "stage": {
+                "batchRate": 400,
+                "batchLimit": 1000
+            }
+        }
+    ]
 }

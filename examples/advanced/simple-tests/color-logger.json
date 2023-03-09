@@ -1,31 +1,31 @@
 {
-	"component": "synchronizer",
-	"config": {
-		"repeat": 20,
-		"waitBefore": 0.5,
-		"waitAfter": 0.5,
-		"waitBetween": 0.01,
-		"isAsync": false
-	},
-	"children": [
-		{
-		    "generator": {
-		        "name": "color-logger",
-		        "config": {
-		            "payloadSize": 70,
-					"disableSignal": true
-		        }
-		    },
-		    "datajet": {
-		        "name": "firelens",
-		        "config": {
-		            "logStream": "stdout"
-		        }
-		    },
-		    "stage": {
-		        "batchRate": 200,
-				"batchLimit": 200
-		    }
-		}
-	]
+    "component": "synchronizer",
+    "config": {
+        "repeat": 20,
+        "waitBefore": 0.5,
+        "waitAfter": 0.5,
+        "waitBetween": 0.01,
+        "isAsync": false
+    },
+    "children": [
+        {
+            "generator": {
+                "name": "color-logger",
+                "config": {
+                    "payloadSize": 70,
+                    "disableSignal": true
+                }
+            },
+            "datajet": {
+                "name": "firelens",
+                "config": {
+                    "logStream": "stdout"
+                }
+            },
+            "stage": {
+                "batchRate": 200,
+                "batchLimit": 200
+            }
+        }
+    ]
 }

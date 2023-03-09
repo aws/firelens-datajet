@@ -1,23 +1,23 @@
 {
-	"generator": {
-		"name": "explicit",
-		"config": {
-			"batches": [
+    "generator": {
+        "name": "explicit",
+        "config": {
+            "batches": [
                 [
                     {"source":"stdout","container_name":"Application", "log": "test standard log"}
-			    ],
+                ],
                 [
                     {"source":"stderr","container_name":"Application", "log": "test error log #1"},
                     {"source":"stderr","container_name":"Application", "log": "test error log #2"}
-			    ]
+                ]
             ]
-		}
-	},
-	"datajet": {
-		"name": "stdout"
-	},
-	"stage": {
-		"batchRate": 1,
-		"timeLimit": 20
-	}
+        }
+    },
+    "datajet": {
+        "name": "stdout"
+    },
+    "stage": {
+        "batchRate": 1,
+        "timeLimit": 20
+    }
 }
