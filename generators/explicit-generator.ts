@@ -12,32 +12,32 @@ import { IBatchGenerator, ILogData } from "../core/ext-types.js"
  */
 
 interface IGeneratorConfig {
-    batch: Array<ILogData>,      /* content */
-    batchLimit: number,          /* number of batches */
+    batches: Array<Array<ILogData>>, /* array of array of log objects */
+    loop: boolean,
 }
 
 const defaultConfig: IGeneratorConfig = {
-    batch: [],
-    batchLimit: null,
+    batches: [],
+    loop: true,
 };
 
 const explicitGenerator: IBatchGenerator = {
     name: "explicit",
     defaultConfig: defaultConfig,
     createConfiguredGenerator: function (config: IGeneratorConfig) {
-
         return {
             generatorTemplate: this,
-            makeInstance: (() => (async function*() {
-                let b = 0;
-                while (config.batchLimit === null || b < config.batchLimit) {
-                    ++b;
-                    yield config.batch;
+            makeInstance: (() => (async function* () {
+                let hasLooped = false;
+                while (config.loop === true || !hasLooped) {
+                    for (let b of config.batches) {
+                        yield b;
+                    }
+                    hasLooped = true;
                 }
             })()),
         }
     }
-
 };
 
 export default explicitGenerator;
