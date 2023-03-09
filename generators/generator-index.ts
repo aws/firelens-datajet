@@ -5,8 +5,7 @@
  */
 
 import validatorIndex from "./validators/validator-index.js"
-import lineByLineGenerator from "./line-by-line-generator.js"
-import reverseCSVGenerator from "./reverse-csv-generator.js"
+import fileGenerator from "./file-generator.js"
 import csvGenerator from "./csv-generator.js"
 import incrementGenerator from "./increment-generator.js"
 import colorLoggerGenerator from "./color-logger-generator.js"
@@ -15,8 +14,7 @@ import basicGenerator from "./basic-generator.js"
 import explicitGenerator from "./explicit-generator.js"
 
 export default [
-    lineByLineGenerator,
-    reverseCSVGenerator,
+    fileGenerator,
     csvGenerator,
     incrementGenerator,
     colorLoggerGenerator,
