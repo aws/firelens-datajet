@@ -24,14 +24,14 @@ interface IGeneratorConfig {
 }
 
 const defaultConfig: IGeneratorConfig = {
-    data: "sample/sample.log",
-    batchSize: 10,
+    data: "example/webserver-access.log",
+    batchSize: 1,
     loop: true,
     isJSON: false,
     logKey: "log",
 };
 
-const lineByLineGenerator: IBatchGenerator = {
+const fileGenerator: IBatchGenerator = {
     name: "file",
     defaultConfig: defaultConfig,
     createConfiguredGenerator: function (config: IGeneratorConfig) {
@@ -85,4 +85,4 @@ const lineByLineGenerator: IBatchGenerator = {
 
 };
 
-export default lineByLineGenerator;
+export default fileGenerator;
