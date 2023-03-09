@@ -1,0 +1,21 @@
+{
+	"generator": {
+		"name": "csv",
+		"config": {
+			"name": "logger",
+			"data": "examples/sample-data/csv-logs-as-json.csv",
+			"batchSize": 1,
+			"skipHeader": true,
+			"isJson": true,
+			"logKey": "log",
+			"loop": true
+		}
+	},
+	"datajet": {
+		"name": "stdout"
+	},
+	"stage": {
+		"batchRate": 1,
+		"timeLimit": 20
+	}
+}
