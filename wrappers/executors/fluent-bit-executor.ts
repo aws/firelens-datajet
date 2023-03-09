@@ -17,7 +17,7 @@ const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 
 import mustache, { templateCache } from 'mustache';
 import simpleGit from 'simple-git';
-import { hash, timestamp } from "../../core/utils.js";
+import { hash, timestamp, sleep } from "../../core/utils.js";
 import { IPipelineSchema } from "../../core/rockefeller";
 
 /*
@@ -55,7 +55,8 @@ interface IFluentBitWrapperConfig {
     grace: number, /* in seconds */
     environmentVariables: {[key: string]: any},
     managedTemporaryPaths: Array<string>,
-    managedTemporaryFiles:  {[key: string]: string}
+    managedTemporaryFiles:  {[key: string]: string},
+    warmupTime: number,
 }
 
 interface IFluentLock {
@@ -92,6 +93,7 @@ const defaultConfig: IFluentBitWrapperConfig = {
     ],
     managedTemporaryPaths: [],
     managedTemporaryFiles: {},
+    warmupTime: 5,
 }
 
 const fluentBitWrapper: IWrapper = {
@@ -490,6 +492,8 @@ const fluentBitWrapper: IWrapper = {
                     fluentLog(data);
                 });
                 fluentBitChildProcess.on('error', (error) => logger.error(`Fluent Bit Process error: ${error.message}`))
+
+                await sleep(config.warmupTime);
 
                 return true;
             },
