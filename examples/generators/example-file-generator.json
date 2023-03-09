@@ -1,6 +1,6 @@
 {
 	"generator": {
-		"name": "csv",
+		"name": "file",
 		"config": {
 			"data": "examples/sample-data/webserver-access.log",
 			"batchSize": 1,
