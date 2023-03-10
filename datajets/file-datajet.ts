@@ -17,7 +17,7 @@ interface IDatajetConfig {
 const defaultConfig: IDatajetConfig = {
     folder: "./workspace/tmp",
     filename: "output-logs.log",
-    logKey: null
+    logKey: "log"
 }
 
 const fileDatajet: IDatajet = {
