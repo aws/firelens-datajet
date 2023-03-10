@@ -84,7 +84,7 @@ const defaultConfig: IFluentBitWrapperConfig = {
     fluentConfigFile: "data-public/fluent-config/fluent.conf",
     awaitValidators: true,
     environmentVariables: {},
-    grace: 0,
+    grace: 10,
     fluentLogTransports: [
         {filename: `fluent-bit-${timestamp()}.log`, level: 'info'} /* supports file only right now */
     ],
@@ -444,7 +444,7 @@ const fluentBitWrapper: IWrapper = {
 
                 /* Run Fluent Bit */
                 logger.info("Running Fluent Bit.");
-                fluentBitChildProcess = spawn(`ulimit -c unlimited; ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
+                fluentBitChildProcess = spawn(`ulimit -c unlimited; exec ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
                     cwd: `${executableWorkspacePath}`,
                     env: {
                         ...process.env,
@@ -467,30 +467,33 @@ const fluentBitWrapper: IWrapper = {
             },
         
             validation: async (root: IBuiltStage, subtree: IBuiltStage) => {
-                await new Promise((resolve, reject) => {
 
-                    /* request shutdown: SigTerm */
-                    logger.info("Fluent Bit signalled");
-                    fluentBitChildProcess.kill('SIGTERM');
-                    
-                    /* terminate after grace: SigInt */
-                    let graceTimer = setTimeout(() => {
-                        fluentBitChildProcess.kill('SIGKILL');
-                        logger.info("Fluent Bit killed");
-                        graceTimer = null;
-                        logger.info("Fluent Bit exited (killed)");
-                        resolve(null);
-                    }, config.grace * 1000);
+                const signalHandler = async () => {
+                    return new Promise((promiseResolve) => {
 
-                    /* handle exit */
-                    fluentBitChildProcess.on("exit", () => {
-                        if (graceTimer) {
-                            clearTimeout(graceTimer);
-                        }
-                        logger.info("Fluent Bit exited (stopped)");
-                        resolve(null);
+                        /* request shutdown: SigTerm */
+                        logger.info("Fluent Bit signalled");
+                        fluentBitChildProcess.kill('SIGTERM');
+
+                        /* terminate after grace: SigInt */
+                        let graceTimer = setTimeout(() => {
+                            fluentBitChildProcess.kill('SIGKILL');
+                            logger.info("Fluent Bit killed");
+                            graceTimer = null;
+                        }, config.grace * 1000);
+
+                        /* handle exit */
+                        fluentBitChildProcess.on("close", () => {
+                            if (graceTimer) {
+                                clearTimeout(graceTimer);
+                            }
+                            logger.info("Fluent Bit exited (stopped)");
+                            promiseResolve(null);
+                        });
                     });
-                });
+                };
+
+                await signalHandler();
                 return {
                     isValidationSuccess: true,
                     // Other data can be added here for validation metric collection.
@@ -590,7 +593,7 @@ const fluentBitWrapper: IWrapper = {
 
         async function recoverFromCache(cacheKey: string, executableDestination: string) {
             if (await fileExists(`${cacheFolder}/${cacheKey}`)) {
-                logger.info("🐚 Recovered build from cache");
+                logger.info("Recovered build from cache 🐚");
                 await fileCopy(`${cacheFolder}/${cacheKey}`, `${executableDestination}/fluent-bit`);        
                 return true;        
             }
