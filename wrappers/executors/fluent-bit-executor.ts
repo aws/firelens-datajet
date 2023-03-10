@@ -10,6 +10,7 @@ import winston from 'winston';
 import { ChildProcess, exec, execSync, spawn } from "child_process";
 import { resolve } from 'path';
 import fs, { copyFile } from "fs";
+import { readdir, stat } from 'fs/promises';
 
 const WORKSPACE_PATH = "workspace/";
 const WORKSPACE_NAME = "fluent-bit";
@@ -111,6 +112,8 @@ const fluentBitWrapper: IWrapper = {
         let fluentBitChildProcess: ChildProcess;
         let fluentBitProcessLogger: winston.Logger;
         let fluentLogCounts: {[key: string]: number} = {};
+        let cacheFolder = `${workspaceRoot}/build-cache`;
+        let cacheExpiration = 864000; /* 1 day in seconds */
 
         let loggerLogStd = (data: string, logger: winston.Logger) => {
             const logs = data.toString().split("\n");
@@ -337,6 +340,11 @@ const fluentBitWrapper: IWrapper = {
                 if (!await directoryExists(outputFluentLockedPath)) {
                     await directoryMake(outputFluentLockedPath);
                 }
+                const outputFluentLockedPathCurrentSoftLink = `${outputPath}/current`
+                if (await directoryExists(outputFluentLockedPathCurrentSoftLink)) {
+                    await directoryDelete(outputFluentLockedPathCurrentSoftLink);
+                }
+                await softLinkMake(outputFluentLockedPath, outputFluentLockedPathCurrentSoftLink);
                 setManagedVariable("outputPath", outputFluentLockedPath);
                 const fluentLockFilePath = `${outputFluentLockedPath}/fluent-lock.json`;
                 if (!await fileExists(fluentLockFilePath)) {
@@ -361,6 +369,11 @@ const fluentBitWrapper: IWrapper = {
                 if (!await directoryExists(outputTestPath)) {
                     await directoryMake(outputTestPath);
                 }
+                const outputTestPathLatestSoftLink = `${outputFluentLockedPath}/latest`
+                if (await directoryExists(outputTestPathLatestSoftLink)) {
+                    await directoryDelete(outputTestPathLatestSoftLink);
+                }
+                await softLinkMake(outputTestPath, outputTestPathLatestSoftLink);
                 setManagedVariable("testPath", outputTestPath);
                 const testByproductPath = `${outputTestPath}/byproduct`;
                 if (!await directoryExists(testByproductPath)) {
@@ -408,76 +421,31 @@ const fluentBitWrapper: IWrapper = {
                         filename: `${outputLogPath}/${transport?.filename ?? "fluent-bit.log"}`,
                     })),
                 });
-                const cmakeProcessLogger = winston.createLogger({
-                    level: 'info',
-                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
-                        filename: `${outputLogPath}/cmake.log`,
-                    })),
-                });
-                const makeProcessLogger = winston.createLogger({
-                    level: 'info',
-                    transports: config.fluentLogTransports.map(transport => new winston.transports.File({
-                        filename: `${outputLogPath}/make.log`,
-                    })),
-                });
 
-                /* CMake & make build */
-                logger.info("👷 Building Fluent Bit. Stand by...");
-                let buildFailed = false;
-                try {
-                    /* CMake */
-                    await execChildAsyncWrapper((() => {
-                        const childProcess = exec("cmake ..", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
-                        if (error) {
-                            logger.error("CMake failed");
-                            loggerLogStd(error.message, cmakeProcessLogger);
-                            // cmakeProcessLogger.info(`error: ${error.message}\n`);
-                            buildFailed = true;
-                            return;
-                        }
-                        if (stderr) {
-                            loggerLogStd(stderr, cmakeProcessLogger);
-                            // cmakeProcessLogger.info(`stderr: ${stderr}\n`);
-                            return;
-                        }
-                        loggerLogStd(stdout, cmakeProcessLogger);
-                        });
-                        return childProcess;
-                    })());
-                    /* Make */
-                    await execChildAsyncWrapper((() => {
-                        const childProcess = exec("make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
-                            if (error) {
-                                logger.error("Make failed");
-                                loggerLogStd(error.message, makeProcessLogger);
-                                buildFailed = true;
-                                childProcess.kill();
-                                return;
-                            }
-                            if (stderr) {
-                                loggerLogStd(stderr, makeProcessLogger);
-                                return;
-                            }
-                            loggerLogStd(stdout, makeProcessLogger);
-                        });
-                        return childProcess
-                    })());
-                } catch (e) {
-                    buildFailed = true;
+                /* Manage cache */
+                if (!await directoryExists(cacheFolder)) {
+                    await directoryMake(cacheFolder);
                 }
-                if (buildFailed) {
-                    logger.error("Build failed.");
-                    return false;
-                }
-                logger.info("Build succeeded.");
+                await manageCacheExpirations(logger, cacheFolder, cacheExpiration);
 
-                /* Archive Fluent Bit executable */
-                await fileCopy(`${fullRepoPath}/build/bin/fluent-bit`, `${testByproductPath}/fluent-bit`);
+                /* Recover from cache */
+                const executableWorkspacePath = `${workspaceRoot}/tmp/executable`;
+                if (!await directoryExists(executableWorkspacePath)) {
+                    await directoryMake(executableWorkspacePath);
+                }
+                const isRecovered = await recoverFromCache(sourceLockHash, executableWorkspacePath);
+                if (!isRecovered) {
+                    /* Build Fluent Bit */
+                    await buildFluentBit(sourceLockHash, outputLogPath, fullRepoPath, executableWorkspacePath);
+                }
+
+                /* Copy to byproduct path */
+                await fileCopy(`${executableWorkspacePath}/fluent-bit`, `${testByproductPath}/fluent-bit`);
 
                 /* Run Fluent Bit */
                 logger.info("Running Fluent Bit.");
                 fluentBitChildProcess = spawn(`ulimit -c unlimited; ./fluent-bit -c '${fluentBakedConfigFilePath}'`, {
-                    cwd: `${fullRepoPath}/build/bin`,
+                    cwd: `${executableWorkspacePath}`,
                     env: {
                         ...process.env,
                         ...config.environmentVariables,
@@ -540,6 +508,94 @@ const fluentBitWrapper: IWrapper = {
         
             isValidationAsync: false,
         };
+
+        /* A method to build Fluent Bit. Executable sent to destination folder */
+        async function buildFluentBit(
+            cacheKey: string,
+            outputLogPath: string,
+            fullRepoPath: string,
+            executableDestination: string
+        ) {
+
+            const cmakeProcessLogger = winston.createLogger({
+                level: 'info',
+                transports: config.fluentLogTransports.map(transport => new winston.transports.File({
+                    filename: `${outputLogPath}/cmake.log`,
+                })),
+            });
+            const makeProcessLogger = winston.createLogger({
+                level: 'info',
+                transports: config.fluentLogTransports.map(transport => new winston.transports.File({
+                    filename: `${outputLogPath}/make.log`,
+                })),
+            });
+
+            /* CMake & make build */
+            logger.info("👷 Building Fluent Bit. Stand by...");
+            let buildFailed = false;
+            try {
+                /* CMake */
+                await execChildAsyncWrapper((() => {
+                    const childProcess = exec("cmake ..", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                    if (error) {
+                        logger.error("CMake failed");
+                        loggerLogStd(error.message, cmakeProcessLogger);
+                        // cmakeProcessLogger.info(`error: ${error.message}\n`);
+                        buildFailed = true;
+                        return;
+                    }
+                    if (stderr) {
+                        loggerLogStd(stderr, cmakeProcessLogger);
+                        // cmakeProcessLogger.info(`stderr: ${stderr}\n`);
+                        return;
+                    }
+                    loggerLogStd(stdout, cmakeProcessLogger);
+                    });
+                    return childProcess;
+                })());
+
+                /* Make */
+                await execChildAsyncWrapper((() => {
+                    const childProcess = exec("make", {cwd: `${fullRepoPath}/build`}, (error, stdout, stderr) => {
+                        if (error) {
+                            logger.error("Make failed");
+                            loggerLogStd(error.message, makeProcessLogger);
+                            buildFailed = true;
+                            childProcess.kill();
+                            return;
+                        }
+                        if (stderr) {
+                            loggerLogStd(stderr, makeProcessLogger);
+                            return;
+                        }
+                        loggerLogStd(stdout, makeProcessLogger);
+                    });
+                    return childProcess
+                })());
+            } catch (e) {
+                buildFailed = true;
+            }
+            if (buildFailed) {
+                logger.error("Build failed.");
+                return false;
+            }
+            logger.info("Build succeeded.");
+
+            /* Archive Fluent Bit executable */
+            await fileCopy(`${fullRepoPath}/build/bin/fluent-bit`, `${executableDestination}/fluent-bit`);
+
+            /* Cache Fluent Bit executable */
+            await fileCopy(`${fullRepoPath}/build/bin/fluent-bit`, `${cacheFolder}/${cacheKey}`);
+        }
+
+        async function recoverFromCache(cacheKey: string, executableDestination: string) {
+            if (await fileExists(`${cacheFolder}/${cacheKey}`)) {
+                logger.info("🐚 Recovered build from cache");
+                await fileCopy(`${cacheFolder}/${cacheKey}`, `${executableDestination}/fluent-bit`);        
+                return true;        
+            }
+            return false;
+        }
     }
 }
 
@@ -588,6 +644,41 @@ async function directoryDelete(path: string) {
     })
 }
 
+async function softLinkMake(linkTo: string, path: string) {
+    return new Promise((resolve, reject) => {
+        fs.symlink(linkTo, path, function(err) {
+            if (err) {
+                reject(err);
+            } else resolve(null);
+        });
+    })
+}
+
+/* Delete all cached executables older than cacheExpiration */
+async function manageCacheExpirations(logger: winston.Logger, cacheFolder: string, cacheExpiration: number) {
+    const timeNow = Date.now();
+    const cacheFiles = (await Promise.all((await readdir(cacheFolder, { withFileTypes: true }))
+        .filter(dirent => dirent.isFile)
+        .map(async dirent => {
+            const path = `${cacheFolder}/${dirent.name}`;
+            const fstat = await stat(path);
+            return {
+                ctimeMs: fstat.ctimeMs,
+                path: path,
+            }
+        })));
+
+    await (Promise.all(
+        cacheFiles
+            .filter(f => (timeNow - f.ctimeMs) > cacheExpiration * 1000)
+            .map(async f => {
+                logger.info(`🐚 Cache expired after ${cacheExpiration} seconds.`
+                + ` Total lifespan of ${Math.floor(timeNow - f.ctimeMs)} seconds`);
+                await fileDelete(f.path);
+            })
+    ));
+}
+
 async function fileRead(path: string): Promise<string> {
     return new Promise((resolve, reject) => {
         fs.readFile(path, (err, buff) => {
@@ -612,6 +703,10 @@ async function fileMake(path: string, contents: string) {
             resolve(null);
         })
     })
+}
+
+async function fileDelete(path: string) {
+    return directoryDelete(path);
 }
 
 async function fileCopy(source: string, destination: string) {
