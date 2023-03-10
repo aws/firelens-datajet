@@ -1,0 +1,43 @@
+{
+    "component": "fluent-bit-executor",
+    "config": {
+        "fluentConfigFile": "./examples/datajets/example-file-datajet/example-file-datajet-fluent-bit.conf",
+        "codeSource": {
+            "base": {
+                "name": "1.9.9",
+                "repository": "https://github.com/fluent/fluent-bit.git",
+                "branch": "1.9",
+                "commit": "5c03b2e555a4fe1933707c5e1d119f481e28e616"
+            }
+        },
+        "outputFolder": "example-file-datajet",
+        "managedTemporaryPaths": [
+            "storage",
+            "log"
+        ]
+    },
+    "child": {
+        "generator": {
+            "name": "basic",
+            "config": {
+                "logKey": "log",
+                "contentLength": 20,
+                "contentType": "uniform",
+                "batchSize": 1,
+                "contentUniformValue": "📜"
+            }
+        },
+        "datajet": {
+            "name": "file",
+            "config": {
+                "folder": "./workspace/tmp/paths/log",
+                "filename": "example-file-datajet.log",
+                "logKey": null
+            }
+        },
+        "stage": {
+            "batchRate": 1,
+            "timeLimit": 20
+        }
+    }
+}
