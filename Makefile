@@ -16,49 +16,31 @@ ifndef tag
 override tag = latest
 endif
 
-ifndef public_namespace
-override public_namespace = public.ecr.aws/fala-fluentbit/
-endif
+-include .env
 
-ifndef public_region
-override public_region = us-east-1
-endif
+all: release
 
-all: fresh
-
-.PHONY: public
-public:
-	docker build -t ${public_namespace}firelens-datajet:latest -f Dockerfile .
-	docker tag ${public_namespace}firelens-datajet:latest ${public_namespace}firelens-datajet:${tag}
-	aws ecr-public get-login-password --region ${public_region} | docker login --username AWS --password-stdin ${public_namespace}
-	docker push ${public_namespace}firelens-datajet:${tag}
-
-.PHONY: publish
-publish:
-	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
+.PHONY: release
+release:
+	mkdir -p ./data/data-public
+	docker build --no-cache -t amazon/firelens-datajet:latest -f Dockerfile .
 	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
-	ecs-cli push amazon/firelens-datajet:${tag}
-
-.PHONY: private
-private:
-	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
-	docker tag amazon/firelens-datajet:latest 826489191740.dkr.ecr.us-west-2.amazonaws.com/private-datajet:${tag}
-	ecs-cli push 826489191740.dkr.ecr.us-west-2.amazonaws.com/private-datajet:${tag}
 
 .PHONY: cached
 cached:
 	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
 	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
 
-.PHONY: fresh
-fresh:
-	docker build --no-cache -t amazon/firelens-datajet:latest -f Dockerfile .
-	docker tag amazon/firelens-datajet:latest amazon/firelens-datajet:${tag}
+.PHONY: deploy-public
+deploy-public: release
+	docker tag amazon/firelens-datajet:latest ${public_namespace}firelens-datajet:${tag}
+	aws ecr-public get-login-password --region ${public_region} | docker login --username AWS --password-stdin ${public_namespace}
+	docker push ${public_namespace}firelens-datajet:${tag}
 
-.PHONY: container
-container:
-	docker-compose --file ./dockercompose.yml build
-	docker-compose --file ./dockercompose.yml up
+.PHONY: deploy-private
+deploy-private: release
+	docker tag amazon/firelens-datajet:latest ${private_namespace}firelens-datajet:${tag}
+	ecs-cli push ${private_namespace}firelens-datajet:${tag}
 
 .PHONY: run
 run:
@@ -66,17 +48,24 @@ run:
 	docker build -t amazon/firelens-datajet:latest -f Dockerfile .
 	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:latest
 
+.PHONY: runimage
 runimage:
 	docker run --log-driver fluentd  --log-opt fluentd-address=docker.for.mac.localhost:24224 amazon/firelens-datajet:${tag}
 
-containerjetd:
-	touch .dockerenv
+.PHONY: containerjet
+containerjet:
 	docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
+	docker tag amazon/firelens-datajet:executor-latest amazon/firelens-datajet:${tag}
+
+.PHONY: containerjetd
+containerjetd: containerjet
+	touch .dockerenv
 	mkdir -p `pwd`/output-containerjet/coredumps
 	docker run -d --privileged --ulimit core=-1 -v `pwd`/output-containerjet/coredumps:/cores -v `pwd`/output-containerjet/out:/app/output --env-file="./.dockerenv" amazon/firelens-datajet:executor-latest
 	echo "Successfully started containerjet: $(docker container ls --latest | awk 'NR==2 {print $1}')"
 
-containerjetit:
+.PHONY: containerjetit
+containerjetit: containerjet
 	touch .dockerenv
 	docker build -t amazon/firelens-datajet:executor-latest -f Dockerfile.executor .
 	mkdir -p `pwd`/output-containerjet/coredumps

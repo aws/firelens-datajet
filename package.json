@@ -4,6 +4,10 @@
   "type": "module",
   "description": "Route test data to Fluent Bit flexibly",
   "main": "firelens-datajet.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aws/firelens-datajet.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
