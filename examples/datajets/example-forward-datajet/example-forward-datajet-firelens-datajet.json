@@ -1,0 +1,51 @@
+{
+    "component": "fluent-bit-executor",
+    "config": {
+        "fluentConfigFile": "./examples/datajets/example-forward-datajet/example-forward-datajet-fluent-bit.conf",
+        "codeSource": {
+            "base": {
+                "name": "1.9.9",
+                "repository": "https://github.com/fluent/fluent-bit.git",
+                "branch": "1.9",
+                "commit": "5c03b2e555a4fe1933707c5e1d119f481e28e616"
+            }
+        },
+        "outputFolder": "example-forward-datajet"
+    },
+    "child": {
+        "generator": {
+            "name": "basic",
+            "config": {
+                "logKey": "log",
+                "contentLength": 20,
+                "contentType": "uniform",
+                "batchSize": 1,
+                "contentUniformValue": "🦄"
+            }
+        },
+        "datajet": {
+            "name": "forward",
+            "config": {
+                "tagPrefix": "MyForwardedLogs",
+                "host": "0.0.0.0",
+                "port": 24224,
+                "timeout": 3.0,
+                "reconnectInterval": 600000,
+                "requireAckResponse": false,
+                "batchSend": false,
+                "inputStructure": "log-key-string",
+                "timeOffset": 0,
+                "logKey": "log",
+                "addKeys": {
+                    "container_name": "distracted_bell",
+                    "source": "stdout",
+                    "container_id":"c61d13c68659b622a01d8c3825b0bc1186391119d47dbf864d9c3a65c3f2aa79"
+                }
+            }
+        },
+        "stage": {
+            "batchRate": 1,
+            "timeLimit": 20
+        }
+    }
+}
