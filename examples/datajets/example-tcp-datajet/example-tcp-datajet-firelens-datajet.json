@@ -1,0 +1,39 @@
+{
+    "component": "fluent-bit-executor",
+    "config": {
+        "fluentConfigFile": "./examples/datajets/example-tcp-datajet/example-tcp-datajet-fluent-bit.conf",
+        "codeSource": {
+            "base": {
+                "name": "1.9.9",
+                "repository": "https://github.com/fluent/fluent-bit.git",
+                "branch": "1.9",
+                "commit": "5c03b2e555a4fe1933707c5e1d119f481e28e616"
+            }
+        },
+        "outputFolder": "example-tcp-datajet"
+    },
+    "child": {
+        "generator": {
+            "name": "basic",
+            "config": {
+                "logKey": "log",
+                "contentLength": 20,
+                "contentType": "uniform",
+                "batchSize": 1,
+                "contentUniformValue": "🦄"
+            }
+        },
+        "datajet": {
+            "name": "tcp",
+            "config": {
+                "port": 5170,
+                "batchSize": 1,
+                "addNewline": true
+            }
+        },
+        "stage": {
+            "batchRate": 1,
+            "timeLimit": 20
+        }
+    }
+}
