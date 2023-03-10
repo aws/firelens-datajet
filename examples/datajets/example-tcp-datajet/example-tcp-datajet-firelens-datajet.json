@@ -28,7 +28,10 @@
             "config": {
                 "port": 5170,
                 "batchSize": 1,
-                "addNewline": true
+                "addNewline": true,
+                "maxRetries": 2,
+                "tcpBufferLimit": 100000000,
+                "logKey": "log"
             }
         },
         "stage": {

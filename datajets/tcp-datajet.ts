@@ -26,7 +26,7 @@ const defaultConfig: IDatajetConfig = {
     maxRetries: 2,
     tcpBufferLimit: 100_000_000,  /* 100 Megabytes */
     addNewline: false,
-    logKey: null,
+    logKey: "log",
 }
 
 const tcpDatajet: IDatajet = {
