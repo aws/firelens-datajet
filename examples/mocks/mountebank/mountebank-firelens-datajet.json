@@ -1,0 +1,50 @@
+{
+    "component": "fluent-bit-executor",
+    "config": {
+        "fluentConfigFile": "./examples/mocks/mountebank/mountebank-fluent-bit.conf",
+        "codeSource": {
+            "base": {
+                "name": "1.9.9",
+                "repository": "https://github.com/fluent/fluent-bit.git",
+                "branch": "1.9",
+                "commit": "5c03b2e555a4fe1933707c5e1d119f481e28e616"
+            },
+            "cherryPicks": [
+                {
+                    "name": "tls-options",
+                    "repository": "https://github.com/matthewfala/fluent-bit.git",
+                    "branch": "immutable-cwl-net-options",
+                    "commit": "5d9692f00b5295728bf0340d332896a7cc450a7e"
+                }
+            ]
+        },
+        "outputFolder": "mountebank"
+    },
+    "child": {
+        "generator": {
+            "name": "basic",
+            "config": {
+                "logKey": "log",
+                "contentLength": 20,
+                "contentType": "uniform",
+                "batchSize": 1,
+                "contentUniformValue": "🦄"
+            }
+        },
+        "datajet": {
+            "name": "tcp",
+            "config": {
+                "port": 5170,
+                "batchSize": 1,
+                "addNewline": true,
+                "maxRetries": 2,
+                "tcpBufferLimit": 100000000,
+                "logKey": "log"
+            }
+        },
+        "stage": {
+            "batchRate": 1,
+            "timeLimit": 20
+        }
+    }
+}
