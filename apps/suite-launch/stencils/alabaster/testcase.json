@@ -1,0 +1,16 @@
+{
+    "template": {
+        "workers": "1",
+        "keepalive": "on",
+        "recycle": "2000",
+        "idle_timeout": "30",
+        "connect_timeout": "10",
+        "n_cw": 20,
+        "n_s3": 20,
+        "input_plugin": "tcp",
+        "output_plugin": "both",
+        "command-aws-for-fluent-bit": "/init/fluent_bit_init_process; chmod +x /init/invoke_fluent_bit.sh; cd /cores; export RANDOM_ID_VALUE=$(($RANDOM%99999))$(($RANDOM%99999))$(($RANDOM%99999)); echo 'RANDOM_ID is set to $RANDOM_ID_VALUE'; env RANDOM_ID=$RANDOM_ID_VALUE /init/invoke_fluent_bit.sh; echo $RANDOM_ID; ls /cores; mv `ls /cores` ${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.core; zip /cores/core.zip *; aws s3 cp /cores/core.zip s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.zip; aws s3 cp /cores/core.zip s3://${S3_ALTERNATE_LOCATION_PREFIX}-${RANDOM_ID_VALUE}.zip;"
+    },
+    "cluster": "{{{"{{{cluster}}}"}}}",
+    "n_tasks": {{{"{{{n_tasks}}}"}}}
+}
