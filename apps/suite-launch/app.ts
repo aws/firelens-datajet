@@ -81,15 +81,15 @@ async function run() {
   // Get the directory of the script
   const scriptDir = path.dirname(require.main!.filename);
 
-  // Load the environment variables from material-sets.env
-  const materialSetsEnvPath = path.join(scriptDir, 'material-sets', 'material-sets.env');
+  // Load the environment variables from test-suite.env
+  const materialSetsEnvPath = path.join(scriptDir, 'test-suite', 'test-suite.env');
   dotenv.config({ path: materialSetsEnvPath });
 
   // Get the path to the material groups directory
-  const materialGroupsDir = path.join(__dirname, "material-sets");
+  const materialGroupsDir = path.join(__dirname, "test-suite");
 
   // Read the material groups JSON file
-  const materialGroupsJsonPath = path.join(materialGroupsDir, "material-sets.json");
+  const materialGroupsJsonPath = path.join(materialGroupsDir, "test-suite.json");
   const materialGroupsJsonString = await fs.promises.readFile(materialGroupsJsonPath, "utf-8");
   const materialGroupsJson: MaterialGroupJson = JSON.parse(materialGroupsJsonString);
 
@@ -202,7 +202,7 @@ async function run() {
   const materialSetsDir = materialGroupsDir;
   await sync(materialSetsDir, 's3://' + s3Bucket);
 
-  // Get the list of folders in the material-sets folder
+  // Get the list of folders in the test-suite folder
   let folders = testCaseDirs;
   console.log(folders);
 
