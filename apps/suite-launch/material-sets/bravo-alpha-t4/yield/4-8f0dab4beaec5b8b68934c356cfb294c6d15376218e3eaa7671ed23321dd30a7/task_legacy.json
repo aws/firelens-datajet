@@ -1,0 +1,95 @@
+{
+    "family": "bravo-alpha-t4",
+    "executionRoleArn": "arn:aws:iam::826489191740:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::826489191740:role/FirelensECS",
+    "networkMode": "bridge",
+    "containerDefinitions": [
+      {
+        "name": "fluent-bit",
+        "image": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.2-tls-options",
+        "cpu": 512,
+        "firelensConfiguration": {
+          "type": "fluentbit"
+        },
+        "environmentFiles": [
+          {
+              "value": "arn:aws:s3:::aws-for-fluent-bit-stability-test-collections/bravo-alpha-t4/yield/4-8f0dab4beaec5b8b68934c356cfb294c6d15376218e3eaa7671ed23321dd30a7/fluent-bit.env",
+              "type": "s3"
+          }
+        ],
+        "environment": [
+          {
+            "name": "AWS_REGION",
+            "value": "us-west-2"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_1",
+            "value": "arn:aws:s3:::aws-for-fluent-bit-stability-test-collections/bravo-alpha-t4/yield/4-8f0dab4beaec5b8b68934c356cfb294c6d15376218e3eaa7671ed23321dd30a7/fluent-bit.conf"
+          }
+        ],
+        "memory": 512,
+        "essential": true,
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "app-bravo-alpha-t4",
+            "awslogs-region": "us-west-2",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "fluent-bit"
+          }
+        }
+      },
+      {
+        "name": "datajet",
+        "image": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "essential": true,
+        "environment": [
+          {
+            "name": "CLIENTS",
+            "value": "[\"s3\"]"
+          },
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "firelens-datajet"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "bravo-alpha-t4/yield/4-8f0dab4beaec5b8b68934c356cfb294c6d15376218e3eaa7671ed23321dd30a7/firelens-datajet.json"
+          }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+            "awslogs-group": "app-bravo-alpha-t4",
+            "awslogs-region": "us-west-2",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "datajet"
+            }
+        },
+        "dependsOn": [{
+            "containerName": "fluent-bit",
+            "condition": "START"
+        }],
+        "links": ["fluent-bit:flb"]
+      },
+      {
+        "essential": false,
+        "image": "httpd",
+        "name": "dummy",
+        "logConfiguration": {
+          "logDriver":"awsfirelens",
+          "options": {
+            "Name": "cloudwatch_logs",
+            "region": "us-west-2",
+            "log_group_name": "/aws/ecs/containerinsights/dummy-app",
+            "auto_create_group": "true",
+            "log_stream_name": "stdout-stderr-",
+            "retry_limit": "2"
+          }
+        },
+        "memoryReservation": 100
+      }
+    ],
+    "memory": "512",
+    "cpu": "512"
+}

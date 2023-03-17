@@ -1,0 +1,80 @@
+{
+  "component": "synchronizer",
+  "config": {
+    "repeat": 100,
+    "waitBefore": 5,
+    "waitAfter": 10,
+    "waitBetween": 0,
+    "isAsync": true
+  },
+  "children": [
+    {
+      "comment": "basic log to tcp (cwl)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "flb",
+          "port": 6270,
+          "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 1000000
+      }
+    },
+
+    {
+      "comment": "basic log to tcp (s3)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "flb",
+          "port": 6271,
+          "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 1000000
+      }
+    },
+
+
+    {
+      "comment": "this stage does nothing, but is used for propper json formatting",
+      "generator": {
+        "name": "basic",
+        "config": {
+        }
+      },
+      "datajet": {
+        "name": "stdout",
+        "config": {
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 0
+      }
+    }
+
+
+  ]
+}
