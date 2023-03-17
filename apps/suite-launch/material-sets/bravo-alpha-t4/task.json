@@ -1,7 +1,7 @@
 {
     "family": "{{{test_name_unique}}}",
-    "executionRoleArn": "arn:aws:iam::826489191740:role/ecsTaskExecutionRole",
-    "taskRoleArn": "arn:aws:iam::826489191740:role/FirelensECS",
+    "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
     "networkMode": "bridge",
     "containerDefinitions": [
       {
@@ -71,7 +71,8 @@
             "containerPath": "/tmp/data_logs",
             "readOnly": false
           }
-        ]
+        ],
+        "links": ["mock:mock"]
       },
       {
         "name": "datajet",
@@ -128,6 +129,31 @@
             "log_stream_name": "stdout-stderr-",
             "retry_limit": "2"
           }
+        },
+        "memoryReservation": 100
+      },
+      {
+        "essential": false,
+        "image": "{{{image-mock}}}",
+        "name": "mock",
+        "environment": [
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{{s3_materials_bucket}}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{{s3_materials_key_base}}}/mountebank.json"
+          }
+        ],
+        "logConfiguration": {
+          "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{{test_name_unique}}}",
+                "awslogs-region": "us-west-2",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "mock"
+            }
         },
         "memoryReservation": 100
       }

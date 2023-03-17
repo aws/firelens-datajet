@@ -1,16 +1,17 @@
 {
-    "s3_bucket_name": "firelens-datajet",
+    "s3_bucket_name": "aws-for-fluent-bit-stability-test-collections",
     "global_template": {
         "test_collection_name": "bravo",
         "test_suite_name": "bravo-alpha",
         "test_suite_timestamp": "1",
-        "image-aws-for-fluent-bit": "826489191740.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:init-debug-s3-2.31.3-prerelease",
-        "image-datajet": "826489191740.dkr.ecr.us-west-2.amazonaws.com/private-datajet:s3-client",
+        "image-aws-for-fluent-bit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.2-tls-options",
+        "image-datajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "image-mock": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.1",
         "cluster": "Bravo",
-        "n_tasks": 1,
+        "n_tasks": 39,
 
-        "segfault": true,
-        "s3-log-destination": "jetti-s3",
-        "s3-corefile-destination": "jetti-corefiles"
+        "segfault": false,
+        "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
+        "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles"
     }
 }
