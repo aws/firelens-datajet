@@ -8,9 +8,19 @@ import { PromiseResult } from 'aws-sdk/lib/request';
 import * as handlebars from "handlebars";
 const S3SyncClient = require('s3-sync-client');
 
-interface MaterialGroupJson {
+interface GlobalTemplateJson {
+  global_test_case_template: { [key: string]: any },
+  global_test_suite_template: { [key: string]: any },
+}
+
+interface TestExecutionJson {
+  test_execution_name: string,
+  execution_template: { [key: string]: any };
+}
+
+interface TestSuiteJson {
   s3_bucket_name: string;
-  global_template: { [key: string]: any };
+  suite_template: { [key: string]: any };
 }
 
 interface TestcaseJson {
@@ -81,35 +91,49 @@ async function run() {
   // Get the directory of the script
   const scriptDir = path.dirname(require.main!.filename);
 
+  // Read the test suites JSON file
+  const testExecutionJsonPath = path.join(__dirname, "test-execution.json");
+  const testExecutionJsonString = await fs.promises.readFile(testExecutionJsonPath, "utf-8");
+  const testExecutionJson: TestExecutionJson = JSON.parse(testExecutionJsonString);
+
   // Load the environment variables from test-suite.env
-  const materialSetsEnvPath = path.join(scriptDir, 'test-suite', 'test-suite.env');
-  dotenv.config({ path: materialSetsEnvPath });
+  const testSuitesEnvPath = path.join(scriptDir, 'test-suite', 'test-suite.env');
+  dotenv.config({ path: testSuitesEnvPath });
 
-  // Get the path to the material groups directory
-  const materialGroupsDir = path.join(__dirname, "test-suite");
+  // Get the path to the test suites directory
+  const testSuiteDir = path.join(__dirname, "test-suite");
 
-  // Read the material groups JSON file
-  const materialGroupsJsonPath = path.join(materialGroupsDir, "test-suite.json");
-  const materialGroupsJsonString = await fs.promises.readFile(materialGroupsJsonPath, "utf-8");
-  const materialGroupsJson: MaterialGroupJson = JSON.parse(materialGroupsJsonString);
+  // Read the test suites JSON file
+  const testSuiteJsonPath = path.join(testSuiteDir, "test-suite.json");
+  const testSuiteJsonString = await fs.promises.readFile(testSuiteJsonPath, "utf-8");
+  const testSuiteJson: TestSuiteJson = JSON.parse(testSuiteJsonString);
 
-  // Process each material group
-  console.log(`Processing material group directory: ${materialGroupsDir}`);
-
-  // Determine the S3 bucket to use for the material group
-  const s3BucketName = materialGroupsJson.s3_bucket_name;
+  // Process each test suite
+  console.log(`Processing test suite directory: ${testSuiteDir}`);
 
   // Read the global template
-  const globalTemplate = materialGroupsJson.global_template;
+  const suiteTemplate = {
+    ...testExecutionJson.execution_template,
+    ...testSuiteJson.suite_template
+  }
 
-  // Process each test case in each material group
-  let testCaseDirs = fs.readdirSync(materialGroupsDir, { withFileTypes: true })
+  // Determine the S3 bucket to use for the test suite
+  const s3BucketName = testSuiteJson.s3_bucket_name;
+
+  // Determine the S3 folder to use for the test suite
+  const testSuiteUploadFolder: string =
+    testExecutionJson.test_execution_name + "/" +
+    suiteTemplate.test_collection_name + "/" +
+    suiteTemplate.test_suite_name;
+
+  // Process each test case in each test suite
+  let testCaseDirs = fs.readdirSync(testSuiteDir, { withFileTypes: true })
     .filter((dir) => dir.isDirectory())
-    .map((dir) => path.join(materialGroupsDir, dir.name));
+    .map((dir) => path.join(testSuiteDir, dir.name));
 
   // Override with user provided testCaseDirs
   if (process.argv.length > 2) {
-    testCaseDirs = process.argv.slice(2).map((item) => path.join(materialGroupsDir, item));
+    testCaseDirs = process.argv.slice(2).map((item) => path.join(testSuiteDir, item));
   }
 
   for (const testCaseDir of testCaseDirs) {
@@ -118,10 +142,16 @@ async function run() {
     // Read the test case JSON file
     const testCaseJsonPath = path.join(testCaseDir, "testcase.json");
     const testCaseJsonString = await fs.promises.readFile(testCaseJsonPath, "utf-8");
-    const testCaseJson: TestcaseJson = JSON.parse(handlebars.compile(testCaseJsonString)(globalTemplate));
+    const testCaseJson: TestcaseJson = JSON.parse(handlebars.compile(testCaseJsonString)(suiteTemplate));
+
+    // Read the global JSON file
+    const testGlobalJsonPath = path.join(__dirname, "test-global-template.json");
+    const testGlobalJsonString = await fs.promises.readFile(testGlobalJsonPath, "utf-8");
+    const globalTestCaseTemplate: GlobalTemplateJson = JSON.parse(
+      handlebars.compile(testGlobalJsonString)(suiteTemplate)).global_test_case_template;
 
     // Determine the ID for the current test case
-    const hash = await getMaterialGroupHash(testCaseDir, materialGroupsJsonString);
+    const hash = await getMaterialGroupHash(testCaseDir, testSuiteJsonString);
     const yieldDir = path.join(testCaseDir, "yield");
     let testId = 1;
     if (fs.existsSync(yieldDir)) {
@@ -172,7 +202,9 @@ async function run() {
       test_revision: `${testId}-${hash.slice(0, 6)}`,
       test_name: path.basename(testCaseDir),
       test_name_unique: `${path.basename(testCaseDir)}-r${testId}-${hash.slice(0, 6)}`,
-      ...globalTemplate,
+      test_suite_timestamp: Date.now(),
+      ...globalTestCaseTemplate,
+      ...suiteTemplate,
       ...testCaseJson.template,
     };
     testCaseJson.template = templateData
@@ -198,9 +230,10 @@ async function run() {
   const s3Client = new S3Client({});
   const { sync } = new S3SyncClient({ client: s3Client });
 
-  // Sync the materialsets folder
-  const materialSetsDir = materialGroupsDir;
-  await sync(materialSetsDir, 's3://' + s3Bucket);
+  // Sync the testsuites folder
+  const testSuitesDir = testSuiteDir;
+  await sync(testSuitesDir, 's3://' +
+    s3Bucket + "/" + testSuiteUploadFolder);
 
   // Get the list of folders in the test-suite folder
   let folders = testCaseDirs;
@@ -278,6 +311,9 @@ async function run() {
       });
     });
     await new Promise(resolve => setTimeout(resolve, 550)); /* if the async loop runs too quickly we get throttled */
+
+    await sync(testSuitesDir, 's3://' +
+    s3Bucket + "/" + testSuiteUploadFolder);
   }
 }
 
@@ -287,7 +323,7 @@ run();
 async function getMaterialGroupHash(materialGroupDir: string, extra: string): Promise<string> {
   const hash = crypto.createHash("sha256");
   
-  // Update the hash with the contents of each file in the material group directory
+  // Update the hash with the contents of each file in the test suite directory
   const fileNames = await fs.promises.readdir(materialGroupDir);
   for (const fileName of fileNames) {
     const filePath = path.join(materialGroupDir, fileName);
