@@ -1,0 +1,6 @@
+{
+    "test_execution_name": "2.31.2",
+    "execution_template": {
+        "image-aws-for-fluent-bit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.2-tls-options"
+    }
+}
