@@ -23,12 +23,13 @@ interface TestSuiteJson {
   suite_template: { [key: string]: any };
 }
 
-interface TestcaseJson {
+interface TestCaseConfig {
   test_name: string;
   template: any;
   s3_bucket_name: string;
   cluster: string;
   n_tasks: number;
+  task_definition: string;
 }
 
 /* register handlebars custom templating helpers */
@@ -140,9 +141,9 @@ async function run() {
     console.log(`Processing test case directory: ${testCaseDir}`);
 
     // Read the test case JSON file
-    const testCaseJsonPath = path.join(testCaseDir, "testcase.json");
-    const testCaseJsonString = await fs.promises.readFile(testCaseJsonPath, "utf-8");
-    const testCaseJson: TestcaseJson = JSON.parse(handlebars.compile(testCaseJsonString)(suiteTemplate));
+    const testCaseConfigPath = path.join(testCaseDir, "test-case.json");
+    const testCaseConfigString = await fs.promises.readFile(testCaseConfigPath, "utf-8");
+    const testCaseConfig: TestCaseConfig = JSON.parse(handlebars.compile(testCaseConfigString)(suiteTemplate));
 
     // Read the global JSON file
     const testGlobalJsonPath = path.join(__dirname, "test-global-template.json");
@@ -181,9 +182,20 @@ async function run() {
     }
     await fs.promises.symlink(yieldDirPath, yieldSubDirSymLinkPath);
 
+    // Stage the yield directory
     const materialSetFiles = fs.readdirSync(testCaseDir, { withFileTypes: true })
-    .filter((dirent) => dirent.isFile())
-    .map((dirent) => dirent.name);
+      .filter((dirent) => dirent.isFile())
+      .map((dirent) => dirent.name);
+    
+    // Copy over the task
+    await fs.promises.cp(
+      path.join(
+        __dirname,
+        "task-definitions",
+        testCaseConfig.task_definition
+      ),
+      path.join(yieldDirPath, "task.json"));
+
 
     // Copy all non-directory files from the material sets directory to the yield directory
     /*for (const materialSetFile of materialSetFiles) {
@@ -205,17 +217,17 @@ async function run() {
       test_suite_timestamp: Date.now(),
       ...globalTestCaseTemplate,
       ...suiteTemplate,
-      ...testCaseJson.template,
+      ...testCaseConfig.template,
     };
-    testCaseJson.template = templateData
+    testCaseConfig.template = templateData
 
     for (const materialSetFile of materialSetFiles) {
       const sourcePath = path.join(testCaseDir, materialSetFile);
       const destinationPath = path.join(yieldDirPath, materialSetFile);
       const fileString = await fs.promises.readFile(sourcePath, "utf-8");
       const templatedString = handlebars.compile(fileString)(templateData);
-      if (sourcePath == testCaseJsonPath) {
-        await fs.promises.writeFile(destinationPath, JSON.stringify(testCaseJson, null, 2));
+      if (sourcePath == testCaseConfigPath) {
+        await fs.promises.writeFile(destinationPath, JSON.stringify(testCaseConfig, null, 2));
         continue;
       }
       await fs.promises.writeFile(destinationPath, templatedString);
@@ -250,16 +262,16 @@ async function run() {
 
     const yieldSubDir = path.join(folder, "yield", "0-current");
 
-    const testCaseJsonPath = path.join(yieldSubDir, "testcase.json");
-    const testCaseJson: TestcaseJson = JSON.parse(fs.readFileSync(testCaseJsonPath, 'utf8'));
+    const testCaseConfigPath = path.join(yieldSubDir, "testcase.json");
+    const testCaseConfig: TestCaseConfig = JSON.parse(fs.readFileSync(testCaseConfigPath, 'utf8'));
 
     // Register the task definition
     const taskJsonPath = path.join(yieldSubDir, 'task.json');
     const rawJsonFile = fs.readFileSync(taskJsonPath, 'utf8');
-    const taskDefinitionParams: AWS.ECS.Types.RegisterTaskDefinitionRequest = JSON.parse(fs.readFileSync(taskJsonPath, 'utf8'));
+    const taskDefinitionParams: AWS.ECS.Types.RegisterTaskDefinitionRequest = JSON.parse(rawJsonFile);
 
     // Avoid processing tasks with count of 0
-    const nTasks = testCaseJson.n_tasks;
+    const nTasks = testCaseConfig.n_tasks;
     if (nTasks === 0) {
       continue;
     }
@@ -284,7 +296,7 @@ async function run() {
         let result: PromiseResult<AWS.ECS.RunTaskResponse, AWS.AWSError>;
         try {
           result = await ecs.runTask({
-            cluster: testCaseJson.cluster,
+            cluster: testCaseConfig.cluster,
             taskDefinition: taskDefinitionArn!,
             count: count,
           }).promise();
