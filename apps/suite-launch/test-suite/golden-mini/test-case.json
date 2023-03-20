@@ -12,5 +12,6 @@
     },
     "cluster": "{{{cluster}}}",
     "n_tasks": {{{n_tasks}}},
-    "task_definition": "mountebank-mock.json"
+    "task_definition": "mountebank-mock.json",
+    "test_preset": "mountebank-golden-blank"
 }

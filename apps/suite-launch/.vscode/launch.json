@@ -14,7 +14,7 @@
                 "start"
             ],
             "args": [
-                "golden"
+                "golden-mini"
             ],
             "runtimeExecutable": "npm",
             "skipFiles": [

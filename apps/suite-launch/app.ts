@@ -30,6 +30,7 @@ interface TestCaseConfig {
   cluster: string;
   n_tasks: number;
   task_definition: string;
+  test_preset: string;
 }
 
 /* register handlebars custom templating helpers */
@@ -160,9 +161,14 @@ async function run() {
     /* --------------------- */
 
     // Add all files to the staged folder
-    const stagedDirPath = path.join(testCaseDir, "staged");
-    if ((await fs.promises.access(stagedDirPath)) == null) {
+    const  stagedDirPath = path.join(testCaseDir, "staged");
+    try {
+      const _ = await fs.promises.access(stagedDirPath);
+      // The folder exists. Delete.
       await fs.promises.rm(stagedDirPath, {recursive: true});
+    }
+    catch {
+      // The folder does not exist. Do nothing.
     }
     await fs.promises.mkdir(stagedDirPath);
 
@@ -176,14 +182,35 @@ async function run() {
       path.join(stagedDirPath, "task.json"));
 
     // Add resource files to stage directory
-    const testCaseFiles = fs.readdirSync(testCaseDir, { withFileTypes: true })
-      .filter((dirent) => dirent.isFile())
-      .map((dirent) => dirent.name);
+    if (testCaseConfig?.test_preset != undefined) {
+      const sourceTestResourcesFrom = path.join(__dirname, "test-presets", testCaseConfig.test_preset);
+      const testCaseFiles = fs.readdirSync(sourceTestResourcesFrom, { withFileTypes: true })
+        .filter((dirent) => dirent.isFile())
+        .map((dirent) => dirent.name);
+      
+      for (const testCaseFile of testCaseFiles) {
+        const sourcePath = path.join(sourceTestResourcesFrom, testCaseFile);
+        const destinationPath = path.join(stagedDirPath, testCaseFile);
+        await fs.promises.copyFile(sourcePath, destinationPath);
+      }
+
+      // Copy over the test-case.json over from the test suite
+      const testCaseSourcePath = path.join(testCaseDir, "test-case.json");
+      const testCaseDestinationPath = path.join(stagedDirPath, "test-case.json");
+      await fs.promises.copyFile(testCaseSourcePath, testCaseDestinationPath);
+    }
     
-    for (const testCaseFile of testCaseFiles) {
-      const sourcePath = path.join(testCaseDir, testCaseFile);
-      const destinationPath = path.join(stagedDirPath, testCaseFile);
-      await fs.promises.copyFile(sourcePath, destinationPath);
+    /* Let's just copy our test preset from the folder. Implicit test config. */
+    else {
+      const testCaseFiles = fs.readdirSync(testCaseDir, { withFileTypes: true })
+        .filter((dirent) => dirent.isFile())
+        .map((dirent) => dirent.name);
+      
+      for (const testCaseFile of testCaseFiles) {
+        const sourcePath = path.join(testCaseDir, testCaseFile);
+        const destinationPath = path.join(stagedDirPath, testCaseFile);
+        await fs.promises.copyFile(sourcePath, destinationPath);
+      }
     }
 
     /* --------------------- */
