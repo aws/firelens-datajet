@@ -137,6 +137,10 @@ async function run() {
     testCaseDirs = process.argv.slice(2).map((item) => path.join(testSuiteDir, item));
   }
 
+  /* --------------------- */
+  /*  Process Test Cases   */
+  /* --------------------- */
+  
   for (const testCaseDir of testCaseDirs) {
     console.log(`Processing test case directory: ${testCaseDir}`);
 
@@ -151,8 +155,46 @@ async function run() {
     const globalTestCaseTemplate: GlobalTemplateJson = JSON.parse(
       handlebars.compile(testGlobalJsonString)(suiteTemplate)).global_test_case_template;
 
+    /* --------------------- */
+    /*  Staged Folder Setup  */
+    /* --------------------- */
+
+    // Add all files to the staged folder
+    const stagedDirPath = path.join(testCaseDir, "staged");
+    if ((await fs.promises.access(stagedDirPath)) == null) {
+      await fs.promises.rm(stagedDirPath, {recursive: true});
+    }
+    await fs.promises.mkdir(stagedDirPath);
+
+    // Copy over the task
+    await fs.promises.cp(
+      path.join(
+        __dirname,
+        "task-definitions",
+        testCaseConfig.task_definition
+      ),
+      path.join(stagedDirPath, "task.json"));
+
+    // Add resource files to stage directory
+    const testCaseFiles = fs.readdirSync(testCaseDir, { withFileTypes: true })
+      .filter((dirent) => dirent.isFile())
+      .map((dirent) => dirent.name);
+    
+    for (const testCaseFile of testCaseFiles) {
+      const sourcePath = path.join(testCaseDir, testCaseFile);
+      const destinationPath = path.join(stagedDirPath, testCaseFile);
+      await fs.promises.copyFile(sourcePath, destinationPath);
+    }
+
+    /* --------------------- */
+    /*  Yield Folder Setup   */
+    /* --------------------- */
+
     // Determine the ID for the current test case
-    const hash = await getMaterialGroupHash(testCaseDir, testSuiteJsonString);
+    const hash = await getMaterialGroupHash(stagedDirPath,
+      testSuiteJsonString,
+      testGlobalJsonString,
+      testExecutionJsonString);
     const yieldDir = path.join(testCaseDir, "yield");
     let testId = 1;
     if (fs.existsSync(yieldDir)) {
@@ -173,7 +215,7 @@ async function run() {
     // Create the yield directory for this test case
     const yieldSubDir = `${testId}-${hash}`;
     const yieldDirPath = path.join(yieldDir, yieldSubDir);
-    await fs.promises.mkdir(yieldDirPath, { recursive: true });
+    await fs.promises.mkdir(yieldDirPath, { recursive: true });   
 
     // Create a link to the directory
     const yieldSubDirSymLinkPath = path.join(yieldDir, "0-current");
@@ -182,30 +224,8 @@ async function run() {
     }
     await fs.promises.symlink(yieldDirPath, yieldSubDirSymLinkPath);
 
-    // Stage the yield directory
-    const materialSetFiles = fs.readdirSync(testCaseDir, { withFileTypes: true })
-      .filter((dirent) => dirent.isFile())
-      .map((dirent) => dirent.name);
-    
-    // Copy over the task
-    await fs.promises.cp(
-      path.join(
-        __dirname,
-        "task-definitions",
-        testCaseConfig.task_definition
-      ),
-      path.join(yieldDirPath, "task.json"));
-
-
-    // Copy all non-directory files from the material sets directory to the yield directory
-    /*for (const materialSetFile of materialSetFiles) {
-      const sourcePath = path.join(testCaseDir, materialSetFile);
-      const destinationPath = path.join(yieldDirPath, materialSetFile);
-      await fs.promises.copyFile(sourcePath, destinationPath);
-    } */
-
-    // Template all files in the material sets directory
-    console.log(`Templating files in material set directory: ${testCaseDir}/yield/${yieldSubDir}`);
+    // Template all files in the staged directory
+    console.log(`Templating files in staged directory: ${testCaseDir}/yield/${yieldSubDir}`);
 
     const templateData = {
       s3_materials_arn: `arn:aws:s3:::${s3BucketName}/${path.basename(testCaseDir)}/yield/${yieldSubDir}`,
@@ -219,11 +239,17 @@ async function run() {
       ...suiteTemplate,
       ...testCaseConfig.template,
     };
-    testCaseConfig.template = templateData
+    testCaseConfig.template = templateData;
 
-    for (const materialSetFile of materialSetFiles) {
-      const sourcePath = path.join(testCaseDir, materialSetFile);
-      const destinationPath = path.join(yieldDirPath, materialSetFile);
+
+    // Copy all non-directory files from the material sets directory to the yield directory
+    const stagedFiles = fs.readdirSync(stagedDirPath, { withFileTypes: true })
+      .filter((dirent) => dirent.isFile())
+      .map((dirent) => dirent.name);
+
+    for (const stagedFile of stagedFiles) {
+      const sourcePath = path.join(stagedDirPath, stagedFile);
+      const destinationPath = path.join(yieldDirPath, stagedFile);
       const fileString = await fs.promises.readFile(sourcePath, "utf-8");
       const templatedString = handlebars.compile(fileString)(templateData);
       if (sourcePath == testCaseConfigPath) {
@@ -262,7 +288,7 @@ async function run() {
 
     const yieldSubDir = path.join(folder, "yield", "0-current");
 
-    const testCaseConfigPath = path.join(yieldSubDir, "testcase.json");
+    const testCaseConfigPath = path.join(yieldSubDir, "test-case.json");
     const testCaseConfig: TestCaseConfig = JSON.parse(fs.readFileSync(testCaseConfigPath, 'utf8'));
 
     // Register the task definition
@@ -332,7 +358,7 @@ async function run() {
 run();
 
 
-async function getMaterialGroupHash(materialGroupDir: string, extra: string): Promise<string> {
+async function getMaterialGroupHash(materialGroupDir: string, ...extra: Array<string>): Promise<string> {
   const hash = crypto.createHash("sha256");
   
   // Update the hash with the contents of each file in the test suite directory
@@ -348,7 +374,9 @@ async function getMaterialGroupHash(materialGroupDir: string, extra: string): Pr
     }
   }
 
-  hash.update(extra);
+  for (const e of extra) {
+    hash.update(e);
+  }
   
   return hash.digest("hex");
 }

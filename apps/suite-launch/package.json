@@ -6,7 +6,8 @@
     "scripts": {
         "test": "jest",
         "start": "ts-node app.ts",
-        "use-stencil": "ts-node stencil.ts"
+        "use-stencil": "ts-node stencil.ts",
+        "build": "tsc --build"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.272.0",

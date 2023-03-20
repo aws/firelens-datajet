@@ -11,6 +11,6 @@
         "output_plugin": "both"
     },
     "cluster": "{{{cluster}}}",
-    "n_tasks": "{{{n_tasks}}}",
+    "n_tasks": {{{n_tasks}}},
     "task_definition": "mountebank-mock.json"
 }
