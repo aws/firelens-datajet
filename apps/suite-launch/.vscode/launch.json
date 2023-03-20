@@ -8,6 +8,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "start"
+            ],
+            "args": [
+                "golden"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "Firelens Datajet Endpoint",
@@ -28,7 +43,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/dist/driver-local.js",
+            "program": "${workspaceFolder}/dist/app.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ],
@@ -43,10 +58,10 @@
                 "ts-node/register"
             ],
             "args": [
-                "app.ts"
+                "app.ts",
+                "golden"
             ],
-            "sourceMaps": true,
-            "cwd": "${workspaceRoot}/apps/suite-launch"
+            "sourceMaps": true
         }
     ]
 }
