@@ -1,3 +1,5 @@
 test-collections/
 test-suite/*/yield/
 test-suite/*/staged/
+test-suite-examples/*/yield/
+test-suite-examples/*/staged/
