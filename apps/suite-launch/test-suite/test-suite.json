@@ -5,8 +5,7 @@
         "test_suite_name": "stability-tests",
         "image-datajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
         "image-mock": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.1",
-        "cluster": "Bravo",
-        "n_tasks": 1,
+        "golden_path_n_tasks": 1,
         "segfault": true,
         "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
         "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles"

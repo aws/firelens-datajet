@@ -1,0 +1,139 @@
+{
+  "component": "synchronizer",
+  "config": {
+    "repeat": 100,
+    "waitBefore": 5,
+    "waitAfter": 10,
+    "waitBetween": 0,
+    "isAsync": true
+  },
+  "children": [
+    {{#ifEquals input_plugin "tcp"}}
+      {{#ifEqualsOneOf output_plugin "both" "cwl"}}
+    {
+      "comment": "basic log to tcp (cwl)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "flb",
+          "port": 6270,
+          "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 1000000
+      }
+    },
+      {{/ifEqualsOneOf}}
+
+      {{#ifEqualsOneOf output_plugin "both" "s3"}}
+    {
+      "comment": "basic log to tcp (s3)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "flb",
+          "port": 6271,
+          "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 1000000
+      }
+    },
+      {{/ifEqualsOneOf}}
+    {{/ifEquals}}
+
+    {{#ifEquals input_plugin "tail"}}
+      {{#ifEqualsOneOf output_plugin "both" "cwl"}}
+    {
+      "comment": "basic log to tail (cwl)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "file",
+        "config": {
+            "folder": "/var/tmp/data_logs",
+            "filename": "cwl.txt",
+            "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 100000000
+      }
+    },
+      {{/ifEqualsOneOf}}
+
+      {{#ifEqualsOneOf output_plugin "both" "s3"}}
+    {
+      "comment": "basic log to tail (s3)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 200,
+          "batchSize": 100,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "file",
+        "config": {
+            "folder": "/var/tmp/data_logs",
+            "filename": "s3.txt",
+            "key": "log"
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 100000000
+      }
+    },
+      {{/ifEqualsOneOf}}
+    {{/ifEquals}}
+
+    {
+      "comment": "this stage does nothing, but is used for propper json formatting",
+      "generator": {
+        "name": "basic",
+        "config": {
+        }
+      },
+      "datajet": {
+        "name": "stdout",
+        "config": {
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 0
+      }
+    }
+
+
+  ]
+}

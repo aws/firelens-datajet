@@ -1,0 +1,15 @@
+{
+    "task_definition": "mock-mountebank.json",
+    "test_preset": "golden-path-v01-11-2023",
+    "template": {
+        "ServiceName": "golden-onepod-low-throughput",
+        "cw_use_mock": true,
+        "include_onepod": true,
+        "add_forward": true,
+        "kbps_throughput_tcp": 10,
+        "kbps_throughput_tail": 10,
+        "kbps_forward": 10
+    },
+    "cluster": "Bravo",
+    "n_tasks": {{{golden_path_n_tasks}}}
+}
