@@ -4,7 +4,7 @@
     "template": {
         "ServiceName": "golden-onepod-low-throughput",
         "cw_use_mock": true,
-        "include_onepod": true,
+        "include_onepod": false,
         "add_forward": true,
         "kbps_throughput_tcp": 10,
         "kbps_throughput_tail": 10,
@@ -16,7 +16,7 @@
         "LOG_REGION": "us-west-2"
     },
     "cluster": "{{{golden_path_cluster}}}",
-    "n_tasks": 40,
+    "n_tasks": {{{golden_path_n_tasks}}},
     "network_vpc_config": {
         "subnets": [
             "subnet-09f03b2a756754342"

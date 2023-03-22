@@ -13,3 +13,4 @@ oncall
 output-logs.log
 .dockerenv*
 ./firelens-datajet*
+apps/suite-launch/decommissioned/
