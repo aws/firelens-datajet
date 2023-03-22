@@ -8,4 +8,6 @@
 - kbps_throughput_tcp, number, 100, throughput to tcp in kb per seconds
 - kbps_throughput_tail, number, 40, throughput to tail in kb per seconds
 - kbps_forward, number, 4, throughput to forward in kb per seconds
+- endpoint_flb, localhost (can use flb for ec2)
+- endpoint_mock, localhost (can use mock for ec2)
 

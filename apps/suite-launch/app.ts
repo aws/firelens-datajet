@@ -31,6 +31,7 @@ interface TestCaseConfig {
   n_tasks: number;
   task_definition: string;
   test_preset: string;
+  network_vpc_config: any;
 }
 
 /* register handlebars custom templating helpers */
@@ -255,8 +256,8 @@ async function run() {
     console.log(`Templating files in staged directory: ${testCaseDir}/yield/${yieldSubDir}`);
 
     const templateData = {
-      s3_materials_arn: `arn:aws:s3:::${s3BucketName}/${path.basename(testCaseDir)}/yield/${yieldSubDir}`,
-      s3_materials_key_base: `${path.basename(testCaseDir)}/yield/${yieldSubDir}`,
+      s3_materials_arn: `arn:aws:s3:::${s3BucketName}/${testSuiteUploadFolder}/${path.basename(testCaseDir)}/yield/${yieldSubDir}`,
+      s3_materials_key_base: `${testSuiteUploadFolder}/${path.basename(testCaseDir)}/yield/${yieldSubDir}`,
       s3_materials_bucket: s3BucketName,
       test_revision: `${testId}-${hash.slice(0, 6)}`,
       test_name: path.basename(testCaseDir),
@@ -352,6 +353,10 @@ async function run() {
             cluster: testCaseConfig.cluster,
             taskDefinition: taskDefinitionArn!,
             count: count,
+            launchType: "FARGATE",
+            networkConfiguration: {
+              awsvpcConfiguration: testCaseConfig.network_vpc_config
+            }
           }).promise();
 
           // await new Promise(resolve => setTimeout(resolve, 250)); /* slow down the async loop */

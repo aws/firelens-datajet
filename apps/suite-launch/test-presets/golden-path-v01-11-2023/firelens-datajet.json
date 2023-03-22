@@ -22,7 +22,7 @@
       "datajet": {
         "name": "forward",
         "config": {
-          "host": "flb",
+          "host": "{{{endpoint_flb}}}",
           "port": 6270,
           "tagPrefix": "Application-firelens-"
         }
@@ -67,7 +67,7 @@
       "datajet": {
         "name": "tcp",
         "config": {
-          "host": "flb",
+          "host": "{{{endpoint_flb}}}",
           "port": 5170,
           "addNewline": true
         }
@@ -90,7 +90,7 @@
       "datajet": {
         "name": "tcp",
         "config": {
-          "host": "flb",
+          "host": "{{{endpoint_flb}}}",
           "port": 5171,
           "addNewline": true
         }
