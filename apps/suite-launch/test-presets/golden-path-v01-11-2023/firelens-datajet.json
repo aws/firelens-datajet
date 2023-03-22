@@ -1,0 +1,104 @@
+{
+  "component": "synchronizer",
+  "config": {
+    "repeat": 100,
+    "waitBefore": 5,
+    "waitAfter": 10,
+    "waitBetween": 0,
+    "isAsync": true
+  },
+  "children": [
+    {
+      "comment": "FireLens logs to standard out (move forward)",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 100,
+          "batchSize": 10,
+          "key": "log",
+          "addNewline": true
+        }
+      },
+      "datajet": {
+        "name": "forward",
+        "config": {
+          "host": "{{{endpoint_flb}}}",
+          "port": 6270,
+          "tagPrefix": "Application-firelens-"
+        }
+      },
+      "stage": {
+        "batchRate": {{{kbps_throughput_forward}}},
+        "maxBatches": 100000000000
+      }
+    },
+    {
+      "comment": "service log to tail",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 100,
+          "batchSize": 10,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "file",
+        "config": {
+            "folder": "/var/tmp/data_logs",
+            "filename": "service_log_1.txt"
+        }
+      },
+      "stage": {
+        "batchRate": {{{kbps_throughput_tail}}},
+        "maxBatches": 100000000000
+      }
+    },
+    {
+      "comment": "ApplicationLogs through tcp",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 100,
+          "batchSize": 10,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "{{{endpoint_flb}}}",
+          "port": 5170,
+          "addNewline": true
+        }
+      },
+      "stage": {
+        "batchRate": {{{kbps_throughput_tcp}}},
+        "maxBatches": 100000000000
+      }
+    },
+    {
+      "comment": "RequestLogs to tcp",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 100,
+          "batchSize": 10,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "{{{endpoint_flb}}}",
+          "port": 5171,
+          "addNewline": true
+        }
+      },
+      "stage": {
+        "batchRate": {{{kbps_throughput_tcp}}},
+        "maxBatches": 100000000000
+      }
+    }
+  ]
+}
