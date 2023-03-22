@@ -8,7 +8,7 @@ aws s3 cp s3://${CLIENT_S3_BUCKET}/${CLIENT_S3_FILE} ./mountebank.json
 mb&
 child=$!
 
-sleep 1
+sleep 5
 
 # Load Configuration
 config=`cat /mountebank.json`
