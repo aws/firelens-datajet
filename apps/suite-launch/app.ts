@@ -98,6 +98,7 @@ async function run() {
   const testExecutionJsonPath = path.join(__dirname, "test-execution.json");
   const testExecutionJsonString = await fs.promises.readFile(testExecutionJsonPath, "utf-8");
   const testExecutionJson: TestExecutionJson = JSON.parse(testExecutionJsonString);
+  const testExecutionId = testExecutionJson.test_execution_name + "-" + randomAlphaNumericGenerator(8);
 
   // Load the environment variables from test-suite.env
   const testSuitesEnvPath = path.join(scriptDir, 'test-suite', 'test-suite.env');
@@ -310,6 +311,10 @@ async function run() {
 
   // Loop through each folder
   for (const folder of folders) {
+
+    // Test case name
+    const testcaseName = path.basename(folder);
+
     // Load the environment variables from testcase.env
     const testcaseEnvPath = path.join(folder, 'testcase.env');
     dotenv.config({ path: testcaseEnvPath });
@@ -328,6 +333,20 @@ async function run() {
     const nTasks = testCaseConfig.n_tasks;
     if (nTasks === 0) {
       continue;
+    }
+
+    // If no container is specified, create one.
+    const testCaseContainerName =
+      testExecutionId + "-" +
+      suiteTemplate.test_collection_name + "-" +
+      suiteTemplate.test_suite_name + "-" +
+      testcaseName
+
+    // Create fargate cluster
+    if (testCaseConfig.cluster === undefined) {
+      await createCluster(ecs, testCaseContainerName);
+      testCaseConfig.cluster = testCaseContainerName;
+      await sleep(2000); /* Wait for the container to be ready to accept new tasks */
     }
 
     ecs.registerTaskDefinition(taskDefinitionParams, async (err, data) => {
@@ -389,6 +408,21 @@ async function run() {
 
 run();
 
+async function createCluster(ecs: AWS.ECS, clusterName: string) {
+  return new Promise((resolve, reject) => {
+    ecs.createCluster({
+      clusterName: clusterName,
+    }, (err) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(clusterName);
+      }
+    });
+  });
+}
+
 
 async function getMaterialGroupHash(materialGroupDir: string, ...extra: Array<string>): Promise<string> {
   const hash = crypto.createHash("sha256");
@@ -411,4 +445,18 @@ async function getMaterialGroupHash(materialGroupDir: string, ...extra: Array<st
   }
   
   return hash.digest("hex");
+}
+
+function randomAlphaNumericGenerator(length: number): string {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  return Array.from(
+      { length }, () => characters.charAt(Math.floor(Math.random() * charactersLength))
+  ).join('');
+}
+
+// Helper methods
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
