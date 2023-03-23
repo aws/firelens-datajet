@@ -17,5 +17,6 @@
         "LOG_REGION": "us-west-2"
     },
     "n_tasks": 40,
-    "network_vpc_config": {{{json network_vpc_config}}}
+    "network_vpc_config": {{{json network_vpc_config}}},
+    "cluster": "{{{cluster}}}"
 }

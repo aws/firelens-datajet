@@ -1,6 +1,16 @@
 {
-    "test_execution_name": "2.31.7",
+    "test_execution_name": "2_31_7-r2",
     "execution_template": {
-        "image-aws-for-fluent-bit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.7-rainbow-mock"
+        "image-aws-for-fluent-bit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.7-rainbow-mock",
+        "test_region": "us-west-1",
+        "network_vpc_config": {
+            "subnets": [
+                "subnet-0c96d5d239af85d61"
+            ],
+            "assignPublicIp": "ENABLED",
+            "securityGroups": [
+                "sg-03bc54f5647dca262"
+            ]
+        }
     }
 }

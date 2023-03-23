@@ -20,7 +20,7 @@
         "environment": [
           {
             "name": "AWS_REGION",
-            "value": "us-west-2"
+            "value": "{{{test_region}}}"
           },
           {
             "name": "aws_fluent_bit_init_s3_1",
@@ -57,7 +57,7 @@
           "logDriver": "awslogs",
           "options": {
             "awslogs-group": "app-{{{test_name_unique}}}",
-            "awslogs-region": "us-west-2",
+            "awslogs-region": "{{{test_region}}}",
             "awslogs-create-group": "true",
             "awslogs-stream-prefix": "fluent-bit"
           }
@@ -97,7 +97,7 @@
             "logDriver": "awslogs",
             "options": {
                 "awslogs-group": "app-{{{test_name_unique}}}",
-                "awslogs-region": "us-west-2",
+                "awslogs-region": "{{{test_region}}}",
                 "awslogs-create-group": "true",
                 "awslogs-stream-prefix": "datajet"
             }
@@ -122,7 +122,7 @@
           "logDriver":"awsfirelens",
           "options": {
             "Name": "cloudwatch_logs",
-            "region": "us-west-2",
+            "region": "{{{test_region}}}",
             "log_group_name": "/aws/ecs/containerinsights/dummy-app",
             "auto_create_group": "true",
             "log_stream_name": "stdout-stderr-",
@@ -153,7 +153,7 @@
           "logDriver": "awslogs",
             "options": {
                 "awslogs-group": "app-{{{test_name_unique}}}",
-                "awslogs-region": "us-west-2",
+                "awslogs-region": "{{{test_region}}}",
                 "awslogs-create-group": "true",
                 "awslogs-stream-prefix": "mock"
             }
