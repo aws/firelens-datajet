@@ -104,6 +104,8 @@ async function run() {
   const testExecutionJson: TestExecutionJson = JSON.parse(testExecutionJsonString);
   const testExecutionId = testExecutionJson.test_execution_name + "-" + randomAlphaNumericGenerator(8);
 
+  console.log("Test Execution Id: " + testExecutionId);
+
   // Load the environment variables from test-suite.env
   const testSuitesEnvPath = path.join(scriptDir, 'test-suite', 'test-suite.env');
   dotenv.config({ path: testSuitesEnvPath });
