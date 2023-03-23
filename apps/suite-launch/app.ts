@@ -32,6 +32,7 @@ interface TestCaseConfig {
   task_definition: string;
   test_preset: string;
   network_vpc_config: any;
+  test_region: string;
 }
 
 /* register handlebars custom templating helpers */
@@ -74,6 +75,11 @@ handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
   return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 });
 
+/* JSON helper */
+handlebars.registerHelper('json', function(context) {
+  return JSON.stringify(context);
+});
+
 handlebars.registerHelper('ifEqualsOneOf', function() {
   const arg1 = arguments[1];
   const otherArgs = [];
@@ -88,8 +94,6 @@ handlebars.registerHelper('ifEqualsOneOf', function() {
 async function run() {
 
   dotenv.config();
-
-  AWS.config.update({region: 'us-west-2'});
 
   // Get the directory of the script
   const scriptDir = path.dirname(require.main!.filename);
@@ -156,7 +160,11 @@ async function run() {
     const testGlobalJsonPath = path.join(__dirname, "test-global-template.json");
     const testGlobalJsonString = await fs.promises.readFile(testGlobalJsonPath, "utf-8");
     const globalTestCaseTemplate: GlobalTemplateJson = JSON.parse(
-      handlebars.compile(testGlobalJsonString)(suiteTemplate)).global_test_case_template;
+      handlebars.compile(testGlobalJsonString)({
+        ...suiteTemplate,
+        ...testCaseConfig.template,
+        test_execution_id: testExecutionId,
+      })).global_test_case_template;
 
     /* --------------------- */
     /*  Staged Folder Setup  */
@@ -264,12 +272,12 @@ async function run() {
       test_name: path.basename(testCaseDir),
       test_name_unique: `${path.basename(testCaseDir)}-r${testId}-${hash.slice(0, 6)}`,
       test_suite_timestamp: Date.now(),
+      test_execution_id: testExecutionId,
       ...globalTestCaseTemplate,
       ...suiteTemplate,
       ...testCaseConfig.template,
     };
     testCaseConfig.template = templateData;
-
 
     // Copy all non-directory files from the material sets directory to the yield directory
     const stagedFiles = fs.readdirSync(stagedDirPath, { withFileTypes: true })
@@ -306,9 +314,6 @@ async function run() {
   let folders = testCaseDirs;
   console.log(folders);
 
-  // Create an ECS client
-  const ecs = new AWS.ECS();
-
   // Loop through each folder
   for (const folder of folders) {
 
@@ -334,6 +339,12 @@ async function run() {
     if (nTasks === 0) {
       continue;
     }
+
+    // Set the region name
+    AWS.config.update({region: testCaseConfig.test_region});
+
+    // Create an ECS client
+    const ecs = new AWS.ECS();
 
     // If no container is specified, create one.
     const testCaseContainerName =
