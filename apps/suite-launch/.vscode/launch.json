@@ -14,7 +14,7 @@
                 "start"
             ],
             "args": [
-                "golden-onepod-low-throughput"
+                "golden-onepod-high-throughput"
             ],
             "runtimeExecutable": "npm",
             "skipFiles": [
