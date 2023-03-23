@@ -10,14 +10,13 @@
         "segfault": false,
         "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
         "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles",
-        "test_region": "us-east-1",
         "network_vpc_config": {
             "subnets": [
-                "subnet-0e47fd6426b16456b"
+                "subnet-09f03b2a756754342"
             ],
             "assignPublicIp": "ENABLED",
             "securityGroups": [
-                "sg-0f553109694dfee47"
+                "sg-046f8b50e5a71a42d"
             ]
         }
     }
