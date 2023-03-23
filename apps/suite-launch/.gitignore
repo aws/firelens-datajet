@@ -4,3 +4,4 @@ test-suite/*/staged/
 test-suite-examples/*/yield/
 test-suite-examples/*/staged/
 decommissioned/
+app.ts
