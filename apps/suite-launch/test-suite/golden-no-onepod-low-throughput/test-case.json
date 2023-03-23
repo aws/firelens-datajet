@@ -1,6 +1,7 @@
 {
     "task_definition": "mock-mountebank-fargate.json",
     "test_preset": "golden-path-v01-11-2023",
+    "test_region": "{{{test_region}}}",
     "template": {
         "ServiceName": "golden-onepod-low-throughput",
         "cw_use_mock": true,
@@ -15,15 +16,6 @@
         "STAGE": "test",
         "LOG_REGION": "us-west-2"
     },
-    "cluster": "{{{golden_path_cluster}}}",
     "n_tasks": {{{golden_path_n_tasks}}},
-    "network_vpc_config": {
-        "subnets": [
-            "subnet-09f03b2a756754342"
-        ],
-        "assignPublicIp": "ENABLED",
-        "securityGroups": [
-            "sg-046f8b50e5a71a42d"
-        ]
-    }
+    "network_vpc_config": {{{json network_vpc_config}}}
 }
