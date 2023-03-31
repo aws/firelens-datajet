@@ -34,9 +34,6 @@
     },
     "config": {
         "region": "us-west-2",
-        "s3ArchivesArn": "arn:aws:s3:::stability-archives",
-        "s3SummaryArn": "arn:aws:s3:::stability-summary",
-        "s3OutputArn": "arn:aws:s3:::stability-output",
         "vpcConfig": {
             "subnets": [
                 "subnet-0c96d5d239af85d61"

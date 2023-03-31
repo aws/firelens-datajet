@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
-    "outDir": "out",
+    "module": "ES2022",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "outDir": "bin",
     "sourceMap": true
   }
 }

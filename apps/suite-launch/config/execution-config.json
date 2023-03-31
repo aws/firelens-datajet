@@ -1,0 +1,5 @@
+{
+    "s3ArchivesArn": "arn:aws:s3:::stability-archives",
+    "s3SummaryArn": "arn:aws:s3:::stability-summary",
+    "s3OutputArn": "arn:aws:s3:::stability-output"
+}

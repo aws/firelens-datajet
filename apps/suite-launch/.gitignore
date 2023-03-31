@@ -5,4 +5,5 @@ test-suite-examples/*/yield/
 test-suite-examples/*/staged/
 .vscode/decommissioned/
 app.ts
+bin/*app*
 archives/
