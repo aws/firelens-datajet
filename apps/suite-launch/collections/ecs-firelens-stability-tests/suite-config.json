@@ -1,0 +1,8 @@
+{
+    "definitions": {
+        "testId": "{{managed.suiteName}}-{{managed.caseName}}"
+    },
+    "config": {
+        "cluster": "{{managed.suiteName}}-{{managed.executionName}}-{{managed.executionId}}"
+    }
+}

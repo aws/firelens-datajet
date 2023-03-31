@@ -1,5 +1,10 @@
 {
-    "global_test_case_template": {
+    "definitions": {
+        "image-datajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "image-mock": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
+        "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
+        "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles",
+        "segfault": false,
         "commands-aws-for-fluent-bit": [
             "/init/fluent_bit_init_process",
             "chmod +x /init/invoke_fluent_bit.sh",
@@ -26,5 +31,20 @@
             "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.executable",
             "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_ALTERNATE_LOCATION_PREFIX}-${RANDOM_ID_VALUE}.executable"
         ]
+    },
+    "config": {
+        "region": "us-west-2",
+        "s3ArchivesArn": "arn:aws:s3:::stability-archives",
+        "s3SummaryArn": "arn:aws:s3:::stability-summary",
+        "s3OutputArn": "arn:aws:s3:::stability-output",
+        "vpcConfig": {
+            "subnets": [
+                "subnet-0c96d5d239af85d61"
+            ],
+            "assignPublicIp": "ENABLED",
+            "securityGroups": [
+                "sg-03bc54f5647dca262"
+            ]
+        }
     }
 }

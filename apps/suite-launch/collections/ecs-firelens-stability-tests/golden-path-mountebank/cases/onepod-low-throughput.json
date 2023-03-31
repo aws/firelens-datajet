@@ -1,0 +1,11 @@
+{
+    "definitions": {
+        "include_onepod": false,
+        "kbps_throughput_tcp": 10000,
+        "kbps_throughput_tail": 10000,
+        "kbps_throughput_forward": 10000
+    },
+    "config": {
+        "n_tasks": 40
+    }
+}

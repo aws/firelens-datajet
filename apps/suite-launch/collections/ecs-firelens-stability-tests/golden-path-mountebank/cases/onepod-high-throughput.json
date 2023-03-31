@@ -1,4 +1,13 @@
 {
+    "definitions": {
+        "include_onepod": false,
+        "kbps_throughput_tcp": 10000,
+        "kbps_throughput_tail": 10000,
+        "kbps_throughput_forward": 10000
+    }
+}
+
+{
     "task_definition": "mock-mountebank-fargate.json",
     "test_preset": "golden-path-v01-11-2023",
     "test_region": "{{{test_region}}}",
