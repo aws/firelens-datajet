@@ -1,6 +1,6 @@
-import * as Stage from "./pipeline-stages";
-import * as Syncher from "./syncher";
-import * as Utils from "./utils";
+import * as Stage from "./pipeline-stages.js";
+import * as Syncher from "./syncher.js";
+import * as Utils from "./utils.js";
 
 export async function executeTests(execution: IExecution) {
 
@@ -40,4 +40,6 @@ export async function executeTests(execution: IExecution) {
 
     /* Push records */
     await Syncher.pushRecords();
+
+    console.log("done");
 }

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import meow from 'meow';
 import { promises as fs } from 'fs';
-import { inspectExecution } from "./lib/inspect-execution"
-import { stopExecution } from "./lib/stop-execution"
-import { executeTests } from './lib/pipeline';
-import './lib/types';
+import { inspectExecution } from "./lib/inspect-execution.js"
+import { stopExecution } from "./lib/stop-execution.js"
+import { executeTests } from './lib/pipeline.js';
+import { dirname } from "path";
+import { fileURLToPath } from 'url';
+import './lib/types.js';
 
 const cli = meow(
 `
@@ -36,7 +38,7 @@ const cli = meow(
             file: {
                 type: "string",
                 alias: "f",
-                default: `${__dirname}/execution.json`,
+                default: `${dirname(fileURLToPath(import.meta.url))}/execution.json`,
             },
             param: {
                 type: "string",
@@ -60,7 +62,7 @@ async function main() {
         let execString = cli.flags.param;
         if (execString === "") {
             const execFilePath = cli.flags.file;
-            const execString = await fs.readFile(execFilePath);
+            execString = (await fs.readFile(execFilePath)).toString();
         }
         const exec: IExecution = JSON.parse(execString);
         try {
@@ -95,3 +97,5 @@ async function main() {
     }
 
 }
+
+main();
