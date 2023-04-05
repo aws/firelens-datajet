@@ -48,6 +48,7 @@ interface IExecutionConfig extends IGenericConfig {
 }
 
 interface IExecutionContext {
+    execution: IExecution,
     executionConfig: IExecutionConfig,
     executionId: string, /* <ISO Time><8 Rand Alpha> */
     startTime: number,

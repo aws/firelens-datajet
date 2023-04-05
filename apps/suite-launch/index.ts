@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import meow from 'meow';
 import { promises as fs } from 'fs';
-import { inspectExecution } from "./lib/inspect-execution.js"
-import { stopExecution } from "./lib/stop-execution.js"
-import { executeTests } from './lib/pipeline.js';
+import { inspectExecution } from "./lib/commands/inspect-execution.js"
+import { stopExecution } from "./lib/commands/stop-execution.js"
+import { executeTests } from './lib/commands/start-execution.js';
 import { dirname } from "path";
 import { fileURLToPath } from 'url';
 import './lib/types.js';

@@ -1,6 +1,6 @@
-import * as Stage from "./pipeline-stages.js";
-import * as Syncher from "./syncher.js";
-import * as Utils from "./utils.js";
+import * as Stage from "../helpers/start-execution-stages.js";
+import * as Syncher from "../helpers/syncher.js";
+import * as Utils from "../utils/utils.js";
 
 export async function executeTests(execution: IExecution) {
 
