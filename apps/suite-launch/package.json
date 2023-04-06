@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.272.0",
-        "aws-sdk": "^2.1318.0",
+        "aws-sdk": "^2.1351.0",
         "dotenv": "^10.0.0",
         "handlebars": "^4.7.7",
         "meow": "^11.0.0",
@@ -20,10 +20,7 @@
         "s3-sync-client": "^3.0.3"
     },
     "devDependencies": {
-        "@types/aws-sdk": "^2.7.0",
-        "@types/jest": "^29.4.0",
         "@types/mustache": "^4.2.2",
-        "ts-jest": "^29.0.5",
         "ts-node": "^10.2.1",
         "typescript": "^4.5.5"
     }

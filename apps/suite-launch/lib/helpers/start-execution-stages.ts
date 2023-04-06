@@ -1,6 +1,9 @@
-import { getStringFromFile, getSubFolders, getJsonFromFile, makeId, getSubFiles, s3ArnToBucketAndPath } from "../utils/utils";
+import { getStringFromFile, getSubFolders, getJsonFromFile, makeId, getSubFiles, s3ArnToBucketAndPath, nestedPathCreate, sendStringToFile } from "../utils/utils";
 import * as Constants from "../constants.js";
 import * as Path from "path";
+import { cascadeConfiguration, cascadeConfigurationStringAsDefault, cascadeConfigurationStringAsExtension } from "lib/utils/config-utils";
+import { promises as fs } from fs;
+import { copyAndTemplateFile } from "lib/templating/handlebars-templater";
 
 /* Execution specific details including the execution id */
 export async function generateExecutionContext(execution: IExecution): Promise<IExecutionContext> {
@@ -111,15 +114,52 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
 
 export async function hydrateTestCaseSeed(testCaseSeed: ITestCaseSeed):
                                        Promise<ITestCase> {
-    return null;
+
+    /* Cascade config by order of precidence, highest last */
+    const baseConfig = {
+        managed: testCaseSeed.managedVariables,
+        config: Constants.defaults.config as ICaseConfig, /* Config could also come from a file */
+        definitions: {},
+    };
+
+    const layer2Config = cascadeConfigurationStringAsExtension(testCaseSeed.collectionConfigSeed, baseConfig);
+    const layer3Config = cascadeConfigurationStringAsExtension(testCaseSeed.suiteConfigSeed, layer2Config);
+    const layer4Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseSeed, layer3Config);
+
+    /* Get template */
+    const templateConfigPath = Path.join(Constants.paths.templates, Constants.fileNames.templateDefaultConfig);
+    const templateConfig = await getStringFromFile(templateConfigPath);
+    const config = cascadeConfigurationStringAsDefault(templateConfig, layer4Config);
+    
+    const archiveLocalPath = Path.join(Constants.paths.auto, Constants.folderNames.archives, config.managed.s3ResourcesPath);
+    const archiveArn = config.managed.s3ResourcesArn;
+    return {
+        ...config,
+        local: {
+            archiveLocalPath,
+            archiveArn,
+        }
+    };
 }
 
 export async function archiveTestCase(testCase: ITestCase) {
+    /* Create archive folder */
+    await nestedPathCreate(testCase.local.archiveLocalPath);
 
+    /* Template each file in the templates folder */
+    const templateFiles = await getSubFiles(Path.join(Constants.paths.templates, testCase.config.template));
+
+    /* Template each file */
+    await Promise.all(templateFiles.map(async tf => {
+        const dest = Path.join(testCase.local.archiveLocalPath, Path.basename(tf));
+        await copyAndTemplateFile(tf, dest, testCase);
+    }))
 }
 
 export async function runTestCase(testCase: ITestCase):
                                   Promise<IExecutionRecord> {
+
+    
     return null;
 }
 

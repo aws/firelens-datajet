@@ -17,6 +17,9 @@ export function makeId(length: number) {
     return result;
 }
 
+export async function sendStringToFile(str: string, filePath: string) {
+    return (await fs.writeFile(filePath, str));
+}
 
 export async function getStringFromFile(filePath: string) {
     return (await fs.readFile(filePath)).toString();
@@ -57,4 +60,8 @@ export function s3ArnToBucketAndPath(s3Arn: string) {
         s3Bucket,
         s3Path,
     };
+}
+
+export async function nestedPathCreate(path: string) {
+    await fs.mkdir(path, { recursive: true })
 }

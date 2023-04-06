@@ -2,6 +2,7 @@
 interface IGenericConfig {
     config: ICaseConfig,
     definitions: {[key: string]: any},
+    managed: ICaseManagedVariables,
 }
 
 interface ICaseManagedVariables {
@@ -23,6 +24,7 @@ interface ICaseManagedVariables {
  * Accessable in templates as config.x
  */
 interface ICaseConfig {
+    template: string,
     cluster: string,
     region: string,
     taskCount: number,
@@ -59,10 +61,7 @@ interface ICaseLocalVariables {
     archiveArn: string,
 }
 
-interface ITestCase {
-    config: ICaseConfig,
-    managed: ICaseManagedVariables,
-    defined: any,
+interface ITestCase extends IGenericConfig {
     local: ICaseLocalVariables,
 }
 
