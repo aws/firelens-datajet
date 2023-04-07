@@ -11,6 +11,7 @@ interface ICaseManagedVariables {
     collectionName: string,
     suiteName: string,
     caseName: string,
+    caseNameFull: string,
     s3ResourcesArn: string, /* directs to appropriate folder for test case */
     s3ResourcesBucket: string,
     s3ResourcesPath: string,
@@ -28,6 +29,8 @@ interface ICaseConfig {
     cluster: string,
     region: string,
     taskCount: number,
+    taskVpcSubnets: Array<string>,
+    taskVpcSecurityGroups: Array<string>,
 }
 
 interface ITestCaseSeed {
@@ -45,8 +48,9 @@ interface IExecution extends IGenericConfig {
 
 interface IExecutionConfig extends IGenericConfig {
     s3ArchivesArn: string,
+    s3RecordArn: string,
     s3SummaryArn: string,
-    s3OutputArn: string
+    s3OutputArn: string,
 }
 
 interface IExecutionContext {
@@ -58,7 +62,7 @@ interface IExecutionContext {
 
 interface ICaseLocalVariables {
     archiveLocalPath: string,
-    archiveArn: string,
+    archiveArn: string
 }
 
 interface ITestCase extends IGenericConfig {

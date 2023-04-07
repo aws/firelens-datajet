@@ -51,7 +51,7 @@ const cli = meow(
 
 async function main() {
 
-    const command = cli.input[0] ?? "start";
+    const command =  cli.input[0] ?? "start";
 
     if (command === "help") {
         cli.showHelp(0);
@@ -62,14 +62,15 @@ async function main() {
         let execString = cli.flags.param;
         if (execString === "") {
             const execFilePath = cli.flags.file;
-            execString = (await fs.readFile(execFilePath)).toString();
+            execString = await fs.readFile(execFilePath, "utf-8");
         }
         const exec: IExecution = JSON.parse(execString);
         try {
             await executeTests(exec);
             return process.exit(0);
         }
-        catch {
+        catch (e) {
+            console.log(`stability-tests start exited with error ${e}`)
             process.exit(1);
         }
     }

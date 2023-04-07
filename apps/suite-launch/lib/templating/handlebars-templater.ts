@@ -1,5 +1,6 @@
-import * as handlebars from "handlebars";
-import { getStringFromFile, sendStringToFile } from "lib/utils/utils";
+import { getStringFromFile, sendStringToFile } from "../utils/utils.js";
+import handlebars from "handlebars";
+
 
 /* register handlebars custom templating helpers */
 /*
@@ -11,18 +12,18 @@ handlebars.registerHelper('times', function(n, block) {
     var accum = '';
     for(var i = 0; i < n; ++i) {
         accum += block.fn({
-          ...this,
-          _idx: i
+        ...this,
+        _idx: i
         });
     }
     return accum;
 });
-  
+
 /*
- * {{#for 0 10 2}}
- *   <span>{{this}}</span>
- * {{/for}}
- */
+* {{#for 0 10 2}}
+*   <span>{{this}}</span>
+* {{/for}}
+*/
 handlebars.registerHelper('for', function(from, to, incr, block) {
     var accum = '';
     for(var i = from; i < to; i += incr) {
@@ -35,19 +36,19 @@ handlebars.registerHelper('for', function(from, to, incr, block) {
 });
 
 /*
- * {{#ifEquals sampleString "This is a string"}}
- *  Your HTML here
- * {{/ifEquals}}
- */
+* {{#ifEquals sampleString "This is a string"}}
+*  Your HTML here
+* {{/ifEquals}}
+*/
 handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
     return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 });
-  
+
 /* JSON helper */
 handlebars.registerHelper('json', function(context) {
     return JSON.stringify(context);
 });
-  
+
 handlebars.registerHelper('ifEqualsOneOf', function() {
     const arg1 = arguments[1];
     let otherArgs: any[] = [];

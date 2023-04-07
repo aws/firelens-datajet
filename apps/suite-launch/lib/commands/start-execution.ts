@@ -1,5 +1,5 @@
 import * as Stage from "../helpers/start-execution-stages.js";
-import * as Syncher from "../helpers/syncher.js";
+import * as Syncher from "../cloud/s3.js";
 import * as Utils from "../utils/utils.js";
 
 export async function executeTests(execution: IExecution) {
@@ -13,13 +13,13 @@ export async function executeTests(execution: IExecution) {
     const testCases = await Promise.all(testCaseSeeds.map(Stage.hydrateTestCaseSeed));
 
     /* Pull archive */
-    await Syncher.pullArchive();
+    await Syncher.pullArchive(executionContext);
 
     /* Archive test cases */
     await Promise.all(testCases.map(Stage.archiveTestCase));
     
     /* Push archive */
-    await Syncher.pushArchive();
+    await Syncher.pushArchive(executionContext);
 
     /* Run test cases, synchronously */
     const executionRecords = [];
@@ -33,13 +33,15 @@ export async function executeTests(execution: IExecution) {
     }
 
     /* Pull records */
-    await Syncher.pullRecords();
+    await Syncher.pullRecords(executionContext);
 
     /* Record test cases */
-    await Promise.all(executionRecords.map(r => Stage.recordTestCase(r.testCase, r.executionRecord)));
+    Stage.recordTestCases(executionContext, executionRecords);
+
+    await Promise.all(executionRecords.map(r => Stage.recordTestCases(r.testCase, r.executionRecord)));
 
     /* Push records */
-    await Syncher.pushRecords();
+    await Syncher.pushRecords(executionContext);
 
     console.log("done");
 }

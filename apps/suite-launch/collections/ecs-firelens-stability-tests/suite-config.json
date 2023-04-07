@@ -3,6 +3,7 @@
         "testId": "{{managed.suiteName}}-{{managed.caseName}}"
     },
     "config": {
-        "cluster": "{{managed.suiteName}}-{{managed.executionName}}-{{managed.executionId}}"
+        "cluster": "{{managed.suiteName}}-{{managed.executionName}}-{{managed.executionId}}",
+        "template": "golden-path-mountebank-fargate-v01-11-2023"
     }
 }

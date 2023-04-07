@@ -1,9 +1,10 @@
-import { getStringFromFile, getSubFolders, getJsonFromFile, makeId, getSubFiles, s3ArnToBucketAndPath, nestedPathCreate, sendStringToFile } from "../utils/utils";
+import { getStringFromFile, getSubFolders, getJsonFromFile, makeId, getSubFiles, s3ArnToBucketAndPath, nestedPathCreate, sendStringToFile, sendJSONToFile } from "../utils/utils.js";
 import * as Constants from "../constants.js";
-import * as Path from "path";
-import { cascadeConfiguration, cascadeConfigurationStringAsDefault, cascadeConfigurationStringAsExtension } from "lib/utils/config-utils";
-import { promises as fs } from fs;
-import { copyAndTemplateFile } from "lib/templating/handlebars-templater";
+import path, * as Path from "path";
+import { cascadeConfigurationStringAsDefault, cascadeConfigurationStringAsExtension, validateTestConfig } from "../utils/config-utils.js";
+import { promises as fs } from "fs";
+import { copyAndTemplateFile } from "../templating/handlebars-templater.js";
+import { runECSTestCase } from "../cloud/ecs.js";
 
 /* Execution specific details including the execution id */
 export async function generateExecutionContext(execution: IExecution): Promise<IExecutionContext> {
@@ -11,7 +12,7 @@ export async function generateExecutionContext(execution: IExecution): Promise<I
     const d = new Date();
     const iso = d.toISOString().replaceAll(":", "").replaceAll(".", "").replaceAll("Z", "");
     const id = makeId(8);
-    const executionId = `E${iso}-${id}`;
+    const executionId = `E-${iso}-${id}`;
     const startTime = Date.now();
 
     const executionConfig = await getJsonFromFile(Constants.paths.executionConfig); 
@@ -20,7 +21,7 @@ export async function generateExecutionContext(execution: IExecution): Promise<I
         execution,
         executionConfig,
         executionId,
-        startTime,
+        startTime
     };
 }
 
@@ -41,13 +42,13 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
     await Promise.all(collections.map(
         async (c) => {
             const suites = await getSubFolders(c);
-            const suiteConfigSeed = await getStringFromFile(Path.join(c, Constants.paths.suiteConfigFileName));
+            const suiteConfigSeed = await getStringFromFile(Path.join(c, Constants.fileNames.suiteConfig));
 
             /* Expand each test suite */
             const testCaseSeeds =
             await Promise.all(suites.map(async (s) => {
-                const cases = await getSubFiles(Path.join(s, Constants.paths.casesSubDir));
-                const caseConfigSeed = await getStringFromFile(Path.join(c, Constants.paths.caseConfigFileName));
+                const cases = await getSubFiles(Path.join(s, Constants.folderNames.cases));
+                const caseConfigSeed = await getStringFromFile(Path.join(s, Constants.fileNames.caseConfig));
                 
                 const testCaseSeeds =
                 await Promise.all(cases.map(async (tc) => {
@@ -73,7 +74,7 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
 
                     /* Output execution folders */
                     const s3OutputExecutionArn = Path.join(
-                        executionContext.executionConfig.s3ArchivesArn,
+                        executionContext.executionConfig.s3OutputArn,
                         managedVariablesDefaults.executionId);
                     
                     const {
@@ -87,6 +88,7 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                         collectionName,
                         suiteName,
                         caseName,
+                        caseNameFull: `${collectionName}-${suiteName}-${caseName}`,
                         s3ResourcesArn,
                         s3ResourcesBucket,
                         s3ResourcesPath,
@@ -127,17 +129,24 @@ export async function hydrateTestCaseSeed(testCaseSeed: ITestCaseSeed):
     const layer4Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseSeed, layer3Config);
 
     /* Get template */
-    const templateConfigPath = Path.join(Constants.paths.templates, Constants.fileNames.templateDefaultConfig);
+    const templateName = layer4Config.config.template;
+    if (!templateName) {
+        validateTestConfig(layer4Config);
+    }
+    const templateConfigPath = Path.join(Constants.paths.templates, templateName, Constants.fileNames.templateDefaultConfig);
     const templateConfig = await getStringFromFile(templateConfigPath);
     const config = cascadeConfigurationStringAsDefault(templateConfig, layer4Config);
+
+    validateTestConfig(config);
     
     const archiveLocalPath = Path.join(Constants.paths.auto, Constants.folderNames.archives, config.managed.s3ResourcesPath);
     const archiveArn = config.managed.s3ResourcesArn;
+
     return {
         ...config,
         local: {
             archiveLocalPath,
-            archiveArn,
+            archiveArn
         }
     };
 }
@@ -157,13 +166,15 @@ export async function archiveTestCase(testCase: ITestCase) {
 }
 
 export async function runTestCase(testCase: ITestCase):
-                                  Promise<IExecutionRecord> {
-
-    
-    return null;
+                                  Promise<IExecutionRecordArchive> {
+    return await runECSTestCase(testCase);
 }
 
-export async function recordTestCase(testCase: ITestCase,
-                                     executionRecord: IExecutionRecord) {
+export async function recordTestCases(
+    executionContext: IExecutionContext,
+    executionRecordArchives: Array<IExecutionRecordArchive>) {
     
+    const recordsLocalPath = Path.join(Constants.paths.auto, Constants.folderNames.records, executionContext.executionId);
+    await nestedPathCreate(recordsLocalPath);
+    return await sendJSONToFile(executionRecordArchives, recordsLocalPath);
 }

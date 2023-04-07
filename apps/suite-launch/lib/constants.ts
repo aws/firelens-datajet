@@ -1,25 +1,29 @@
+import * as Path from "path";
+import { fileURLToPath } from "url";
+
+/* Root directory of application */
+const r = Path.join(Path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export const paths = {
-    "executionConfig": "./config/execution-config.json",
-    "collectionConfig": "./config/collection-config.json",
-    "collections": "./collections",
-    "templates": "./templates",
-    "auto": "./auto",
-    "suiteConfigFileName": "suite-config.json",
-    "caseConfigFileName": "case-config.json",
-    "casesSubDir": "cases",
+    "executionConfig": `${r}/config/execution-config.json`,
+    "collectionConfig": `${r}/config/collection-config.json`,
+    "collections": `${r}/collections`,
+    "templates": `${r}/templates`,
+    "auto": `${r}/auto`,
 }
 
 export const folderNames = {
     "archives": "archives",
     "records": "records",
     "summary": "summary",
+    "cases": "cases",
 }
 
 export const fileNames = {
     "suiteConfig": "suite-config.json",
     "caseConfig": "case-config.json",
-    "templateDefaultConfig": "default-config.json";
+    "templateDefaultConfig": "default-config.json",
+    "taskDefinition": "task-definition.json"
 }
 
 export const defaults = {

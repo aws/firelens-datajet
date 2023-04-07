@@ -21,6 +21,10 @@ export async function sendStringToFile(str: string, filePath: string) {
     return (await fs.writeFile(filePath, str));
 }
 
+export async function sendJSONToFile(json: any, filePath: string) {
+    return await sendStringToFile(JSON.stringify(json, null, 2), filePath);
+}
+
 export async function getStringFromFile(filePath: string) {
     return (await fs.readFile(filePath)).toString();
 }
@@ -54,12 +58,21 @@ export async function getSubConfig(path: string) {
 export function s3ArnToBucketAndPath(s3Arn: string) {
     const s3Resources = s3Arn.split("arn:aws:s3:::")[1];
     const s3Bucket = s3Resources.split("/")[0];
-    const s3Path   = s3Resources.split("/")[1];
+    const s3Path   = s3Resources.split("/").splice(1).join("/");
 
     return {
         s3Bucket,
         s3Path,
     };
+}
+
+export function s3ArnToAccessPoint(s3Arn: string) {
+    const {
+        s3Bucket,
+        s3Path,
+    } = s3ArnToBucketAndPath(s3Arn);
+    
+    return `s3://${s3Bucket}${(s3Path === "") ? "" : "/"}${s3Path}`;
 }
 
 export async function nestedPathCreate(path: string) {

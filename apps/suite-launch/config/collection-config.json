@@ -34,14 +34,11 @@
     },
     "config": {
         "region": "us-west-2",
-        "vpcConfig": {
-            "subnets": [
-                "subnet-0c96d5d239af85d61"
-            ],
-            "assignPublicIp": "ENABLED",
-            "securityGroups": [
-                "sg-03bc54f5647dca262"
-            ]
-        }
+        "taskVpcSubnets": [
+            "subnet-0c96d5d239af85d61"
+        ],
+        "taskVpcSecurityGroups": [
+            "sg-03bc54f5647dca262"
+        ]
     }
 }
