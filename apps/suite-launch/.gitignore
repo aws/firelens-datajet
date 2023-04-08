@@ -7,3 +7,4 @@ test-suite-examples/*/staged/
 app.ts
 bin/*app*
 archives/
+auto/

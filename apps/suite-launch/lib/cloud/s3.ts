@@ -36,30 +36,28 @@ export async function pushArchive(executionContext: IExecutionContext) {
 
 export async function pullRecords(executionContext: IExecutionContext) {
     const recordsPath = Path.join(Constants.paths.auto, Constants.folderNames.records);
-    nestedPathCreate(Constants.paths.auto);
+    nestedPathCreate(recordsPath);
 
     // Create a S3 sync client
     const s3Client = new S3Client({});
     const { sync } = new S3SyncClient({ client: s3Client });
-    executionContext.executionConfig.s3RecordArn;
 
     // Sync the local file system with a remote S3 bucket
     await sync(
-        s3ArnToAccessPoint(executionContext.executionConfig.s3ArchivesArn),
+        s3ArnToAccessPoint(executionContext.executionConfig.s3RecordArn),
         recordsPath,
         { del: true });
 }
 
 export async function pushRecords(executionContext: IExecutionContext) {
-    const recordsePath = Path.join(Constants.paths.auto, Constants.folderNames.records);
+    const recordsPath = Path.join(Constants.paths.auto, Constants.folderNames.records);
 
     // Create a S3 sync client
     const s3Client = new S3Client({});
     const { sync } = new S3SyncClient({ client: s3Client });
-    executionContext.executionConfig.s3ArchivesArn;
 
     // Sync the local file system with a remote S3 bucket
     await sync(
-        s3ArnToAccessPoint(executionContext.executionConfig.s3ArchivesArn),
-        recordsePath);
+        recordsPath,
+        s3ArnToAccessPoint(executionContext.executionConfig.s3RecordArn));
 }

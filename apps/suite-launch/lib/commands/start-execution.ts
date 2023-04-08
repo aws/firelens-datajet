@@ -22,15 +22,7 @@ export async function executeTests(execution: IExecution) {
     await Syncher.pushArchive(executionContext);
 
     /* Run test cases, synchronously */
-    const executionRecords = [];
-    for (const testCase of testCases) {
-        executionRecords.push({
-            testCase: testCase,
-            executionRecord: await Stage.runTestCase(testCase)
-        });
-        /* Sleep between runs. We can taylor this to an appropriate number */
-        await Utils.sleep(50);
-    }
+    const executionRecords = await Promise.all(testCases.map(Stage.runTestCase));
 
     /* Pull records */
     await Syncher.pullRecords(executionContext);
@@ -38,10 +30,8 @@ export async function executeTests(execution: IExecution) {
     /* Record test cases */
     Stage.recordTestCases(executionContext, executionRecords);
 
-    await Promise.all(executionRecords.map(r => Stage.recordTestCases(r.testCase, r.executionRecord)));
-
     /* Push records */
     await Syncher.pushRecords(executionContext);
 
-    console.log("done");
+    console.log(`Started tests. Execution ID: ${executionContext.executionId}`);
 }

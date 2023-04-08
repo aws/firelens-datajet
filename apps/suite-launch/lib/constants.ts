@@ -23,7 +23,8 @@ export const fileNames = {
     "suiteConfig": "suite-config.json",
     "caseConfig": "case-config.json",
     "templateDefaultConfig": "default-config.json",
-    "taskDefinition": "task-definition.json"
+    "taskDefinition": "task-definition.json",
+    "execution": "execution.json",
 }
 
 export const defaults = {

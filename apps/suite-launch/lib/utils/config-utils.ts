@@ -56,7 +56,7 @@ export async function validateTestConfig(config: IGenericConfig) {
     checkNotNull.forEach(c => {
         if (config.config[c] === undefined) {
             console.log(`Configuration error on test: ` +
-            `${config.managed.caseNameFull}. Please ensure ${c} is set in "config"`);
+            `${config.managed.caseNameUnique}. Please ensure ${c} is set in "config"`);
         }
     });
 

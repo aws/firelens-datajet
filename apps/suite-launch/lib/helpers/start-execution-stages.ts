@@ -5,6 +5,7 @@ import { cascadeConfigurationStringAsDefault, cascadeConfigurationStringAsExtens
 import { promises as fs } from "fs";
 import { copyAndTemplateFile } from "../templating/handlebars-templater.js";
 import { runECSTestCase } from "../cloud/ecs.js";
+import * as PathProvider from "../providers/path-provider.js"
 
 /* Execution specific details including the execution id */
 export async function generateExecutionContext(execution: IExecution): Promise<IExecutionContext> {
@@ -27,7 +28,7 @@ export async function generateExecutionContext(execution: IExecution): Promise<I
 
 export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                                            Promise<ITestCaseSeed[]> {
-
+    const executionConfigSeed = await getStringFromFile(PathProvider.executionJson());
     const collectionConfigSeed = await getStringFromFile(Constants.paths.collectionConfig);
     const collections = await getSubFolders(Constants.paths.collections);
 
@@ -88,7 +89,7 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                         collectionName,
                         suiteName,
                         caseName,
-                        caseNameFull: `${collectionName}-${suiteName}-${caseName}`,
+                        caseNameUnique: `${collectionName}-${suiteName}-${caseName}`,
                         s3ResourcesArn,
                         s3ResourcesBucket,
                         s3ResourcesPath,
@@ -99,11 +100,14 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
 
                     /* Define the test case seed */
                     return {
+                        executionConfigSeed,
                         collectionConfigSeed,
                         suiteConfigSeed,
                         caseConfigSeed,
                         caseSeed,
-                        managedVariables
+                        managedVariables,
+                        seedDefinitions: executionContext.execution.definitions ?? {},
+                        seedConfig: executionContext.execution.config ?? {} as ICaseConfig,
                     }
                 }));
                 return testCaseSeeds;
@@ -135,7 +139,10 @@ export async function hydrateTestCaseSeed(testCaseSeed: ITestCaseSeed):
     }
     const templateConfigPath = Path.join(Constants.paths.templates, templateName, Constants.fileNames.templateDefaultConfig);
     const templateConfig = await getStringFromFile(templateConfigPath);
-    const config = cascadeConfigurationStringAsDefault(templateConfig, layer4Config);
+    const layer5Config = cascadeConfigurationStringAsDefault(templateConfig, layer4Config);
+
+    /* Final layer of configuration from execution seed. These function as overrides. */
+    const config = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer5Config);
 
     validateTestConfig(config);
     
@@ -176,5 +183,9 @@ export async function recordTestCases(
     
     const recordsLocalPath = Path.join(Constants.paths.auto, Constants.folderNames.records, executionContext.executionId);
     await nestedPathCreate(recordsLocalPath);
-    return await sendJSONToFile(executionRecordArchives, recordsLocalPath);
+    const recordsComplete = {
+        executionContext,
+        executionRecordArchives
+    }
+    return await sendJSONToFile(recordsComplete, Path.join(recordsLocalPath, `${executionContext.executionId}-record.json`));
 }

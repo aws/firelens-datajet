@@ -28,7 +28,7 @@
         }
       },
       "stage": {
-        "batchRate": {{{kbps_throughput_forward}}},
+        "batchRate": {{definitions.kbps_throughput_forward}},
         "maxBatches": 100000000000
       }
     },
@@ -50,7 +50,7 @@
         }
       },
       "stage": {
-        "batchRate": {{{kbps_throughput_tail}}},
+        "batchRate": {{definitions.kbps_throughput_tail}},
         "maxBatches": 100000000000
       }
     },
@@ -67,13 +67,13 @@
       "datajet": {
         "name": "tcp",
         "config": {
-          "host": "{{{endpoint_flb}}}",
+          "host": "{{definitions.endpoint_flb}}",
           "port": 5170,
           "addNewline": true
         }
       },
       "stage": {
-        "batchRate": {{{kbps_throughput_tcp}}},
+        "batchRate": {{definitions.kbps_throughput_tcp}},
         "maxBatches": 100000000000
       }
     },
@@ -96,7 +96,7 @@
         }
       },
       "stage": {
-        "batchRate": {{{kbps_throughput_tcp}}},
+        "batchRate": {{definitions.kbps_throughput_tcp}},
         "maxBatches": 100000000000
       }
     }

@@ -5,13 +5,16 @@ interface IGenericConfig {
     managed: ICaseManagedVariables,
 }
 
+/*
+ * Used in templating as managed.x
+ */
 interface ICaseManagedVariables {
     executionId: string,
     executionName: string,
     collectionName: string,
     suiteName: string,
     caseName: string,
-    caseNameFull: string,
+    caseNameUnique: string, /* this is testCollection-testSuite-testCase */
     s3ResourcesArn: string, /* directs to appropriate folder for test case */
     s3ResourcesBucket: string,
     s3ResourcesPath: string,
@@ -34,6 +37,7 @@ interface ICaseConfig {
 }
 
 interface ITestCaseSeed {
+    executionConfigSeed: string, /* Highest order of precidence, from execution.json */
     collectionConfigSeed: string,
     suiteConfigSeed: string,
     caseConfigSeed: string,
@@ -77,6 +81,11 @@ interface IExecutionRecord {
 interface IExecutionRecordArchive {
     executionRecord: IExecutionRecord,
     testCase: ITestCase,
+}
+
+interface IExecutionRecordComplete {
+    executionContext: IExecutionContext,
+    executionRecordArchives: IExecutionRecordArchive[],
 }
 
 interface IExecutionSummary {

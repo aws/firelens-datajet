@@ -7,6 +7,7 @@ import { executeTests } from './lib/commands/start-execution.js';
 import { dirname } from "path";
 import { fileURLToPath } from 'url';
 import './lib/types.js';
+import * as pathProvider from "./lib/providers/path-provider.js"
 
 const cli = meow(
 `
@@ -38,7 +39,7 @@ const cli = meow(
             file: {
                 type: "string",
                 alias: "f",
-                default: `${dirname(fileURLToPath(import.meta.url))}/execution.json`,
+                default: pathProvider.executionJson(),
             },
             param: {
                 type: "string",

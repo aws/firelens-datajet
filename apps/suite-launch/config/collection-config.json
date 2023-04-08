@@ -1,7 +1,7 @@
 {
     "definitions": {
-        "image-datajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
-        "image-mock": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
+        "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
         "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
         "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles",
         "segfault": false,
@@ -35,10 +35,10 @@
     "config": {
         "region": "us-west-2",
         "taskVpcSubnets": [
-            "subnet-0c96d5d239af85d61"
+            "subnet-09f03b2a756754342"
         ],
         "taskVpcSecurityGroups": [
-            "sg-03bc54f5647dca262"
+            "sg-046f8b50e5a71a42d"
         ]
     }
 }

@@ -1,6 +1,6 @@
 import { getJsonFromFile, sleep } from "../utils/utils.js";
 import * as ECS from "@aws-sdk/client-ecs";
-import * as AWS from 'aws-sdk'; /* We really should be migrating to v3, but for now use v2 */
+import AWS from 'aws-sdk'; /* We really should be migrating to v3, but for now use v2 */
 import { getTestCaseTaskDefinition } from "../utils/config-utils.js";
 import { PromiseResult } from "aws-sdk/lib/request";
 process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = '1';
@@ -50,12 +50,12 @@ async function processEcsTestTaskQueue() {
         const ecs = new AWS.ECS();
 
         // Create fargate cluster if it doesn't already exist
-        const clusters = await ecs.describeClusters().promise();
-        if (!clusters.clusters.some(c => c.clusterName === testCase.config.cluster)) {
+        const clusters = await ecs.listClusters().promise();
+        if (!clusters.clusterArns.some(c => c.endsWith(`/${testCase.config.cluster}`))) {
             await ecs.createCluster({
                 clusterName: testCase.config.cluster
             }).promise();
-            console.log(`Created cluster: ${testCase.config.cluster}`)
+            console.log(`🍇 Created cluster: ${testCase.config.cluster}\n`)
             await sleep(2000); /* Wait for the container to be ready to accept new tasks */
         }
     
@@ -74,6 +74,7 @@ async function processEcsTestTaskQueue() {
         }
 
         // Launch tasks in groups of 10 or less
+        console.log(`  🧪 ${testCase.managed.collectionName}/${testCase.managed.suiteName}/${testCase.managed.caseName}: launched tasks`);
         let launchedTasks = [];
         const taskCount = testCase.config.taskCount;
         for (let i = 0; i < taskCount; i += Math.min(10, taskCount - i)) {
@@ -99,20 +100,19 @@ async function processEcsTestTaskQueue() {
                 return;
             }
 
-            launchedTasks.push(result.tasks!.map((task) => task.taskArn!));
+            const launchedTaskArns = result.tasks!.map((task) => task.taskArn!);
+            console.log(launchedTaskArns.reduce((a,b)=>`${a}    ${b}\n`, ""));
+            launchedTasks.push(...launchedTaskArns);
             
             /* Retry failed tasks... */
             const failedTasks = count - result.tasks.length;
             i -= failedTasks;
             if (failedTasks) {
-                console.log(`${testCase.managed.caseNameFull}, failed task launches: ${failedTasks}. Will retry`);
+                console.log(`    ⚠️ ${testCase.managed.caseNameUnique}, failed task launches: ${failedTasks}. Will retry`);
             }
 
             await new Promise(resolve => setTimeout(resolve, 500)); /* slow down the async loop (20 per second) */
         }
-
-        console.log(`${testCase.managed.caseNameFull}, launched tasks`);
-        console.log(JSON.stringify(launchedTasks, null, 2));
 
         task.successPromiseResolver({
             executionRecord: {
