@@ -1,0 +1,9 @@
+{
+    "executionName":  "2_31_7-r2",
+    "executeCollections": [
+        "ecs-firelens-stability-tests"
+    ],
+    "definitions": {
+        "imageAwsForFluentBit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.31.7-rainbow-mock"   
+    }
+}
