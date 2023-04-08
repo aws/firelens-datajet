@@ -1,0 +1,12 @@
+test-collections/
+test-suite/*/yield/
+test-suite/*/staged/
+test-suite-examples/*/yield/
+test-suite-examples/*/staged/
+.vscode/decommissioned/
+app.ts
+bin/*app*
+archives/
+auto/
+bin/
+test-suite/

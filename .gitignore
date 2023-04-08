@@ -6,7 +6,7 @@ containerjet/
 dist/
 node_modules/
 data-private/
-task-definitions/
+./task-definitions/
 test-config/
 .env
 oncall
