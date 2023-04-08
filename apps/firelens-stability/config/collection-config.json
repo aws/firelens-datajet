@@ -1,0 +1,44 @@
+{
+    "definitions": {
+        "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
+        "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
+        "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles",
+        "segfault": false,
+        "commands-aws-for-fluent-bit": [
+            "/init/fluent_bit_init_process",
+            "chmod +x /init/invoke_fluent_bit.sh",
+            "cd /cores",
+            "export RANDOM_ID_VALUE=$(($RANDOM%99999))$(($RANDOM%99999))$(($RANDOM%99999))",
+            "echo 'RANDOM_ID is set to $RANDOM_ID_VALUE'",
+            "env RANDOM_ID=$RANDOM_ID_VALUE /init/invoke_fluent_bit.sh",
+            "echo $RANDOM_ID",
+            "ls /cores",
+            "mv `ls /cores` ${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.core",
+            "zip /cores/core.zip *",
+            "aws s3 cp /cores/core.zip s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.zip",
+            "aws s3 cp /cores/core.zip s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-all/cores/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.zip",
+            "aws s3 cp /cores/core.zip s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-by-date/`date +%Y-%m-%d`/cores/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.zip",
+            "aws s3 cp /cores/core.zip s3://${S3_ALTERNATE_LOCATION_PREFIX}-${RANDOM_ID_VALUE}.zip",
+            "gdb -batch -ex 'thread apply all bt full' -ex 'quit' '/fluent-bit/bin/fluent-bit' ${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.core > '/cores/stacktrace'",
+            "aws s3 cp /cores/stacktrace s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.stacktrace",
+            "aws s3 cp /cores/stacktrace s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-all/stacktraces/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.stacktrace",
+            "aws s3 cp /cores/stacktrace s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-by-date/`date +%Y-%m-%d`/stacktraces/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.stacktraces",
+            "aws s3 cp /cores/stacktrace s3://${S3_ALTERNATE_LOCATION_PREFIX}-${RANDOM_ID_VALUE}.stacktrace",
+            "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.executable",
+            "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-all/executables/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.executable",
+            "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_BUCKET}/{{{test_execution_id}}}/{{{test_collection_name}}}/{{{test_suite_name}}}-t{{{test_suite_timestamp}}}/error-reports-by-date/`date +%Y-%m-%d`/executables/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.executable",
+            "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_BUCKET}/${S3_KEY_PREFIX}/${S3_FILE_NAME_PREFIX}-${RANDOM_ID_VALUE}.executable",
+            "aws s3 cp /fluent-bit/bin/fluent-bit s3://${S3_ALTERNATE_LOCATION_PREFIX}-${RANDOM_ID_VALUE}.executable"
+        ]
+    },
+    "config": {
+        "region": "us-west-2",
+        "taskVpcSubnets": [
+            "subnet-09f03b2a756754342"
+        ],
+        "taskVpcSecurityGroups": [
+            "sg-046f8b50e5a71a42d"
+        ]
+    }
+}

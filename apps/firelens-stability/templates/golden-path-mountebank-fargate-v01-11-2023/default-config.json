@@ -1,0 +1,16 @@
+{
+    "definitions": {
+        "include_onepod": false,
+        "kbps_throughput_tcp": 10,
+        "kbps_throughput_tail": 10,
+        "kbps_throughput_forward": 10,
+        "cw_use_mock": true,
+        "add_forward": true,
+        "endpoint_mock": "localhost",
+        "endpoint_flb": "localhost",
+        "HOSTNAME": "myhostname",
+        "STAGE": "test",
+        "LOG_REGION": "us-west-2",
+        "serviceName": "golden-onepod-low-throughput"
+    }
+}

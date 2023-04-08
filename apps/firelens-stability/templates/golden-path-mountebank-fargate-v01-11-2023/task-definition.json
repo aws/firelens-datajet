@@ -1,0 +1,160 @@
+{
+    "family": "{{managed.caseNameUnique}}",
+    "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+      "FARGATE"
+    ],
+    "containerDefinitions": [
+      {
+        "name": "fluent-bit",
+        "image": "{{definitions.imageAwsForFluentBit}}",
+        "cpu": 512,
+        "firelensConfiguration": {
+          "type": "fluentbit"
+        },
+        "environment": [
+          {
+            "name": "AWS_REGION",
+            "value": "{{config.region}}"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_1",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_2",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit-onepod.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_3",
+            "value": "{{managed.s3ResourcesArn}}/fluent-parser.conf"
+          },
+          {
+            "name": "S3_BUCKET",
+            "value": "{{managed.s3OutputBucket}}"
+          },
+          {
+            "name": "S3_KEY_PREFIX",
+            "value": "{{managed.s3OutputExecutionArn}}/{{managed.caseNameUnique}}"
+          }
+        ],
+        "memory": 512,
+        "essential": true,
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "app-{{managed.caseNameUnique}}",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "fluent-bit"
+          }
+        },
+        "mountPoints": [
+          {
+            "sourceVolume": "my-shared-volume",
+            "containerPath": "/tmp/data_logs",
+            "readOnly": false
+          }
+        ],
+        "dependsOn": [{
+          "containerName": "mock",
+          "condition": "START"
+        }]
+      },
+      {
+        "name": "datajet",
+        "user": "0",
+        "image": "{{definitions.imageDatajet}}",
+        "essential": true,
+        "environment": [
+          {
+            "name": "CLIENTS",
+            "value": "[\"s3\"]"
+          },
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{managed.s3ResourcesBucket}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{managed.s3ResourcesPath}}/firelens-datajet.json"
+          }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{managed.caseNameUnique}}",
+                "awslogs-region": "{{config.region}}",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "datajet"
+            }
+        },
+        "mountPoints": [
+          {
+            "sourceVolume": "my-shared-volume",
+            "containerPath": "/var/tmp/data_logs",
+            "readOnly": false
+          }
+        ],
+        "dependsOn": [{
+            "containerName": "fluent-bit",
+            "condition": "START"
+        }]
+      },
+      {
+        "essential": false,
+        "image": "httpd",
+        "name": "dummy",
+        "logConfiguration": {
+          "logDriver":"awsfirelens",
+          "options": {
+            "Name": "cloudwatch_logs",
+            "region": "{{config.region}}",
+            "log_group_name": "/aws/ecs/containerinsights/{{managed.caseNameUnique}}",
+            "auto_create_group": "true",
+            "log_stream_name": "stdout-stderr-",
+            "retry_limit": "2"
+          }
+        },
+        "dependsOn": [{
+          "containerName": "fluent-bit",
+          "condition": "START"
+        }],
+        "memoryReservation": 100
+      },
+      {
+        "essential": false,
+        "image": "{{definitions.imageMountebank}}",
+        "name": "mock",
+        "environment": [
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{managed.s3ResourcesBucket}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{managed.s3ResourcesPath}}/mountebank.json"
+          }
+        ],
+        "logConfiguration": {
+          "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{managed.caseNameUnique}}",
+                "awslogs-region": "{{config.region}}",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "mock"
+            }
+        },
+        "memoryReservation": 100
+      }
+    ],
+    "memory": "2048",
+    "cpu": "512",
+    "volumes": [
+      {
+        "name": "my-shared-volume"
+      }
+    ]
+}

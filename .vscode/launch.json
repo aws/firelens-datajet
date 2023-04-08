@@ -33,6 +33,20 @@
                 "${workspaceFolder}/**/*.js"
             ],
             "preLaunchTask": "npm: build",
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Suite Launch",
+            "runtimeArgs": [
+                "-r",
+                "ts-node/register"
+            ],
+            "args": [
+                "app.ts"
+            ],
+            "sourceMaps": true,
+            "cwd": "${workspaceRoot}/apps/suite-launch"
         }
     ]
 }
