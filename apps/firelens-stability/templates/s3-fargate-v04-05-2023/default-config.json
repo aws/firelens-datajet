@@ -1,0 +1,24 @@
+{
+    "definitions": {
+        "taskName": "{{managed.caseNameUnique}}",
+        "s3LogDestinationBucketName": "{{definitions.s3LogDestinationBucketName}}",
+        
+        "datajet_kbps_throughput_four_tcp": 250,
+        "s3_use_put_object": "Off",
+        "s3_outputPluginCount": "1",
+        "s3_total_file_size": "100M",
+        "s3_upload_timeout": "10m",
+        "s3_s3_key_format": "/{{managed.executionName}}-{{managed.executionId}}/{{managed.caseNameUnique}}/${RUN_ID}/%Y-%m-%d/$UUID",
+        "s3_compression": null,
+
+        "endpoint_flb": "localhost",
+        "debugS3Bucket": "{{managed.s3OutputBucket}}",
+        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
+        "datajet_tcp_ports": [
+            "5170",
+            "5171",
+            "5172",
+            "5173"
+        ]
+    }
+}

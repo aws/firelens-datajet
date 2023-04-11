@@ -1,0 +1,53 @@
+{
+  "component": "synchronizer",
+  "config": {
+    "repeat": 100,
+    "waitBefore": 5,
+    "waitAfter": 10,
+    "waitBetween": 0,
+    "isAsync": true
+  },
+  "children": [
+{{#each2 definitions.datajet_tcp_ports}}
+    {
+      "comment": "ApplicationLogs through tcp",
+      "generator": {
+        "name": "basic",
+        "config": {
+          "contentLength": 1000,
+          "batchSize": 1,
+          "key": "log"
+        }
+      },
+      "datajet": {
+        "name": "tcp",
+        "config": {
+          "host": "{{definitions.endpoint_flb}}",
+          "port": {{_item}},
+          "addNewline": true
+        }
+      },
+      "stage": {
+        "batchRate": {{definitions.datajet_kbps_throughput_four_tcp}}
+      }
+    },
+{{/each2}}
+    {
+      "comment": "this stage does nothing, but is used for propper json formatting",
+      "generator": {
+        "name": "basic",
+        "config": {
+        }
+      },
+      "datajet": {
+        "name": "stdout",
+        "config": {
+        }
+      },
+      "stage": {
+        "batchRate": 1,
+        "maxBatches": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+    "config": {
+        "template": "s3-fargate-v04-05-2023",
+        "taskCount": 5
+    }
+}

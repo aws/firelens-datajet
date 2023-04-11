@@ -1,0 +1,5 @@
+{
+    "definitions": {
+        "s3_upload_timeout": "1m"
+    }
+}

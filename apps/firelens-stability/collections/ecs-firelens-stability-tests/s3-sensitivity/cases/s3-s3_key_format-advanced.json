@@ -1,0 +1,5 @@
+{
+    "definitions": {
+        "s3_s3_key_format": "/{{managed.executionName}}-{{managed.executionId}}/{{managed.caseNameUnique}}/${RUN_ID}/%Y-%m-%d/$TAG[2]/$TAG-$TAG[0]-$TAG[1]-idx-$INDEX-uuid-$UUID"
+    }
+}
