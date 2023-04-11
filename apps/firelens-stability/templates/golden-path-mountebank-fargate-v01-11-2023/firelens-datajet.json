@@ -15,21 +15,22 @@
         "config": {
           "contentLength": 100,
           "batchSize": 10,
-          "key": "log",
-          "addNewline": true
+          "logKey": "log",
+          "addNewline": true,
+          "contentType": "{{definitions.datajet_generator_basic_contentType}}",
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
         }
       },
       "datajet": {
         "name": "forward",
         "config": {
-          "host": "{{{endpoint_flb}}}",
+          "host": "{{definitions.endpoint_flb}}",
           "port": 6270,
-          "tagPrefix": "Application-firelens-"
+          "tagPrefix": "Application-firelens-{{definitions.caseNameUnique}}"
         }
       },
       "stage": {
-        "batchRate": {{definitions.kbps_throughput_forward}},
-        "maxBatches": 100000000000
+        "batchRate": {{definitions.kbps_throughput_forward}}
       }
     },
     {
@@ -39,7 +40,9 @@
         "config": {
           "contentLength": 100,
           "batchSize": 10,
-          "key": "log"
+          "logKey": "log",
+          "contentType": "{{definitions.datajet_generator_basic_contentType}}",
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
         }
       },
       "datajet": {
@@ -50,8 +53,7 @@
         }
       },
       "stage": {
-        "batchRate": {{definitions.kbps_throughput_tail}},
-        "maxBatches": 100000000000
+        "batchRate": {{definitions.kbps_throughput_tail}}
       }
     },
     {
@@ -61,7 +63,9 @@
         "config": {
           "contentLength": 100,
           "batchSize": 10,
-          "key": "log"
+          "logKey": "log",
+          "contentType": "{{definitions.datajet_generator_basic_contentType}}",
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
         }
       },
       "datajet": {
@@ -73,8 +77,7 @@
         }
       },
       "stage": {
-        "batchRate": {{definitions.kbps_throughput_tcp}},
-        "maxBatches": 100000000000
+        "batchRate": {{definitions.kbps_throughput_tcp}}
       }
     },
     {
@@ -84,20 +87,21 @@
         "config": {
           "contentLength": 100,
           "batchSize": 10,
-          "key": "log"
+          "logKey": "log",
+          "contentType": "{{definitions.datajet_generator_basic_contentType}}",
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
         }
       },
       "datajet": {
         "name": "tcp",
         "config": {
-          "host": "{{{endpoint_flb}}}",
+          "host": "{{definitions.endpoint_flb}}",
           "port": 5171,
           "addNewline": true
         }
       },
       "stage": {
-        "batchRate": {{definitions.kbps_throughput_tcp}},
-        "maxBatches": 100000000000
+        "batchRate": {{definitions.kbps_throughput_tcp}}
       }
     }
   ]
