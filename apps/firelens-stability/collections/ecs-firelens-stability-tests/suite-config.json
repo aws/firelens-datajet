@@ -1,9 +1,10 @@
 {
     "definitions": {
-        "testId": "{{managed.suiteName}}-{{managed.caseName}}"
+        "testId": "{{managed.suiteName}}-{{managed.caseName}}",
+        "segfault": false
     },
     "config": {
-        "cluster": "{{managed.executionName}}-{{managed.suiteName}}-{{managed.executionId}}",
+        "cluster": "{{managed.executionName}}-{{managed.executionId}}-{{managed.collectionName}}",
         "template": "golden-path-mountebank-fargate-v01-11-2023"
     }
 }
