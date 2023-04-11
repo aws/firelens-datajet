@@ -1,7 +1,7 @@
 {
     "family": "{{managed.caseNameUnique}}",
-    "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole",
-    "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
+    "executionRoleArn": "{{definitions.executionRoleArn}}",
+    "taskRoleArn": "{{definitions.taskRoleArn}}",
     "networkMode": "awsvpc",
     "requiresCompatibilities": [
       "FARGATE"
@@ -10,10 +10,16 @@
       {
         "name": "fluent-bit",
         "image": "{{definitions.imageAwsForFluentBit}}",
-        "cpu": 512,
+        "cpu": 1024,
         "firelensConfiguration": {
           "type": "fluentbit"
         },
+        "environmentFiles": [
+          {
+              "value": "{{managed.s3ResourcesArn}}/fluent-bit.env",
+              "type": "s3"
+          }
+        ],
         "environment": [
           {
             "name": "AWS_REGION",
@@ -33,22 +39,22 @@
           },
           {
             "name": "S3_BUCKET",
-            "value": "{{managed.s3OutputBucket}}"
+            "value": "{{definitions.debugS3Bucket}}"
           },
           {
             "name": "S3_KEY_PREFIX",
-            "value": "{{managed.s3OutputExecutionArn}}/{{managed.caseNameUnique}}"
+            "value": "{{definitions.debugS3KeyPrefix}}"
           }
         ],
-        "memory": 512,
+        "memory": 4096,
         "essential": true,
         "logConfiguration": {
           "logDriver": "awslogs",
           "options": {
-            "awslogs-group": "app-{{managed.caseNameUnique}}",
+            "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
             "awslogs-region": "{{config.region}}",
             "awslogs-create-group": "true",
-            "awslogs-stream-prefix": "fluent-bit"
+            "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"
           }
         },
         "mountPoints": [
@@ -85,10 +91,10 @@
         "logConfiguration": {
             "logDriver": "awslogs",
             "options": {
-                "awslogs-group": "app-{{managed.caseNameUnique}}",
+                "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
                 "awslogs-region": "{{config.region}}",
                 "awslogs-create-group": "true",
-                "awslogs-stream-prefix": "datajet"
+                "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
             }
         },
         "mountPoints": [
@@ -112,7 +118,7 @@
           "options": {
             "Name": "cloudwatch_logs",
             "region": "{{config.region}}",
-            "log_group_name": "/aws/ecs/containerinsights/{{managed.caseNameUnique}}",
+            "log_group_name": "/aws/ecs/containerinsights/dummy-app",
             "auto_create_group": "true",
             "log_stream_name": "stdout-stderr-",
             "retry_limit": "2"
@@ -141,17 +147,17 @@
         "logConfiguration": {
           "logDriver": "awslogs",
             "options": {
-                "awslogs-group": "app-{{managed.caseNameUnique}}",
+                "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
                 "awslogs-region": "{{config.region}}",
                 "awslogs-create-group": "true",
-                "awslogs-stream-prefix": "mock"
+                "awslogs-stream-prefix": "{{managed.caseNameUnique}}-mock"
             }
         },
         "memoryReservation": 100
       }
     ],
-    "memory": "2048",
-    "cpu": "512",
+    "memory": "4096",
+    "cpu": "1024",
     "volumes": [
       {
         "name": "my-shared-volume"

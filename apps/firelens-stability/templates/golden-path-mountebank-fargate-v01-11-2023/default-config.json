@@ -1,5 +1,9 @@
 {
     "definitions": {
+        "taskName": "{{managed.caseNameUnique}}",
+        "cw_auto_create_group": "false",
+        "datajet_generator_basic_contentType": "random",
+        "datajet_generator_basic_contentRandomValueSet": "alpha-numeric",
         "include_onepod": false,
         "kbps_throughput_tcp": 10,
         "kbps_throughput_tail": 10,
@@ -8,9 +12,9 @@
         "add_forward": true,
         "endpoint_mock": "localhost",
         "endpoint_flb": "localhost",
-        "HOSTNAME": "myhostname",
-        "STAGE": "test",
         "LOG_REGION": "us-west-2",
-        "serviceName": "golden-onepod-low-throughput"
+        "ServiceName": "golden-onepod-low-throughput",
+        "debugS3Bucket": "{{managed.s3OutputBucket}}",
+        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}"
     }
 }
