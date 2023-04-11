@@ -1,0 +1,5 @@
+{
+    "definitions": {
+        "datajet_kbps_throughput_four_tcp": 2500
+    }
+}

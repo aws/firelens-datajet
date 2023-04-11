@@ -2,8 +2,7 @@
     "definitions": {
         "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
         "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
-        "s3-log-destination": "aws-for-fluent-bit-stability-test-sink",
-        "s3-corefile-destination": "aws-for-fluent-bit-stability-test-corefiles",
+        "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
         "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
         "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole"
     },
