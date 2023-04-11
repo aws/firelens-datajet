@@ -1,6 +1,6 @@
 {
     "definitions": {
-        "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:s3-client",
+        "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:latest",
         "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
         "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
         "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",

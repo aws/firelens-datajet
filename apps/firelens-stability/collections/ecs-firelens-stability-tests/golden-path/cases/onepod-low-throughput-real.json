@@ -1,0 +1,13 @@
+{
+    "definitions": {
+        "cw_use_mock": false,
+        "include_onepod": true,
+        "cw_auto_create_group": true,
+        "kbps_throughput_tcp": 1,
+        "kbps_throughput_tail": 1,
+        "kbps_throughput_forward": 1
+    },
+    "config": {
+        "taskCount": 5
+    }
+}
