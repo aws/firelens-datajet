@@ -1,0 +1,5 @@
+{
+    "definitions": {
+        "s3_compression": "gzip"
+    }
+}
