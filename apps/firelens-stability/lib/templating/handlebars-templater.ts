@@ -36,6 +36,22 @@ handlebars.registerHelper('for', function(from, to, incr, block) {
 });
 
 /*
+* {{#each2 array}}
+*   <span>{{_item}}</span>
+* {{/each2}}
+*/
+handlebars.registerHelper('each2', function(arr, block) {
+    var accum = '';
+    for(var a of arr) {
+        accum += block.fn({
+            ...this,
+            _item: a
+        });
+    }
+    return accum;
+});
+
+/*
 * {{#ifEquals sampleString "This is a string"}}
 *  Your HTML here
 * {{/ifEquals}}
