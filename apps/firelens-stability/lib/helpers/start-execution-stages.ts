@@ -192,5 +192,11 @@ export async function recordTestCases(
     }
     const recordsFile = Path.join(recordsLocalPath, `${executionContext.executionId}-record.json`);
     console.log(`Records written to file: ${recordsFile}`)
+    console.log(`Started tasks: ${recordsComplete.executionRecordArchives.map(r=>r.testCase.config.taskCount).reduce((a,b)=>a+b,0)}`);
+    console.log(`Unique test cases: ${recordsComplete.executionRecordArchives.length}`);
+    console.log(`Tasks per test case:`);
+    recordsComplete.executionRecordArchives.forEach(r=>
+        console.log(`    ${r.testCase.managed.caseNameUnique}: ${r.testCase.config.taskCount}`));
+
     return await sendJSONToFile(recordsComplete, recordsFile);
 }
