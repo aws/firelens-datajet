@@ -146,7 +146,7 @@ async function validateAndRetryECSTask(ecsTestTask: IEcsTestTask) {
 
     /* Done! All tasks are in running */
     if (runningTasksCount === ecsTestTask.testCase.config.taskCount) {
-        console.log(`  ✅ ${testCase.managed.collectionName}/${testCase.managed.suiteName}/${testCase.managed.caseName}: All tasks in running state`);
+        console.log(`  ✅ ${testCase.managed.collectionName}/${testCase.managed.suiteName}/${testCase.managed.caseName}: All ${ecsTestTask.testCase.config.taskCount} tasks in running state`);
 
         /* Mark the ECS task as resolved. */
         ecsTaskReturn(ecsTestTask);
@@ -210,14 +210,14 @@ async function outOfRetriesECSTask(ecsTestTask: IEcsTestTask) {
 
 async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.ECS, taskDefinitionArn: string): Promise<string[]> {
     let launchedTasks = [];
-    for (let i = 0; i < taskCount; i += Math.min(10, taskCount - i)) {
-        const count = Math.min(10, taskCount - i);
+    while (launchedTasks.length < taskCount) {
+        const launchCount = Math.min(10, taskCount - launchedTasks.length);
         let result: PromiseResult<AWS.ECS.RunTaskResponse, AWS.AWSError>;
         try {
             result = await ecs.runTask({
             cluster: testCase.config.cluster,
             taskDefinition: taskDefinitionArn!,
-            count: count,
+            count: launchCount,
             launchType: "FARGATE",
             networkConfiguration: {
                 awsvpcConfiguration: {
@@ -238,10 +238,9 @@ async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.E
         launchedTasks.push(...launchedTaskArns);
         
         /* Retry failed tasks... */
-        const failedTasks = count - result.tasks.length;
-        i -= failedTasks;
+        const failedTasks = launchCount - launchedTaskArns.length;
         if (failedTasks) {
-            console.log(`    ⚠️ ${testCase.managed.caseNameUnique}, failed task launches: ${failedTasks}. Will retry`);
+            console.log(`    ⚠️ ${testCase.managed.caseNameUnique}, failed ${failedTasks} task launches. Will retry`);
             await new Promise(resolve => setTimeout(resolve, 500)); /* slow down the async loop (20 per second) */
         }
 
