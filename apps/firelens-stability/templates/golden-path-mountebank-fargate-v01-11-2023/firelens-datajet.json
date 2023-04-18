@@ -13,8 +13,8 @@
       "generator": {
         "name": "basic",
         "config": {
-          "contentLength": 100,
-          "batchSize": 10,
+          "contentLength": 1000,
+          "batchSize": 1,
           "logKey": "log",
           "addNewline": true,
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
@@ -38,8 +38,8 @@
       "generator": {
         "name": "basic",
         "config": {
-          "contentLength": 100,
-          "batchSize": 10,
+          "contentLength": 1000,
+          "batchSize": 1,
           "logKey": "log",
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
           "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
@@ -61,8 +61,8 @@
       "generator": {
         "name": "basic",
         "config": {
-          "contentLength": 100,
-          "batchSize": 10,
+          "contentLength": 1000,
+          "batchSize": 1,
           "logKey": "log",
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
           "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
@@ -85,8 +85,8 @@
       "generator": {
         "name": "basic",
         "config": {
-          "contentLength": 100,
-          "batchSize": 10,
+          "contentLength": 1000,
+          "batchSize": 1,
           "logKey": "log",
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
           "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"

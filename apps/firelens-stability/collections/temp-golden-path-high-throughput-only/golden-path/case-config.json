@@ -1,0 +1,6 @@
+{
+    "config": {
+        "template": "golden-path-mountebank-fargate-v01-11-2023",
+        "taskCount": 40
+    }
+}
