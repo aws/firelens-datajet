@@ -71,6 +71,10 @@ async function startECSTask(task: IEcsTestTask) {
     const clusters = await ecs.listClusters().promise();
     if (!clusters.clusterArns.some(c => c.endsWith(`/${testCase.config.cluster}`))) {
         await ecs.createCluster({
+            settings: [{
+                name: "containerInsights",
+                value: "enabled"
+            }],
             clusterName: testCase.config.cluster
         }).promise();
         console.log(`🍇 Created cluster: ${testCase.config.cluster}\n`)
