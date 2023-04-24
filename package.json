@@ -22,7 +22,7 @@
   "dependencies": {
     "@types/express": "^4.17.13",
     "@types/mustache": "^4.1.2",
-    "aws-sdk": "^2.1312.0",
+    "aws-sdk": "^2.1364.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "fast-csv": "^4.3.6",
