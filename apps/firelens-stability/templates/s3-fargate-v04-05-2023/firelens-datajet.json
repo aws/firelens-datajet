@@ -36,17 +36,15 @@
       "comment": "this stage does nothing, but is used for propper json formatting",
       "generator": {
         "name": "basic",
-        "config": {
-        }
+        "config": {}
       },
       "datajet": {
         "name": "stdout",
-        "config": {
-        }
+        "config": {}
       },
       "stage": {
         "batchRate": 1,
-        "maxBatches": 0
+        "batchLimit": 0
       }
     }
   ]
