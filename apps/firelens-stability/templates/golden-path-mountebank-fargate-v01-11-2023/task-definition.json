@@ -7,6 +7,81 @@
       "FARGATE"
     ],
     "containerDefinitions": [
+      {{#if definitions.adot_enable}}
+      {
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/aws-otel-EC2",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-stream-prefix": "ecs",
+            "awslogs-create-group": "True"
+          }
+        },
+        "healthCheck": {
+          "command": [ "/healthcheck" ],
+          "interval": 5,
+          "timeout": 6,
+          "retries": 5,
+          "startPeriod": 1
+        },
+        "portMappings": [
+          {
+            "hostPort": 2000,
+            "protocol": "udp",
+            "containerPort": 2000
+          },
+          {
+            "hostPort": 4317,
+            "protocol": "tcp",
+            "containerPort": 4317
+          },
+          {
+            "hostPort": 8125,
+            "protocol": "udp",
+            "containerPort": 8125
+          }
+        ],
+        "command": [
+          "--config=s3://{{managed.s3ResourcesBucket}}.s3.us-west-2.amazonaws.com/{{managed.s3ResourcesPath}}/adot-config.yaml"
+        ],
+        "image": "amazon/aws-otel-collector",
+        "name": "aws-otel-collector"
+      },
+      {
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/aws-otel-EC2",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-stream-prefix": "ecs",
+            "awslogs-create-group": "True"
+          }
+        },
+        "portMappings": [
+          {
+            "hostPort": 8000,
+            "protocol": "tcp",
+            "containerPort": 8000
+          }
+        ],
+        "environment": [
+          {
+            "name": "AWS_XRAY_DAEMON_ADDRESS",
+            "value": "localhost:2000"
+          }
+        ],
+        "image": "public.ecr.aws/aws-otel-test/aws-otel-goxray-sample-app:latest",
+        "essential": false,
+        "name": "aws-otel-emitter",
+        "dependsOn": [
+          {
+            "containerName": "aws-otel-collector",
+            "condition": "START"
+          }
+        ]
+      },
+      {{/if}}
       {
         "name": "fluent-bit",
         "image": "{{definitions.imageAwsForFluentBit}}",
