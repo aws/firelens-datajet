@@ -1,0 +1,172 @@
+{
+    "family": "{{{test_name_unique}}}",
+    "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
+    "networkMode": "bridge",
+    "containerDefinitions": [
+      {
+        "name": "fluent-bit",
+        "image": "{{{image-aws-for-fluent-bit}}}",
+        {{#if commands-aws-for-fluent-bit}}
+        "command": ["/bin/bash", "-c", "{{#each commands-aws-for-fluent-bit}}{{{this}}}; {{/each}}"],
+        {{/if}}
+        "cpu": 512,
+        "firelensConfiguration": {
+          "type": "fluentbit"
+        },
+        "environmentFiles": [
+          {
+              "value": "{{{s3_materials_arn}}}/fluent-bit.env",
+              "type": "s3"
+          }
+        ],
+        "environment": [
+          {
+            "name": "AWS_REGION",
+            "value": "us-west-2"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_1",
+            "value": "{{{s3_materials_arn}}}/fluent-bit.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_2",
+            "value": "{{{s3_materials_arn}}}/fluent-bit-onepod.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_3",
+            "value": "{{{s3_materials_arn}}}/fluent-parser.conf"
+          },
+          {
+            "name": "S3_BUCKET",
+            "value": "{{{s3-corefile-destination}}}"
+          },
+          {
+            "name": "S3_KEY_PREFIX",
+            "value": "{{{test_name}}}/r{{{test_revision}}}"
+          },
+          {
+            "name": "S3_FILE_NAME_PREFIX",
+            "value": "{{{test_name}}}-r{{{test_revision}}}"
+          },
+          {
+            "name": "S3_ALTERNATE_LOCATION_PREFIX",
+            "value": "{{{s3_materials_bucket}}}/{{{test_name}}}/error-reports/{{{test_name}}}-r{{{test_revision}}}"
+          }
+        ],
+        "memory": 512,
+        "essential": true,
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "app-{{{test_name_unique}}}",
+            "awslogs-region": "us-west-2",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "fluent-bit"
+          }
+        },
+        "mountPoints": [
+          {
+            "sourceVolume": "my-shared-volume",
+            "containerPath": "/tmp/data_logs",
+            "readOnly": false
+          }
+        ],
+        "links": ["mock:mock"]
+      },
+      {
+        "name": "datajet",
+        "user": "0",
+        "image": "{{{image-datajet}}}",
+        "essential": true,
+        "environment": [
+          {
+            "name": "CLIENTS",
+            "value": "[\"s3\"]"
+          },
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{{s3_materials_bucket}}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{{s3_materials_key_base}}}/firelens-datajet.json"
+          }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{{test_name_unique}}}",
+                "awslogs-region": "us-west-2",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "datajet"
+            }
+        },
+        "mountPoints": [
+          {
+            "sourceVolume": "my-shared-volume",
+            "containerPath": "/var/tmp/data_logs",
+            "readOnly": false
+          }
+        ],
+        "dependsOn": [{
+            "containerName": "fluent-bit",
+            "condition": "START"
+        }],
+        "links": ["fluent-bit:flb"]
+      },
+      {
+        "essential": false,
+        "image": "httpd",
+        "name": "dummy",
+        "logConfiguration": {
+          "logDriver":"awsfirelens",
+          "options": {
+            "Name": "cloudwatch_logs",
+            "region": "us-west-2",
+            "log_group_name": "/aws/ecs/containerinsights/dummy-app",
+            "auto_create_group": "true",
+            "log_stream_name": "stdout-stderr-",
+            "retry_limit": "2"
+          }
+        },
+        "dependsOn": [{
+          "containerName": "fluent-bit",
+          "condition": "START"
+        }],
+        "memoryReservation": 100
+      },
+      {
+        "essential": false,
+        "image": "{{{image-mock}}}",
+        "name": "mock",
+        "environment": [
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{{s3_materials_bucket}}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{{s3_materials_key_base}}}/mountebank.json"
+          }
+        ],
+        "logConfiguration": {
+          "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{{test_name_unique}}}",
+                "awslogs-region": "us-west-2",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "mock"
+            }
+        },
+        "memoryReservation": 100
+      }
+    ],
+    "memory": "512",
+    "cpu": "512",
+    "volumes": [
+      {
+        "name": "my-shared-volume"
+      }
+    ]
+}
