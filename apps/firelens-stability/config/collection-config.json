@@ -3,8 +3,8 @@
         "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:latest",
         "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
         "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
-        "taskRoleArn": "arn:aws:iam::210752607241:role/FirelensECS",
-        "executionRoleArn": "arn:aws:iam::210752607241:role/ecsTaskExecutionRole"
+        "taskRoleArn": "arn:aws:iam::210752607241:role/FireLensTaskRoleReduced",
+        "executionRoleArn": "arn:aws:iam::210752607241:role/FireLensExecutionRoleReduced"
     },
     "config": {
         "region": "us-west-2",
