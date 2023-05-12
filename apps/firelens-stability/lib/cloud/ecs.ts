@@ -226,7 +226,7 @@ async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.E
             networkConfiguration: {
                 awsvpcConfiguration: {
                     subnets: testCase.config.taskVpcSubnets,
-                    assignPublicIp: "ENABLED",
+                    assignPublicIp: "DISABLED",
                     securityGroups: testCase.config.taskVpcSecurityGroups,
                 }
             }
