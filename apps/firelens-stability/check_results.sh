@@ -35,14 +35,17 @@ ecs-firelens-stability-tests-s3-sensitivity-s3-use_put_object-on
 if [ -z "${1}" ]
 then
     echo "Usage: check_results.sh {region} {cluster} {execution ID}"
+    exit 1
 fi
 if [ -z "${2}" ]
 then
     echo "Usage: check_results.sh {region} {cluster} {execution ID}"
+    exit 1
 fi
 if [ -z "${3}" ]
 then
     echo "Usage: check_results.sh {region} {cluster} {execution ID}"
+    exit 1
 fi
 
 echo "Cluster: ${2} ${1}"
