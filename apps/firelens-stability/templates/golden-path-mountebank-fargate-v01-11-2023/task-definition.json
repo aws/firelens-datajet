@@ -186,7 +186,7 @@
       },
       {
         "essential": false,
-        "image": "httpd",
+        "image": "{{definitions.imageHttpd}}",
         "name": "dummy",
         "logConfiguration": {
           "logDriver":"awsfirelens",
