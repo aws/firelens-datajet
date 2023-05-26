@@ -1,0 +1,64 @@
+<p>Let's create a binary TCP imposter with multiple stubs:</p>
+
+<testScenario name='tcp contains example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4547,
+  "protocol": "tcp",
+  "mode": "binary",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "Zmlyc3QgcmVzcG9uc2U=" } }],
+      "predicates": [{ "contains": { "data": "AgM=" } }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "data": "c2Vjb25kIHJlc3BvbnNl" } }],
+      "predicates": [{ "contains": { "data": "Bwg=" } }]
+    }</strong>,<strong class='highlight3'>
+    {
+      "responses": [{ "is": { "data": "dGhpcmQgcmVzcG9uc2U=" } }],
+      "predicates": [{ "contains": { "data": "Bwg=" } }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>We're sending a base64-encoded version of four bytes: 0x1, 0x2, 0x3,
+and 0x4.  Our first predicate is a base64 encoded version of 0x2 and 0x3.
+The response is a base64-encoded version of the string "first response":</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>AQIDBA==</strong>' | base64 --decode | nc localhost 4547</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>first response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>Next we'll send 0x5, 0x6, 0x7, and 0x8, matching on a predicate
+encoding 0x7 and 0x8:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight2'>BQYHCA==</strong>' | base64 --decode | nc localhost 4547</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight2'>second response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The third stub will never run, since it matches the same requests as the
+second stub.  mountebank always chooses the first stub that matches based on
+the order you add them to the <code>stubs</code> array when creating the
+imposter.</p>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4547 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

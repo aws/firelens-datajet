@@ -1,0 +1,62 @@
+<p>Let's create a text-based imposter with multiple stubs.  Binary imposters won't
+see any interesting behavior difference with only <code>startsWith</code> predicates:</p>
+
+<testScenario name='tcp startsWith example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4548,
+  "protocol": "tcp",
+  "mode": "text",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "first response" } }],
+      "predicates": [{ "startsWith": { "data": "first" } }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "data": "second response" } }],
+      "predicates": [{ "startsWith": { "data": "second" } }]
+    }</strong>,<strong class='highlight3'>
+    {
+      "responses": [{ "is": { "data": "third response" } }],
+      "predicates": [{ "startsWith": { "data": "second" } }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The match is not case-sensitive:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>FIRST REQUEST</strong>' | nc localhost 4548</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>first response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The same is true for the second stub.</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight2'>Second Request</strong>' | nc localhost 4548</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight2'>second response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The third stub will never run, since it matches the same requests as the
+second stub.  mountebank always chooses the first stub that matches based on
+the order you add them to the <code>stubs</code> array when creating the
+imposter.</p>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4548 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

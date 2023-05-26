@@ -1,0 +1,24 @@
+version: 2
+plugins:
+  csslint:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - javascript
+  eslint:
+    enabled: true
+  fixme:
+    enabled: true
+  markdownlint:
+    enabled: true
+  nodesecurity:
+    enabled: true
+  shellcheck:
+    enabled: true
+exclude_patterns:
+  - "**/node_modules/"
+  - "dist"
+  - "test"
+  - "mbTest"

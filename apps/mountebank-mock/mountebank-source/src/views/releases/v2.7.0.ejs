@@ -1,0 +1,32 @@
+<h1>v<%= releaseVersion %></h1>
+
+<p class='info-icon'>Be sure to keep up with the latest releases by subscribing to the
+    <a href='http://mbtest.org/feed'>ATOM feed</a>.</p>
+
+<h2>New Features</h2>
+<ul class='bullet-list'>
+    <li>Added a number of new community contributions to protocols!</li>
+    <li>Mountebank will now issue a warn log message on potentially unsafe regular expressions</li>
+</ul>
+
+<h2>Bug Fixes</h2>
+<ul class='bullet-list'>
+    <li>Fixed issue with a bad request when adding a stub crashing mountebank</li>
+    <li>Fixed an issue saving proxied JSON HTTP bodies as JSON instead of a string</li>
+    <li>Fixed a few bugs in the documentation</li>
+</ul>
+
+<h2>Contributors</h2>
+<p>Many thanks to the following kind folks for help with this release, either through bug reports,
+    suggestions, or direct code contributions:</p>
+
+<ul class='bullet-list'>
+    <li>Venkat Palivela</li>
+    <li>Christian Sahlmann</li>
+    <li>Marco Gario</li>
+    <li>Isabelle Carter</li>
+</ul>
+
+<h2>Install</h2>
+
+<pre><code>npm install -g mountebank@<%= releaseVersion %></code></pre>

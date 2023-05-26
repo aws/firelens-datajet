@@ -1,0 +1,121 @@
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>wait</code></td>
+    <td>A positive integer, or a string</td>
+    <td>If a number is passed in, mountebank will wait that number of milliseconds before returning.
+    If a string is passed in, it is expected to be a parameterless JavaScript function that returns the number
+    of milliseconds to wait.
+
+    <p class='warning-icon'>The <code><a href='/docs/commandLine'>--allowInjection</a></code> command
+      line flag must be set to support passing in a JavaScript function</p>
+    </td>
+  </tr>
+</table>
+
+<p>The <code>wait</code> behavior is conceptually quite simple.  Just pass in a number of milliseconds
+to wait into the behavior:</p>
+
+<testScenario name='wait'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4545,
+  "protocol": "http",
+  "stubs": [
+    {
+      "responses": [
+        {
+          "is": { "body": "This took at least half a second to send" },
+          "behaviors": [
+            { "wait": 500 }
+          ]
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>Now we can call the imposter.  But have some patience, it'll take the better portion of a second
+before you'll get your response...</p>
+
+    <step type='http'>
+<pre><code>GET / HTTP/1.1
+Host: localhost:4545</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 01 Jan 2015 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+This took at least half a second to send</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %></code>
+    </step>
+
+<p>If a more advanced wait strategy is needed, you can also specify a function body as the wait variable.
+As long as the function returns a number, mountebank can be configured to wait a variable
+amount of time.</p>
+
+<p class='warning-icon'>The <code><a href='/docs/commandLine'>--allowInjection</a></code> command
+line flag must be set to support using a function to determine the wait time.</p>
+
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4545,
+  "protocol": "http",
+  "stubs": [
+    {
+      "responses": [
+        {
+          "is": { "body": "This took at least 100 to 1000 ms to send" },
+          "behaviors": [
+            { "wait": "function() { return Math.floor(Math.random() * 901) + 100; }" }
+          ]
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>The result of the function determines the wait time:</p>
+
+    <step type='http'>
+<pre><code>GET / HTTP/1.1
+Host: localhost:4545</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 01 Jan 2015 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+This took at least 100 to 1000 ms to send</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %></code>
+    </step>
+</testScenario>

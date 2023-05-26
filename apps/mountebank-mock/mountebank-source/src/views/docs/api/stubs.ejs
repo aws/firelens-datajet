@@ -1,0 +1,391 @@
+<%
+title = 'stubs'
+description = 'Creating canned responses using mountebank'
+%>
+
+<%- include('../../_header') -%>
+
+<h1>Stub Responses</h1>
+
+<p>Stubs are a type of test double that return a canned response based on the request.
+mountebank allows you to define a list of stubs when creating an imposter. mountebank
+associates both a list of <em>responses</em> and a list of
+<a href='/docs/api/predicates'><em>predicates</em></a> with each stub.</p>
+
+<p>It doesn't make sense to create an empty array of responses, but each response is under no
+obligation to override the defaults (every protocol defines a default for every response field;
+see the protocol-specific documentation pages linked to from the sidebar for more details).
+The responses array defines a circular buffer - every time the stub is used for the request,
+the first response is pulled from the front of the <code>responses</code> array, evaluated, and pushed
+to the back of the array.  This elegantly does what you want.  In the common case, when you
+always want to return the same response, you just add one response to the array.
+More complex scenarios will require that the same endpoint returns a sequence of
+different responses for the same predicates.  Simply add them all to the array in order.
+When the sequence finishes, it will start over.  More complexity can be added by simply
+adding more responses to the array without complicating the contract.</p>
+
+<h2>Response Types</h2>
+
+<p>Each stub response is defined by a specific response type that defines the behavior of the
+response.  The response types currently supported are:</p>
+
+<table>
+  <tr>
+    <th>Response Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>is</code></td>
+    <td>Merges the specified response fields with the response defaults (see the protocol
+      page linked to from the sidebar on the left for the defaults).</td>
+  </tr>
+  <tr>
+    <td><code>proxy</code></td>
+    <td>Proxies the request to the specified destination and returns the response.  The
+    response is saved and can be replayed on subsequent calls.</td>
+  </tr>
+  <tr>
+    <td><code>inject</code></td>
+    <td>Allows you to inject a JavaScript function to create the response object.</td>
+  </tr>
+  <tr>
+    <td><code>fault</code></td>
+    <td>Allows you to specify a connection fault to occur instead of a normal response.</td>
+  </tr>
+</table>
+
+<p>See the <a href='/docs/api/proxies'>proxy</a>, <a href='/docs/api/injection'>
+injection</a> and <a href='/docs/api/faults'>fault</a> pages for detailed examples of those response types, and the
+<a href='/docs/api/predicates'>predicates</a> page for examples of stubs with predicates.
+Multiple stubs only make sense with predicates.</p>
+
+<p>Responses can be parameterized. Right now, only one parameter is supported:</p>
+
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Default</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>repeat</code></td>
+    <td><code>1</code></td>
+    <td>Repeats the response the given number of times.</td>
+  </tr>
+</table>
+
+<p>Stubs can be decorated by adding to the <code>behaviors</code> array.  See the
+<a href='/docs/api/behaviors'>behaviors</a> page for more details.</p>
+
+<h2>Example</h2>
+
+<p>Let's create an http imposter with a couple of <code>is</code> response types.  It will simulate
+a RESTful endpoint that creates a customer the first time it's called and returns a 400
+the second time it's called because the email already exists.  We add a second stub that returns a
+404 on any request that isn't a <code>POST</code> to <code>/customers/123</code></p>
+
+<testScenario name='example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4545,
+  "protocol": "http",
+  "recordRequests": true,
+  "stubs": [
+    {
+      "predicates": [
+        {
+          "equals": {
+            "method": "POST",
+            "path": "/customers/123"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 201,
+            "headers": {
+              "Location": "http://localhost:4545/customers/123",
+              "Content-Type": "application/xml"
+            },
+            "body": "&lt;customer&gt;&lt;email&gt;customer@test.com&lt;/email&gt;&lt;/customer&gt;"
+          }
+        },
+        {
+          "is": {
+            "statusCode": 400,
+            "headers": {
+              "Content-Type": "application/xml"
+            },
+            "body": "&lt;error&gt;email already exists&lt;/error&gt;"
+          }
+        }
+      ]
+    },
+    {
+      "responses": [
+        {
+          "is": { "statusCode": 404 }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>Let's assume the application under test makes the initial call...</p>
+
+    <step type='http'>
+<pre><code>POST /customers/123 HTTP/1.1
+Host: localhost:4545
+Accept: application/xml
+Content-Type: application/xml
+
+&lt;customer&gt;
+  &lt;email&gt;customer@test.com&lt;/email&gt;
+&lt;/customer&gt;</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 201 Created
+Location: http://localhost:4545/customers/123
+Content-Type: application/xml
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+&lt;customer&gt;&lt;email&gt;customer@test.com&lt;/email&gt;&lt;/customer&gt;</code></pre>
+        </assertResponse>
+    </step>
+
+<p>...and the second call:</p>
+
+    <step type='http'>
+<pre><code>POST /customers/123 HTTP/1.1
+Host: localhost:4545
+Accept: application/xml
+Content-Type: application/xml
+
+&lt;customer&gt;
+  &lt;email&gt;customer@test.com&lt;/email&gt;
+&lt;/customer&gt;</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 400 Bad Request
+Content-Type: application/xml
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+&lt;error&gt;email already exists&lt;/error&gt;</code></pre>
+        </assertResponse>
+    </step>
+
+<p>Now let's see the <code>requests</code> that mountebank
+has saved for you:</p>
+
+    <step type='http'>
+<pre><code>GET /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Vary: Accept
+Content-Type: application/json; charset=utf-8
+Content-Length: <volatile>4212</volatile>
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Connection: keep-alive
+
+{
+  "protocol": "http",
+  "port": 4545,
+  "numberOfRequests": 2,
+  "recordRequests": true,
+  "requests": [
+    {
+      "requestFrom": "<volatile>::ffff:127.0.0.1:60523</volatile>",
+      "method": "POST",
+      "path": "/customers/123",
+      "query": {},
+      "headers": {
+        "Host": "localhost:4545",
+        "Accept": "application/xml",
+        "Content-Type": "application/xml",
+        "Connection": "keep-alive",
+        "Transfer-Encoding": "chunked"
+      },
+      "body": "&lt;customer&gt;\n  &lt;email&gt;customer@test.com&lt;/email&gt;\n&lt;/customer&gt;",
+      "ip": "<volatile>::ffff:127.0.0.1</volatile>",
+      "timestamp": "<volatile>2014-01-09T02:30:31.022Z</volatile>"
+    },
+    {
+      "requestFrom": "<volatile>::ffff:127.0.0.1:60523</volatile>",
+      "method": "POST",
+      "path": "/customers/123",
+      "query": {},
+      "headers": {
+        "Host": "localhost:4545",
+        "Accept": "application/xml",
+        "Content-Type": "application/xml",
+        "Connection": "keep-alive",
+        "Transfer-Encoding": "chunked"
+      },
+      "body": "&lt;customer&gt;\n  &lt;email&gt;customer@test.com&lt;/email&gt;\n&lt;/customer&gt;",
+      "ip": "<volatile>::ffff:127.0.0.1</volatile>",
+      "timestamp": "<volatile>2014-01-09T02:30:31.043Z</volatile>"
+    }
+  ],
+  "stubs": [
+    {
+      "predicates": [
+        {
+          "equals": {
+            "method": "POST",
+            "path": "/customers/123"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "is": {
+            "statusCode": 201,
+            "headers": {
+              "Location": "http://localhost:4545/customers/123",
+              "Content-Type": "application/xml"
+            },
+            "body": "&lt;customer&gt;&lt;email&gt;customer@test.com&lt;/email&gt;&lt;/customer&gt;"
+          }
+        },
+        {
+          "is": {
+            "statusCode": 400,
+            "headers": {
+              "Content-Type": "application/xml"
+            },
+            "body": "&lt;error&gt;email already exists&lt;/error&gt;"
+          }
+        }
+      ],
+      "_links": {
+        "self": { "href": "http://localhost:<%= port %>/imposters/4545/stubs/0" }
+      }
+    },
+    {
+      "responses": [
+        {
+          "is": { "statusCode": 404 }
+        }
+      ],
+      "_links": {
+        "self": { "href": "http://localhost:<%= port %>/imposters/4545/stubs/1" }
+      }
+    }
+  ],
+  "_links": {
+    "self": { "href": "http://localhost:<%= port %>/imposters/4545" },
+    "stubs": { "href": "http://localhost:<%= port %>/imposters/4545/stubs" }
+  }
+}</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+
+<code class='hidden'>DELETE /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %></code>
+    </step>
+</testScenario>
+
+<h2>Repeat example</h2>
+
+<p>The <code>repeat</code> behavior allows certain responses to return a certain number of times before
+    moving on to the next response in the array. In the below example, the first response is configured to
+    return 2 times before advancing to the second response:</p>
+
+<testScenario name='repeat'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 7777,
+  "protocol": "http",
+  "stubs": [
+    {
+      "responses": [
+        {
+          "is": {
+            "body": "This will repeat 2 times"
+          },
+          "repeat": 2
+        },
+        {
+          "is": {
+            "body": "Then this will return"
+          }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>Now the first response will return 2 times before returning the second response.</p>
+
+    <step type='http'>
+<pre><code>GET / HTTP/1.1
+Host: localhost:7777</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 01 Jan 2015 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+This will repeat 2 times</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<pre><code>GET / HTTP/1.1
+Host: localhost:7777</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 01 Jan 2015 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+This will repeat 2 times</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<pre><code>GET / HTTP/1.1
+Host: localhost:7777</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 01 Jan 2015 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+Then this will return</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/7777 HTTP/1.1
+Host: localhost:<%= port %></code>
+    </step>
+</testScenario>
+
+
+<%- include('../../_footer') -%>

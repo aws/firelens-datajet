@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+
+if [ `uname` = "Darwin" ]; then
+    OS=macosx
+else
+    OS=linux
+fi
+
+VERSION=4.0.0.1744
+
+echo "Downloading sonar-scanner..."
+wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${VERSION}-${OS}.zip
+unzip sonar-scanner-cli-${VERSION}-${OS}.zip
+rm sonar-scanner-cli-${VERSION}-${OS}.zip
+
+# Necessary for sonar-scanner to run correctly
+PATH=$PATH:`pwd`/sonar-scanner-${VERSION}-${OS}/bin
+echo sonar.host.url=https://sonarcloud.io >> sonar-scanner-${VERSION}-${OS}/conf/sonar-scanner.properties
+
+echo "Running sonar-scanner..."
+sonar-scanner \
+    -Dsonar.projectKey=mountebank \
+    -Dsonar.projectName=mountebank \
+    -Dsonar.links.homepage=http://www.mbtest.org \
+    -Dsonar.links.ci=https://circleci.com/gh/bbyars/workflows/mountebank \
+    -Dsonar.links.issue=https://github.com/bbyars/mountebank/issues \
+    -Dsonar.links.scm=https://github.com/bbyars/mountebank \
+    -Dsonar.sources=src \
+    -Dsonar.exclusions=src/public/scripts/jquery \
+    -Dsonar.tests=test,mbTest \
+    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+    -Dsonar.host.url=https://sonarcloud.io \
+    -Dsonar.organization=bbyars-github \
+    -Dsonar.login=$SONARQUBE_LOGIN
+
+rm -rf sonar-scanner-${VERSION}-${OS}

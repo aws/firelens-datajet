@@ -1,0 +1,79 @@
+<p>The <code>or</code> predicate matches if any of its sub-predicates match.</p>
+
+<testScenario name='tcp or example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4553,
+  "protocol": "tcp",
+  "mode": "text",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "matches" } }],
+      "predicates": [
+        {
+          "or": [
+            { "startsWith": { "data": "start" } },
+            { "endsWith": { "data": "end\n" } },
+            { "contains": { "data": "middle" } }
+          ]
+        }
+      ]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The stub matches if the first sub-predicate matches:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>start data transmission</strong>' | nc localhost 4553</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>matches</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The stub matches if the second sub-predicate matches:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>data transmission end</strong>' | nc localhost 4553</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>matches</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The stub matches if the last sub-predicate matches:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>data middle transmission</strong>' | nc localhost 4553</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>matches</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The stub does not match none of the sub-predicates match...</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>data transmission</strong>' | nc localhost 4553</code></pre>
+
+<p>...which yields an empty response:</p>
+
+        <assertResponse>
+<pre><code>
+</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4553 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>
