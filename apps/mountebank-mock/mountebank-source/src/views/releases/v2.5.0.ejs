@@ -1,0 +1,51 @@
+<h1>v<%= releaseVersion %></h1>
+
+<p class='info-icon'>Be sure to keep up with the latest releases by subscribing to the
+    <a href='http://mbtest.org/feed'>ATOM feed</a>.</p>
+
+<p>This release is largely centered around modernizing the codebase and simplifying the build process.
+That involved removing some previously supported install options:</p>
+
+<h2>Install changes</h2>
+<ul class='bullet-list'>
+    <li>The only supported installation options are now npm and Docker. The OS-specific install
+    packages available previously were not used enough to justify the considerable complexity they
+    added to the build process.</li>
+    <li>After some confusion, I reverted the Dockerfile back to use <code>CMD</code> instead of
+    <code>ENTRYPOINT</code>, which allows you use <code>mb</code> on the <code>docker run</code> command.
+    An example is listed on the <a href='//<%= host %>/docs/gettingStarted'>getting started</a> page.</li>
+</ul>
+
+<h2>New Features</h2>
+<ul class='bullet-list'>
+    <li>Support the HTTP CONNECT method in http proxies</li>
+    <li>Better support for embedding mountebank into a node express app for those who want to bypass the CLI</li>
+</ul>
+
+<h2>Bug Fixes</h2>
+<ul class='bullet-list'>
+    <li>Ensure there is always a logging transport to avoid logger errors on startup</li>
+    <li>Ensure that the <code>defaultResponse</code> and <code>endOfRequestResolver</code>
+        is returned as part of the imposter configuration</li>
+    <li>Fix detection of compressed encodings beyond gzip for http</li>
+    <li>Fix Windows <code>shellTransform</code> bug with long commands</li>
+</ul>
+
+<h2>Contributors</h2>
+<p>Many thanks to the following kind folks for help with this release, either through bug reports,
+    suggestions, or direct code contributions:</p>
+
+<ul class='bullet-list'>
+    <li>Angela</li>
+    <li>Daegon Kim</li>
+    <li>William Yang</li>
+    <li>Jacob Bolda</li>
+    <li>o.drapeza</li>
+    <li>rossanthony</li>
+    <li>Tomasz Zwierzchon</li>
+</ul>
+
+<h2>Install</h2>
+
+<pre><code>npm install -g mountebank@<%= releaseVersion %></code></pre>
+

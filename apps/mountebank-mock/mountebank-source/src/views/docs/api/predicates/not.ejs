@@ -1,0 +1,52 @@
+<p>The <code>not</code> predicate negates its child predicate.</p>
+
+<testScenario name='tcp not example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4552,
+  "protocol": "tcp",
+  "mode": "text",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "not test" } }],
+      "predicates": [{ "not": { "equals": { "data": "test\n" } } }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "data": "test" } }],
+      "predicates": [{ "equals": { "data": "test\n" } }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The first stub matches if the <code>is</code> sub-predicate does not match:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>production</strong>' | nc localhost 4552</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>not test</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>As expected, the second stub matches if the <code>is</code> sub-predicate does match:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>test</strong>' | nc localhost 4552</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>test</strong></code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4552 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

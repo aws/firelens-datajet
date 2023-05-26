@@ -1,0 +1,426 @@
+<%
+title = 'injection'
+description = 'Extending mountebank with custom JavaScript scripting'
+%>
+
+<%- include('../../_header') -%>
+
+<h1>Injection</h1>
+
+<p>mountebank allows JavaScript injection for predicates and response types for situations
+where the built-in ones are not sufficient</p>
+
+<p class='warning-icon'>Injection only works if <code>mb</code> is
+    run with the <code>--allowInjection</code> flag.</p>
+
+<p class='warning-icon'>If you have injection enabled, you should set either the
+<code>--localOnly</code> or <code>--ipWhitelist</code> flags as well. See the
+<a href='/docs/security'>security page</a> for more details.</p>
+
+<p>Though mountebank has gone to some trouble to make injections as hassle-free as
+possible, there are a couple of things to be aware of.  First, when validating stub creation,
+mountebank does not validate any injected functions.  Second, all injections have full access
+to a node.js runtime environment, including the ability to <code>require</code> in different
+modules.  Of course, such power comes with its own challenges, which leads us to our third point: with
+injections, you can crash mountebank.  mountebank has made a noble and valiant effort to be robust
+in the face of errors, but he is not as clever as you are.  If you find yourself coding injections
+frequently because of missing functionality that you believe would be generally useful,
+mountebank humbly requests you to add a
+<a href='https://github.com/bbyars/mountebank/issues'>feature request.</a></p>
+
+<p>There are five options for injecting JavaScript into mountebank.  The first two,
+predicate injection and response injection, are described below.  The third and fourth,
+post-processing responses through the <code>decorate</code> behavior or through the
+<code>wait</code> behavior, are described
+on the <a href='/docs/api/behaviors'>behaviors</a> page.  Finally, determining the end
+of a TCP request is described on the <a href='/docs/protocols/tcp'>tcp</a> protocol page.</p>
+
+<h2 id='predicate-injection'>Predicate injection</h2>
+
+<p>Predicate injection allows you to pass a JavaScript function to decide whether the
+stub should match or not.  Unlike other predicates, predicate injections bind to the entire
+<code>request</code> object, which allows you to base the result on multiple fields.  They
+can return truthy or falsy to decide whether the predicate matches.  mountebank doesn't know
+what that means, so he always returns <code>true</code> or <code>false</code>.</p>
+
+<p>The injected function should take a single parameter, which will contain the following fields:</p>
+
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>request</code></td>
+        <td>The entire request object, containing all request fields</td>
+    </tr>
+    <tr>
+        <td><code>state</code></td>
+        <td>An initially empty object that will be shared between predicate
+        and response injection functions as well as the <code>decorate</code> behavior.
+        You can use it to capture and mutate shared state.</td>
+    </tr>
+    <tr>
+        <td><code>logger</code></td>
+        <td>A logger object with <code>debug</code>, <code>info</code>, <code>warn</code>,
+        and <code>error</code> functions to write to the mountebank logs.</td>
+    </tr>
+</table>
+
+<p>The following example uses injection to satisfy a complicated multi-field predicate for HTTP:</p>
+
+<testScenario name='predicate injection'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4545,
+  "protocol": "http",
+  "stubs": [
+    {
+      "responses": [{ "is": { "statusCode": 400 } }],
+      "predicates": [{
+        "inject": "function (config) {\n\n    function hasXMLProlog () {\n        return config.request.body.indexOf('&lt;?xml') === 0;\n    }\n\n    if (config.request.headers['Content-Type'] === 'application/xml') {\n        return !hasXMLProlog();\n    }\n    else {\n        return hasXMLProlog();\n    }\n}"
+      }]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>Injections certainly don't help the readability of the JSON.  If you're loading imposters through a config file,
+look at the <code>stringify</code> function supported in file templating with the <a href='/docs/commandLine#config-file'>
+<code>--configfile</code></a> command line option to support storing the functions in a readable format.
+Let's look at our injected function appropriately formatted:</p>
+
+<pre><code>function (config) {
+
+    function hasXMLProlog () {
+        return config.request.body.indexOf('&lt;?xml') === 0;
+    }
+
+    if (config.request.headers['Content-Type'] === 'application/xml') {
+        return !hasXMLProlog();
+    }
+    else {
+        return hasXMLProlog();
+    }
+}</code></pre>
+
+<p>It matches on XML content missing a prolog, or a prolog added to non-XML content.  First we'll
+send a request that matches the first condition:</p>
+
+    <step type='http'>
+<pre><code>POST /test HTTP/1.1
+Host: localhost:4545
+Content-Type: <strong class='highlight1'>application/xml</strong>
+
+&lt;customer&gt;
+  &lt;name&gt;Test&lt;/name&gt;
+&lt;/customer&gt;</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 <strong class='highlight1'>400</strong> Bad Request
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked</code></pre>
+            </assertResponse>
+    </step>
+
+<p>Now we'll match on the second condition:</p>
+
+    <step type='http'>
+<pre><code>POST /test HTTP/1.1
+Host: localhost:4545
+Content-Type: <strong class='highlight1'>application/json</strong>
+
+<strong class='highlight1'>&lt;?xml&gt;</strong>
+&lt;customer&gt;
+  &lt;name&gt;Test&lt;/name&gt;
+&lt;/customer&gt;</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 <strong class='highlight1'>400</strong> Bad Request
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>
+
+<h2 id='response-injection'>Response injection</h2>
+
+<p>Response injection allows you to dynamically construct the response based on the
+request and previous requests.  The response object should match the structure defined in
+the appropriate protocol page linked to on the sidebar.  mountebank will use the default
+value documented on the protocol page for any response fields you leave empty. The predicate
+object takes a single parameter which will contain the following fields:</p>
+
+<table>
+    <tr>
+        <th>Field</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>request</code></td>
+        <td>The entire protocol-specific request object</td>
+    </tr>
+    <tr>
+        <td><code>state</code></td>
+        <td>mountebank maintains this variable for you
+            that will be empty on the first injection.  The same variable will be passed into
+            every <code>inject</code> function, allowing you to remember state between calls,
+            even between stubs. It will be shared with predicate <code>inject</code> functions
+            and <code>decorate</code> behaviors.</td>
+    </tr>
+    <tr>
+        <td><code>callback</code></td>
+        <td>Asynchronous injection is supported through this parameter.
+            If your function returns a value, the imposter will consider it to be synchronous.  If
+            it does not return a value, it must invoke the <code>callback</code> parameter with the
+            response object.  The following injection takes advantage of the node.js environment
+            it will run in to proxy most of the request to localhost:5555.  It records the request
+            and response to the <code>state</code> variable, and only proxies if certain request
+            parameters have not already been sent.
+        </td>
+    </tr>
+    <tr>
+        <td><code>logger</code></td>
+        <td>A logger object with <code>debug</code>, <code>info</code>, <code>warn</code>,
+            and <code>error</code> functions to write to the mountebank logs.</td>
+    </tr>
+</table>
+
+<p>The example below will use two imposters, an origin server and a server that proxies
+to the origin server.  It would be better implemented using
+<a href='/docs/api/proxies'>a proxy response type</a>, but has sufficient complexity to
+demonstrate many nuances of injection.</p>
+
+<p>First we'll create the origin server at port 5555.  To help us keep track of the
+two imposters, we'll set the <code>name</code> parameter, which will show up in the logs.</p>
+
+<testScenario name='predicate response'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 5555,
+  "protocol": "http",
+  "name": "origin",
+  "stubs": [{
+    "responses": [{ "inject": "(config) => {\n    config.logger.info('origin called');\n    config.state.requests = config.state.requests || 0;\n    config.state.requests += 1;\n    return {\n      headers: {\n        'Content-Type': 'application/json'\n      },\n      body: JSON.stringify({ count: config.state.requests })\n    };\n}" }]
+  }]
+}</code></pre>
+    </step>
+
+<p>The injected function for the origin server imposter is formatted below.  This
+uses the <code>state</code> parameter, and sets the <code>requests</code>
+field on it to return how many times it's been called:</p>
+
+<pre><code>(config) => {
+    config.logger.info('origin called');
+    config.state.requests = config.state.requests || 0;
+    config.state.requests += 1;
+    return {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      <strong class='highlight3'>body: JSON.stringify({ count: config.state.requests })</strong>
+    };
+}</code></pre>
+
+<p>Now let's create the proxy imposter to try it out:</p>
+
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4546,
+  "protocol": "http",
+  "name": "proxy",
+  "stubs": [
+    {
+      "predicates": [<strong class='highlight1'>{ "equals": { "method": "GET", "path": "/counter" } }</strong>],
+      "responses": [{ "inject": "function (config) {\n    var count = config.state.requests ? Object.keys(config.state.requests).length : 0;\n\n    return {\n        body: `There have been ${count} proxied calls`\n    };\n}" }]
+    },
+    {
+      "responses": [{ "inject": "function (config) {\n    var cacheKey = config.request.method + ' ' + config.request.path;\n\n    if (typeof config.state.requests === 'undefined') {\n        config.state.requests = {};\n    }\n\n    if (config.state.requests[cacheKey]) {\n        config.logger.info('Using previous response');\n        config.callback(config.state.requests[cacheKey]);\n    }\n\n    var http = require('http'),\n        options = {\n            method: config.request.method,\n            hostname: 'localhost',\n            port: 5555,\n            path: config.request.path,\n            headers: config.request.headers\n        },\n        httpRequest = http.request(options, response => {\n            var body = '';\n            response.setEncoding('utf8');\n            response.on('data', chunk => {\n                body += chunk;\n            });\n            response.on('end', () => {\n                var stubResponse = {\n                        statusCode: response.statusCode,\n                        headers: response.headers,\n                        body: body\n                    };\n                config.logger.info('Successfully proxied: ' + JSON.stringify(stubResponse));\n                config.state.requests[cacheKey] = stubResponse;\n                config.callback(stubResponse);\n            });\n        });\n    httpRequest.end();\n}" }]
+    }
+  ]
+}</code></pre>
+    </step>
+
+<p>The first stub uses the following function.  It depends on the second stub to
+set a variable on the <code>state</code> parameter each time it proxies, and returns
+a count of proxied calls.  Note that it uses the exact same <code>requests</code>
+field that the origin server injection uses on the <code>state</code> parameter,
+but for a different purpose.  This is OK - <code>state</code> is shared between
+stubs on one imposter, but not shared between imposters.  This function
+<code>require</code>s in node's <code>util</code> module, showing an example
+that takes advantage of the runtime environment.</p>
+
+<pre><code>function (config) {
+    var count = config.state.requests ? Object.keys(config.state.requests).length : 0;
+
+    return {
+        <strong class='highlight2'>body: `There have been ${count} proxied calls`</strong>
+    };
+}</code></pre>
+
+<p>The second stub uses an asynchronous proxy with a cache:</p>
+
+<pre><code>function (config) {
+    var cacheKey = config.request.method + ' ' + config.request.path;
+
+    if (typeof config.state.requests === 'undefined') {
+        config.state.requests = {};
+    }
+
+    if (config.state.requests[cacheKey]) {
+        config.logger.info('Using previous response');
+        config.callback(config.state.requests[cacheKey]);
+    }
+
+    var http = require('http'),
+        options = {
+            method: config.request.method,
+            hostname: 'localhost',
+            port: 5555,
+            path: config.request.path,
+            headers: config.request.headers
+        },
+        httpRequest = http.request(options, response => {
+            var body = '';
+            response.setEncoding('utf8');
+            response.on('data', chunk => {
+                body += chunk;
+            });
+            response.on('end', () => {
+                var stubResponse = {
+                        statusCode: response.statusCode,
+                        headers: response.headers,
+                        body
+                    };
+                config.logger.info('Successfully proxied: ' + JSON.stringify(stubResponse));
+                config.state.requests[cacheKey] = stubResponse;
+                config.callback(stubResponse);
+            });
+        });
+    httpRequest.end();
+}</code></pre>
+
+<p>Our first request should trigger a proxy call:</p>
+
+    <step type='http'>
+<pre><code>GET /first HTTP/1.1
+Host: localhost:4546</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight3'>{ "count": 1 }</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>A second call also proxies because the path is different.</p>
+
+    <step type='http'>
+<pre><code>GET /second HTTP/1.1
+Host: localhost:4546</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight3'>{ "count": 2 }</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The third request should be served from the cache of the proxy imposter:</p>
+
+    <step type='http'>
+<pre><code>GET /first HTTP/1.1
+Host: localhost:4546</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight3'>{ "count": 1 }</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>Finally, let's query the other stub on the proxy imposter:</p>
+
+    <step type='http'>
+<pre><code><strong class='highlight1'>GET /counter</strong> HTTP/1.1
+Host: localhost:4546</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight2'>There have been 2 proxied calls</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>This is the most complicated example in the documentation, and took
+some time to get it working (these examples in the docs are executed
+as part of the test suite).  This is appropriate since injection is the most
+complicated thing you can do in the tool.  When injection errors are detected,
+mountebank logs the full <code>eval</code>'d code, including the bits it's added
+on top of your code.  It also logs JSON representation of the parameter.</p>
+
+<p>As always, if you get stuck, <a href='/support'>ask for help.</a></p>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/5555 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4546 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>
+
+<h2 id='including-modules'>Including other npm modules</h2>
+
+<p>It is entirely possible to include other npm modules in your injection scripts.
+However, you will need to install the module globally to ensure your injection function
+can access it. For example, if you wanted to use the <code>underscore</code> module,
+you'd first have to install it on the machine running mountebank:</p>
+
+<pre><code>npm install -g underscore</code></pre>
+
+<p>At that point, you can simply <code>require</code> it into your function.</p>
+
+<%- include('../../_footer') -%>

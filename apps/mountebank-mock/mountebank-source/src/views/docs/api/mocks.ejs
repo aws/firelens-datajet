@@ -1,0 +1,130 @@
+<%
+title = 'mocks'
+description = 'Using mountebank to verify network calls were made'
+%>
+
+<%- include('../../_header') -%>
+
+<h1>Mocks</h1>
+
+<p><a href='http://martinfowler.com/articles/mocksArentStubs.html'>Mocks</a> are a type
+of test double that allow you to verify a call was made without relying on the server
+response.  mountebank enables mocking through the <code>requests</code> element on
+an imposter. The fields saved for each request depends on the protocol, and are documented
+in the protocol pages linked to from the sidebar. It is up to the client code to
+implement the mock verification using the <code>requests</code> array.</p>
+
+<p class='warning-icon'>Note, you must configure the imposter to record requests by setting the
+<code>recordRequests</code> field to true to enable mock
+verification. Mocking requires mountebank to remember information about each request to each imposter.
+For long-running instances of mountebank, it is recommended that you run <code>mb</code> with the
+<code>--datadir</code> command line option so that all requests are persisted to disk. Otherwise,
+mountebank will save them to memory, which will create a significant performance constraint
+when there are a large number of requests saved. You can also manually clear an imposter's saved
+requests - see the <a href='/docs/api/overview'>overview page</a> for details.</p>
+
+<h2>Example</h2>
+
+<p>The <a href='/docs/protocols/smtp'>SMTP</a> protocol is one where mocking is very valuable,
+since most applications don't rely on complex SMTP responses, but it is useful to verify
+that the application sent an SMTP request without actually sending an email.</p>
+
+<p>First let's create an imposter:</p>
+
+<testScenario name='example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4545,
+  "protocol": "smtp",
+  "recordRequests": true
+}</code></pre>
+    </step>
+
+<p>Now make the following SMTP request in your application:</p>
+
+    <step type='smtp' port='4545'>
+<pre><code>From: "Customer Service" &lt;customer-service@company.com&gt;
+To: "Customer" &lt;customer@domain.com&gt;
+Subject: Thank you for your order
+
+Hello Customer,
+Thank you for your order from company.com.  Your order will
+be shipped shortly.
+
+Your friendly customer service department.</code></pre>
+    </step>
+
+<p>You can verify the call by making either a <code>GET</code> or
+<code>DELETE</code> call to the imposter:</p>
+
+    <step type='http'>
+<pre><code>GET /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Vary: Accept
+Content-Type: application/json; charset=utf-8
+Content-Length: 1116
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Connection: keep-alive
+
+{
+  "protocol": "smtp",
+  "port": 4545,
+  "numberOfRequests": 1,
+  "recordRequests": true,
+  <strong class='highlight1'>"requests": [
+    {
+      "requestFrom": "<volatile>127.0.0.1</volatile>",
+      "ip": "<volatile>127.0.0.1</volatile>",
+      "envelopeFrom": "customer-service@company.com",
+      "envelopeTo": ["customer@domain.com"],
+      "from": {
+        "address": "customer-service@company.com",
+        "name": "Customer Service"
+      },
+      "to": [
+        {
+          "address": "customer@domain.com",
+          "name": "Customer"
+        }
+      ],
+      "cc": [],
+      "bcc": [],
+      "subject": "Thank you for your order",
+      "priority": "normal",
+      "references": [],
+      "inReplyTo": [],
+      "text": "Hello Customer,\nThank you for your order from company.com.  Your order will\nbe shipped shortly.\n\nYour friendly customer service department.",
+      "html": "",
+      "attachments": [],
+      "timestamp": "<volatile>2015-01-09T02:30:31.850Z</volatile>"
+    }
+  ]</strong>,
+  "stubs": [],
+  "_links": {
+    "self": { "href": "http://localhost:<%= port %>/imposters/4545" },
+    "stubs": { "href": "http://localhost:<%= port %>/imposters/4545/stubs" }
+  }
+}</code></pre>
+        </assertResponse>
+    </step>
+
+    <p>Now you can use the <code>requests</code> element in your test code to validate
+the application sent the correct information.</p>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4545 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>
+
+<%- include('../../_footer') -%>

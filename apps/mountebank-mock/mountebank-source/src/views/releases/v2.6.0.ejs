@@ -1,0 +1,35 @@
+<h1>v<%= releaseVersion %></h1>
+
+<p class='info-icon'>Be sure to keep up with the latest releases by subscribing to the
+    <a href='http://mbtest.org/feed'>ATOM feed</a>.</p>
+
+<h2>New Features</h2>
+<ul class='bullet-list'>
+    <li>Added a new <a href='//<%= host %>/docs/api/faults'><code>fault</code> response type</a>
+     that simulates network failures.</li>
+    <li>Added a new <a href='//<%= host %>/docs/api/proxies#proxy-predicate-generators'><code>ignore</code>
+    field</a> to <code>predicateGenerators</code> to enable you
+    to exclude certain request fields from the generated predicate</li>
+</ul>
+
+<h2>Bug Fixes</h2>
+<ul class='bullet-list'>
+    <li>Fixed UI on /imposters page</li>
+    <li>Fixed some documentation bugs</li>
+</ul>
+
+<h2>Contributors</h2>
+<p>Many thanks to the following kind folks for help with this release, either through bug reports,
+    suggestions, or direct code contributions:</p>
+
+<ul class='bullet-list'>
+    <li>Thyago Machado</li>
+    <li>gerard sek</li>
+    <li>David Connolly</li>
+    <li>Christian Bewernitz</li>
+    <li>Matt Mills</li>
+</ul>
+
+<h2>Install</h2>
+
+<pre><code>npm install -g mountebank@<%= releaseVersion %></code></pre>

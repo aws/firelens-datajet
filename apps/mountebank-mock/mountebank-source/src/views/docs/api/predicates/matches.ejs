@@ -1,0 +1,66 @@
+<p>Let's create a text-based imposter with multiple stubs.  Binary imposters
+cannot use the <code>matches</code> predicate.</p>
+
+<testScenario name='tcp matches example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4550,
+  "protocol": "tcp",
+  "mode": "text",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "first response" } }],
+      "predicates": [{
+        "matches": { "data": "^first\\Wsecond" },
+        "caseSensitive": true
+      }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "data": "second response" } }],
+      "predicates": [{ "matches": { "data": "second\\s+request" } }]
+    }</strong>,<strong class='highlight3'>
+    {
+      "responses": [{ "is": { "data": "third response" } }],
+      "predicates": [{ "matches": { "data": "second\\s+request" } }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The first stub requires a case-sensitive match on a string starting with
+"first", followed by a non-word character, followed by "second":</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>first second</strong>' | nc localhost 4550</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>first response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The second stub is not case-sensitive.</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight2'>Second Request</strong>' | nc localhost 4550</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight2'>second response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The third stub will never run, since it matches the same requests as the
+second stub.  mountebank always chooses the first stub that matches based on
+the order you add them to the <code>stubs</code> array when creating the
+imposter.</p>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4550 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

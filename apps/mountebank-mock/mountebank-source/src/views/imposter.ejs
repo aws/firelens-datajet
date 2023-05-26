@@ -1,0 +1,22 @@
+<%
+title = 'imposter information'
+description = 'Information about a specific mountebank imposter'
+%>
+
+<%- include('_header') -%>
+
+<h1><%= imposter.protocol %> Imposter on port <%= imposter.port %></h1>
+
+<h2>Requests</h2>
+
+<% imposter.requests.forEach(request => { -%>
+<pre><code><%= JSON.stringify(request, null, 2) %></code></pre>
+<% }); -%>
+
+<h2>Stubs</h2>
+
+<% imposter.stubs.forEach(stub => { -%>
+<pre><code><%= JSON.stringify(stub, null, 2) %></code></pre>
+<% }); -%>
+
+<%- include('_footer') -%>
