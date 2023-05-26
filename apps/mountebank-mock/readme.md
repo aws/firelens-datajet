@@ -32,6 +32,8 @@ Notably the following are set:
      endpoint 127.0.0.1
 ```
 
+If you are running locally, you may want to set `--network host` on both mountebank and Fluent Bit containers. 
+
 These options are enabled by the following cherrypicked commit:
 ```
 https://github.com/matthewfala/fluent-bit.git immutable-cwl-net-options 5d9692f00b5295728bf0340d332896a7cc450a7e

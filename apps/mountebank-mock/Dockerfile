@@ -21,8 +21,7 @@ RUN yum install -y \
 
 WORKDIR /app
 
-COPY /package.json /app/package.json
-COPY /package-lock.json /app/package-lock.json
+COPY mountebank-source/ .
 RUN npm install --production && npm cache clean -f && npm link mountebank
 
 # Run as a non-root user

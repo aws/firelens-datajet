@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>mountebank - <%= title %></title>
+    <meta charset='utf-8'>
+    <meta name='description' content='<%= description %>' />
+    <meta name='author' content='Brandon Byars' />
+
+    <link rel='stylesheet' href='/stylesheets/jqueryui/1.10.4/themes/smoothness/jquery-ui.css' />
+    <link rel='stylesheet' type='text/css' href='/stylesheets/application.css' />
+    <!--[if IE]>
+    <link rel='stylesheet' type='text/css' href='/stylesheets/ie.css' />
+    <![endif]-->
+
+    <link rel='shortcut icon' href='/images/favicon.ico' type='image/x-icon' />
+
+    <script src='/scripts/jquery/jquery-3.6.1.min.js'></script>
+    <script src='/scripts/urlHashHandler.js'></script>
+  </head>
+  <body>
+    <div id='main'>
+      <header>
+        <a href='/'><img src='/images/mountebank.png' alt='mountebank' /></a>
+        <p>mountebank - over the wire test doubles</p>
+
+        <form method='GET' action='http://www.google.com/search'>
+          <input type='hidden' name='domains' value='www.mbtest.org' />
+          <input type='hidden' name='sitesearch' value='www.mbtest.org' />
+          <input type='search' name='q' id='q' results='5' autosave='mb' placeholder='Search...'/>
+          <input type='submit' value='Search...' id='searchButton' />
+        </form>
+
+        <nav class='horizontal'>
+          <ul>
+            <li><a href='/'>home</a></li>
+            <li><a href='/imposters'>imposters</a></li>
+            <li><a href='/logs'>logs</a></li>
+            <li><a href='/config'>config</a></li>
+            <li><a href='/metrics' title='Prometheus metrics'>metrics</a></li>
+            <li><a href='/feed' class='feed-icon' title='subscribe for release updates'></a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <hr />
+
+      <div id='sidenav'>
+        <h3>the apothecary</h3>
+        <nav class='vertical'>
+          <ul>
+            <li><a href='/docs/gettingStarted'>getting started</a></li>
+            <li><a href='/docs/mentalModel'>mental model</a></li>
+            <li><a href='/docs/communityExtensions'>3rd party plugins</a></li>
+            <li><a href='/docs/commandLine'>command line</a></li>
+            <li><a href='/docs/security'>security</a></li>
+            <li><a href='/faqs'>faqs</a></li>
+            <li><a href='/support'>support</a></li>
+          </ul>
+
+          <p>api:</p>
+          <ul>
+            <li><a href='/docs/api/overview'>overview</a></li>
+            <li><a href='/docs/api/contracts'>contracts</a></li>
+            <li><a href='/docs/api/mocks'>mock verification</a></li>
+            <li><a href='/docs/api/stubs'>stub responses</a></li>
+            <li>
+              <ul>
+                <li><a href='/docs/api/proxies'>proxies</a></li>
+                <li><a href='/docs/api/injection'>injection</a></li>
+                <li><a href='/docs/api/behaviors'>behaviors</a></li>
+                <li><a href='/docs/api/faults'>faults</a></li>
+              </ul>
+            </li>
+            <li><a href='/docs/api/predicates'>stub predicates</a></li>
+            <li>
+              <ul>
+                <li><a href='/docs/api/xpath'>xpath</a></li>
+                <li><a href='/docs/api/json'>json</a></li>
+                <li><a href='/docs/api/jsonpath'>jsonpath</a></li>
+              </ul>
+            </li>
+            <li><a href='/docs/api/errors'>errors</a></li>
+          </ul>
+
+          <p>builtin protocols:</p>
+          <ul>
+            <li><a href='/docs/protocols/http'>http</a></li>
+            <li><a href='/docs/protocols/https'>https</a></li>
+            <li><a href='/docs/protocols/tcp'>tcp</a></li>
+            <li><a href='/docs/protocols/smtp'>smtp</a></li>
+          </ul>
+
+          <p>community plugins:</p>
+          <ul>
+            <li><a href='https://gitlab.com/dAnjou/mountebank-ldap'>ldap</a></li>
+            <li><a href='https://github.com/vamsib/mountebank-ws'>websockets</a></li>
+            <li><a href='https://github.com/bashj79/mb-graphql'>graphql</a></li>
+            <li><a href='https://github.com/telekom/mb-netmgmt'>snmp</a></li>
+            <li><a href='https://github.com/telekom/mb-netmgmt'>telnet</a></li>
+            <li><a href='https://github.com/telekom/mb-netmgmt'>ssh</a></li>
+            <li><a href='https://github.com/telekom/mb-netmgmt'>netconf</a></li>
+            <li><a href='/docs/protocols/custom'>create your own</a></li>
+          </ul>
+
+          <p>the book:<br /><br />
+              <a href='https://www.manning.com/books/testing-microservices-with-mountebank?utm_source=mb&amp;utm_medium=affiliate&amp;utm_campaign=book_byars_testing_12_20_18&amp;a_aid=mb&amp;a_bid=ee3288f4'>
+                  <img src='/images/book.jpg' alt='Testing Microservices with Mountebank' width='130' height='163' />
+              </a>
+          </p>
+        </nav>
+      </div>
+
+      <div id='content'>

@@ -1,0 +1,153 @@
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>shellTransform</code></td>
+    <td>A string</td>
+    <td>Represents the path to a command line application. The application should
+        retrieve the JSON-encoded <code>request</code> and <code>response</code> from the environment
+        and print out the transformed <code>response</code> to <code>stdout</code>.
+
+    <p class='warning-icon'>The <code><a href='/docs/commandLine'>--allowInjection</a></code> command
+      line flag must be set to support this behavior.</p>
+    </td>
+  </tr>
+</table>
+
+<p>The <code>shellTransform</code> behavior plays a similar role as the <code>decorate</code> behavior,
+enabling a programmatic transformation of the response. However, you don't have to write the transformation
+logic in JavaScript -- it can be in the language of your choice.</p>
+
+<p class='warning-icon'>Since it allows shelling out to another application,
+the <a href='/docs/commandLine'>--allowInjection</a> flag must be passed in to <code>mb</code> on startup.</p>
+
+<p>mountebank will expose the following environment variables to your shell application:</p>
+
+<ul class='bullet-list'>
+    <li><code>MB_REQUEST</code> which contains the JSON request as a string, and</li>
+    <li><code>MB_RESPONSE</code> which contains the current JSON response as a string</li>
+</ul>
+
+<p>The application should write to stdout a JSON representation of
+the transformed response.</p>
+
+<p>We'll show a simple example of shelling out to plug in response values based on an external data source.</p>
+
+<h3 id='external-datasource'>Using an external data source</h3>
+
+<p>At times you may find it convenient to use an external data store to fill in dynamic values based on
+data coming in from the request. You can combine an <code>is</code> canned response with a
+<code>shellTransform</code> behavior to achieve this, regardless of what the external data source is.
+For this example, we'll assume it's a simple pipe-delimited file mapping customer ids to names. We'll
+save it as <code>names.csv</code> in the directory we run <code>mb</code> from.</p>
+
+<p class='info-icon'>Note that, by reformatting the file, this example would more easily be satisfied
+by the <code>lookup</code> behavior.</p>
+
+<testScenario name='shellTransform'>
+    <step type='file' filename='<%= process.cwd() %>/names.txt'>
+<pre><code>123|Frodo Baggins
+234|Samwise Gamgee
+345|Gandalf the White
+456|Smeagol</code></pre>
+    </step>
+
+<p>We expect the incoming http request to specify the id in the URL, and we want to represent the name
+in the response body. We'll set up our imposter like this:</p>
+
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 5555,
+  "protocol": "http",
+  "stubs": [
+    {
+      "predicates": [{ "matches": { "path": "/accounts/\\d+" } }],
+      "responses": [
+        {
+          "is": { "body": "Hello, <strong class='highlight1'>${YOU}!</strong>" },
+          "behaviors": [
+            { "shellTransform": "node <%= process.cwd() %>/addName.js" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+</code></pre>
+    </step>
+
+<p>In this example, we're shelling out to a node.js application, which isn't much different than
+using a <code>decorate</code> function. However, that's just to keep it simple; the application
+could be written in any language.</p>
+
+<p>Let's create the <code>addName.js</code> file..</p>
+
+    <step type='file' filename='<%= process.cwd() %>/addName.js'>
+<pre><code>var request = JSON.parse(process.env.MB_REQUEST),
+    response = JSON.parse(process.env.MB_RESPONSE),
+    requestId = request.path.replace('/accounts/', ''),
+    fs = require('fs'),
+    mappings = fs.readFileSync('<%= process.cwd() %>/names.txt', { encoding: 'utf8' }),
+    lines = mappings.split(/\r?\n/);
+
+for (let i = 0; i &lt; lines.length; i += 1) {
+    var fields = lines[i].split('|'),
+        id = fields[0],
+        name = fields[1];
+
+    if (requestId === id) {
+        <strong class='highlight1'>response.body = response.body.replace('${YOU}', name);</strong>
+    }
+}
+
+console.log(JSON.stringify(response));</code></pre>
+    </step>
+
+<p>Now we can test it out:</p>
+
+    <step type='http'>
+<pre><code>GET /accounts/234 HTTP/1.1
+Host: localhost:5555</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Wed, 07 Jan 2016 21:27:14 GMT</volatile>
+Transfer-Encoding: chunked
+
+Hello, <strong class='highlight1'>Samwise Gamgee!</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>And again...</p>
+
+    <step type='http'>
+<pre><code>GET /accounts/456 HTTP/1.1
+Host: localhost:5555</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Wed, 07 Jan 2016 21:27:14 GMT</volatile>
+Transfer-Encoding: chunked
+
+Hello, <strong class='highlight1'>Smeagol!</strong></code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/5555 HTTP/1.1
+Host: localhost:<%= port %></code>
+    </step>
+
+    <step type='file' filename='<%= process.cwd() %>/names.txt' delete='true'><code></code></step>
+    <step type='file' filename='<%= process.cwd() %>/addName.js' delete='true'><code></code></step>
+</testScenario>

@@ -1,0 +1,146 @@
+<%
+title = 'getting started'
+description = 'A getting started guide for using mountebank'
+%>
+
+<%- include('../_header') -%>
+
+<h1>Getting Started</h1>
+
+<p><b>Install:</b></p>
+
+<pre><code>npm install -g mountebank</code></pre>
+
+<p><b>Run:</b></p>
+
+<pre><code>mb</code></pre>
+
+<p><b>Alternative install methods:</b></p>
+
+<p>You can avoid a global install with <code>npm install mountebank</code>, in which
+case you can run mountebank using the <code>npx mb</code> command.</p>
+
+<p>Alternatively, you can download the Docker image and run:</p>
+
+<pre><code>docker pull bbyars/mountebank:<%= version %>
+docker run --rm -p 2525:2525 -p 4545:4545 -p 5555:5555 bbyars/mountebank:<%= version %> start </code></pre>
+
+<p><b>Use:</b></p>
+
+<p>By default, mountebank listens on port 2525, but that's not the port that your
+imposters (test doubles) will listen on.  To show a couple different kinds of
+imposters, let's create both an http imposter and a tcp one.  We'll use the
+<code>curl</code> command line tool to call mountebank's
+<a href='/docs/api/overview'>api</a>.  The following command creates the
+http imposter, listening on port 4545, by <code>POST</code>ing to
+http://localhost:2525/imposters with the given body.
+The <code>predicates</code> are optional - if you don't include any, the stub
+always matches, and the response is always sent.</p>
+
+<p class='info-icon'>The <a href='/docs/api/contracts'>contracts page</a>
+provides an easy to use exploration of the JSON structure.</p>
+
+<testScenario name='getting-started'>
+    <step type='exec'>
+<pre><code>curl -i -X POST -H 'Content-Type: application/json' http://localhost:<change to='<%= port %>'>2525</change>/imposters --data '{
+  "port": 4545,
+  "protocol": "http",
+  "stubs": [{
+    "responses": [
+      { "is": { <strong class='highlight1'>"statusCode": 400</strong> }}
+    ],
+    "predicates": [{
+      "and": [
+        {
+          "equals": {
+            "path": "/test",
+            "method": "POST",
+            "headers": { "Content-Type": "application/json" }
+          }
+        },
+        {
+          "not": {
+            "contains": { "body": "requiredField" },
+            "caseSensitive": true
+          }
+        }
+      ]
+    }]
+  }]
+}'
+</code></pre>
+    </step>
+
+<p>Let's test it out:</p>
+
+    <step type='exec'>
+<pre><code>curl -i -X POST -H 'Content-Type: application/json' http://localhost:4545/test --data '{"optionalField": true}'</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 <strong class='highlight1'>400</strong> Bad Request
+Connection: close
+Date: <volatile>Sat, 04 Jan 2014 02:48:16 GMT</volatile>
+Transfer-Encoding: chunked</code></pre>
+        </assertResponse>
+    </step>
+
+<p>Had we not tailored the request to match the predicates, we would have instead received
+the default response.  For instance, let's send a request that leaves off the Content-Type:</p>
+
+    <step type='exec'>
+<pre><code>curl -i -X POST http://localhost:4545/test --data '{"optionalField": true}'</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Sat, 04 Jan 2014 02:48:16 GMT</volatile>
+Transfer-Encoding: chunked</code></pre>
+        </assertResponse>
+    </step>
+
+<p>mountebank can stub binary tcp equally well, which is convenient when your application integrates
+with a downstream system using one of the myriad binary RPC
+protocols.  Those protocols tend to rely on language-specific serialization to return an object
+graph.  Your test can use the same serialization code to create a binary stream of the object you want
+the imposter to return during an RPC call, and encode it as a base64 string.  That string is what you
+send to the imposter.  In the example below, we're telling the imposter to respond with a base64-encoded
+string of "hello, world!" when a tcp request containing the string "sayHello" is sent to port 5555, which
+could correspond to the method name serialized in the RPC call:</p>
+
+    <step type='exec'>
+<pre><code>curl -i -X POST -H 'Content-Type: application/json' http://localhost:<change to='<%= port %>'>2525</change>/imposters --data '{
+  "port": 5555,
+  "protocol": "tcp",
+  "mode": "binary",
+  "stubs": [{
+    "responses": [
+      { "is": { <strong class='highlight1'>"data": "aGVsbG8sIHdvcmxkIQ=="</strong> }}
+    ],
+    "predicates": [{ "contains": { "data": "c2F5SGVsbG8=" } }]
+  }]
+}'</code></pre>
+    </step>
+
+<p>We'll use <code>nc</code> (netcat) to make the tcp request, which is like <code>telnet</code>
+but easier to script.</p>
+
+    <step type='exec'>
+<pre><code>echo "Calling sayHello over binary protocol" | nc localhost 5555</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>hello, world!</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>Finally, we can shut down both imposters by issuing an HTTP <code>DELETE</code> to
+both imposters, which are identified by the port number on the URL:</p>
+
+    <step type='exec'>
+<pre><code>curl -X DELETE http://localhost:<change to='<%= port %>'>2525</change>/imposters/4545
+curl -X DELETE http://localhost:<change to='<%= port %>'>2525</change>/imposters/5555</code></pre>
+    </step>
+</testScenario>
+
+<p>Explore more in the links on the left.  Don't hesitate to <a href='/support'>ask</a> for help!</p>
+
+<%- include('../_footer') -%>

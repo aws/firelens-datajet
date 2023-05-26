@@ -1,0 +1,67 @@
+<p>The <code>inject</code> predicate allows you to inject JavaScript to determine if
+the predicate should match or not.  The JavaScript should be a function that accepts
+the request object (and optionally a logger)  and returns true or false.
+See the <a href='/docs/api/injection'>injection page</a> for details.</p>
+
+<p>The execution will have access to a node.js environment.  The following example uses
+node's <code>Buffer</code> object to decode base64 to a byte array.</p>
+
+<testScenario name='tcp inject example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4555,
+  "protocol": "tcp",
+  "mode": "binary",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "data": "Zmlyc3QgcmVzcG9uc2U=" } }],
+      "predicates": [{
+        "inject": "function (request, logger) { logger.info('Inside injection'); return Buffer.from(request.data, 'base64')[2] &gt; 100; }"
+      }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "data": "c2Vjb25kIHJlc3BvbnNl" } }],
+      "predicates": [{
+        "inject": "request => { return Buffer.from(request.data, 'base64')[2] &lt;= 100; }"
+      }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The first stub matches if the third byte is greater than 100.  The request we're
+sending is an encoding <code>[99, 100, 101]:</code></p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>Y2Rl</strong>' | base64 --decode | nc localhost 4555</code></pre>
+
+        <assertResponse>
+<pre><code><strong class='highlight1'>first response</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The logs will also show the injected log output.  The second predicate has to
+match a request originating from localhost with the third byte less than or equal
+to 100.  We're sending <code>[98, 99, 100]</code>:</p>
+
+    <step type='exec'>
+<pre><code>echo '<strong class='highlight1'>YmNk</strong>' | base64 --decode | nc localhost 4555</code></pre>
+
+<p>...giving the response:</p>
+
+        <assertResponse>
+<pre><code>second response</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4555 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

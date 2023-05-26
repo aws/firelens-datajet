@@ -1,0 +1,191 @@
+<%
+title = 'proxies'
+description = 'Using mountebank to record and playback through proxying to a real network dependency'
+%>
+
+<%- include('../../_header') -%>
+
+<h1>Proxies</h1>
+
+<p>Proxies are one of the most powerful features of mountebank, rivaled only by the
+mighty <a href='/docs/api/injection'>injection.</a>  Proxies support record/replay
+behavior to easily capture a rich set of test data for your test scenarios.
+Each proxy definition allows you to define the fields which should be included
+in newly created <code>predicates</code>.</p>
+
+<p><code>proxy</code> response types take the following parameters:</p>
+
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th style='min-width: 4em;'>Default</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>to</code></td>
+    <td>required</td>
+    <td>A URL without the path (e.g. http://someserver:3000 or tcp://someserver:3000)</td>
+    <td>Defines the origin server that the request should proxy to.</td>
+  </tr>
+  <tr>
+    <td><code>predicateGenerators</code></td>
+    <td><code>[]</code></td>
+    <td>array</td>
+    <td>An array of objects that defines how the predicates for new stubs are created. Each object in
+    the array defines the fields to generate predicates from. See <a href='#proxy-predicate-generators'>below</a>
+    for examples.</td>
+  </tr>
+  <tr>
+    <td><code>mode</code></td>
+    <td><code>proxyOnce</code></td>
+    <td>string, one of <code>proxyOnce</code>, <code>proxyAlways</code> or <code>proxyTransparent</code>.</td>
+    <td>Defines the replay behavior of the proxy. The default <code>proxyOnce</code> mode
+        doesn't require you to explicitly do anything to replay the proxied responses. The
+        <code>proxyAlways</code> mode requires you to run the
+        <a href='/docs/commandLine'><code>mb replay</code></a> command (or equivalent) to
+        switch from record mode to replay mode, but allows a richer set of data to be
+        recorded. The <code>proxyTransparent</code> mode proxies the request but does not record any data.
+        See <a href='#proxy-modes'>below</a> for details.</td>
+  </tr>
+  <tr>
+    <td><code>addWaitBehavior</code></td>
+    <td><code>false</code></td>
+    <td>boolean</td>
+    <td>If true, mountebank will add a <a href='/docs/api/behaviors#behavior-wait'><code>wait</code></a>
+    behavior to the response with the same latency that the proxied call took. This is useful in performance
+    testing scenarios where you want to simulate the actual latency of downstream services that you're
+    virtualizing.</td>
+  </tr>
+  <tr>
+    <td><code>addDecorateBehavior</code></td>
+    <td><code>null</code></td>
+    <td>string, JavaScript</td>
+    <td>If defined, mountebank will add a <a href='/docs/api/behaviors#behavior-decorate'><code>decorate</code></a>
+    behavior to the saved response.</td>
+  </tr>
+</table>
+
+<p>http and https proxies add additional optional parameters:</p>
+
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th style='min-width: 4em;'>Default</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>cert</code></td>
+    <td><code>null</code></td>
+    <td>A PEM-formatted string</td>
+    <td>The SSL client certificate</td>
+  </tr>
+  <tr>
+    <td><code>key</code></td>
+    <td><code>null</code></td>
+    <td>A PEM-formatted string</td>
+    <td>The SSL client private key</td>
+  </tr>
+  <tr>
+    <td><code>ciphers</code></td>
+    <td><a href='https://nodejs.org/dist/latest-v14.x/docs/api/tls.html#tls_tls_getciphers'>Here</a></td>
+    <td>A valid cipher (see <a href='https://nodejs.org/api/tls.html#tls_modifying_the_default_tls_cipher_suite'>this page</a> for formats)</td>
+    <td>For older (and insecure) https servers, this field allows you to override the cipher used to communicate</td>
+  </tr>
+  <tr>
+    <td><code>secureProtocol</code></td>
+    <td><code>TLS_method</code></td>
+    <td>A valid <a href='https://www.openssl.org/docs/man1.1.0/man7/ssl.html#Dealing-with-Protocol-Methods'>
+      OpenSSL protocol method name</a></td>
+    <td>The SSL method to use</td>
+  </tr>
+  <tr>
+    <td><code>passphrase</code></td>
+    <td><code>null</code></td>
+    <td>string</td>
+    <td>Shared passphrase used for a single private key</td>
+  </tr>
+  <tr>
+    <td><code>injectHeaders</code></td>
+    <td><code>{}</code></td>
+    <td>object</td>
+    <td>Key-value pairs of headers to inject into the proxied <i>request</i>.</td>
+  </tr>
+</table>
+
+<p>tcp proxies support the following optional configuration:</p>
+
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th style='min-width: 4em;'>Default</th>
+    <th>Type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>keepalive</code></td>
+    <td><code>false</code></td>
+    <td>boolean</td>
+    <td>If true, mountebank will not close the connection on each proxied request</td>
+  </tr>
+</table>
+
+<p>It is occasionally useful to capture how long the original proxied request takes. mountebank
+stores the number of milliseconds for the request in the <code>_proxyResponseTime</code> field in the
+response. Setting the <code>addWaitBehavior</code> flag will add that latency to the saved response.</p>
+
+<p class='info-icon'>Note, if you use a corporate proxy, then the standard shell
+<code>http_proxy</code> or <code>https_proxy</code> environment variables will be honored.</p>
+
+<p>Select the behavior of the proxy below for a relevant example:</p>
+
+<section class='accordion'>
+  <div>
+    <a class='section-toggler'
+       id='proxy-predicate-generators' name='proxy-predicate-generators' href='#proxy-predicate-generators'>
+      Understanding predicateGenerators
+    </a>
+    <section>
+      <%- include('proxy/predicateGenerators') -%>
+    </section>
+  </div>
+  <div>
+    <a class='section-toggler'
+       id='proxy-modes' name='proxy-modes' href='#proxy-modes'>
+      Understanding proxy modes
+    </a>
+    <section>
+      <%- include('proxy/proxyModes') -%>
+    </section>
+  </div>
+  <div>
+    <a class='section-toggler'
+       id='proxy-add-wait-behavior' name='proxy-add-wait-behavior' href='#proxy-add-wait-behavior'>
+      Adding latency to the saved responses with addWaitBehavior
+    </a>
+    <section>
+      <%- include('proxy/addWaitBehavior') -%>
+    </section>
+  </div>
+  <div>
+    <a class='section-toggler'
+       id='proxy-add-decorate-behavior' name='proxy-add-decorate-behavior' href='#proxy-add-decorate-behavior'>
+      Decorating saved responses with addDecorateBehavior
+    </a>
+    <section>
+      <%- include('proxy/addDecorateBehavior') -%>
+    </section>
+  </div>
+  <div>
+    <a class='section-toggler'
+       id='proxy-inject-headers' name='proxy-inject-headers' href='#proxy-inject-headers'>
+      Changing the proxied request headers with injectHeaders
+    </a>
+    <section>
+      <%- include('proxy/injectHeaders') -%>
+    </section>
+  </div>
+</section>
+
+<%- include('../../_footer') -%>

@@ -1,0 +1,114 @@
+<p>Let's create an HTTP imposter with multiple stubs:</p>
+
+<testScenario name='http deepEquals example'>
+    <step type='http'>
+<pre><code>POST /imposters HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json
+Content-Type: application/json
+
+{
+  "port": 4556,
+  "protocol": "http",
+  "stubs": [<strong class='highlight1'>
+    {
+      "responses": [{ "is": { "body": "first" } }],
+      "predicates": [{
+        "deepEquals": {
+          "query": {}
+        }
+      }]
+    }</strong>,<strong class='highlight2'>
+    {
+      "responses": [{ "is": { "body": "second" } }],
+      "predicates": [{
+        "deepEquals": {
+          "query": {
+            "first": "1"
+          }
+        }
+      }]
+    }</strong>,<strong class='highlight3'>
+    {
+      "responses": [{ "is": { "body": "third" } }],
+      "predicates": [{
+        "deepEquals": {
+          "query": {
+            "first": "1",
+            "second": "2"
+          }
+        }
+      }]
+    }</strong>
+  ]
+}</code></pre>
+    </step>
+
+<p>The first predicate matches only a request without a querystring.</p>
+
+    <step type='http'>
+<pre><code>GET /test HTTP/1.1
+Host: localhost:4556</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight1'>first</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The second stub matches only if the exact querystring is sent.</p>
+
+    <step type='http'>
+<pre><code>GET /test?<strong class='highlight2'>First=1</strong> HTTP/1.1
+Host: localhost:4556</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight2'>second</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>The third stub matches only if both query keys are sent.</p>
+
+    <step type='http'>
+<pre><code>GET /test?<strong class='highlight3'>Second=2&amp;First=1</strong> HTTP/1.1
+Host: localhost:4556</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked
+
+<strong class='highlight3'>third</strong></code></pre>
+        </assertResponse>
+    </step>
+
+<p>Any additional query parameters will trigger the default HTTP response.</p>
+
+    <step type='http'>
+<pre><code>GET /test?Second=2&amp;First=1&amp;Third=3 HTTP/1.1
+Host: localhost:4556</code></pre>
+
+        <assertResponse>
+<pre><code>HTTP/1.1 200 OK
+Connection: close
+Date: <volatile>Thu, 09 Jan 2014 02:30:31 GMT</volatile>
+Transfer-Encoding: chunked</code></pre>
+        </assertResponse>
+    </step>
+
+    <step type='http'>
+<code class='hidden'>DELETE /imposters/4556 HTTP/1.1
+Host: localhost:<%= port %>
+Accept: application/json</code>
+    </step>
+</testScenario>

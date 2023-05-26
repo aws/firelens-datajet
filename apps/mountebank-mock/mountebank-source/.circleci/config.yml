@@ -1,0 +1,316 @@
+version: 2.1
+
+executors:
+  node-maintenance:
+    docker:
+      - image: cimg/node:lts # eslint stopped supporting v14
+    environment:
+      - MB_SLOW_TEST_TIMEOUT: 10000
+  node-active:
+    docker:
+      - image: cimg/node:lts
+    environment:
+      - MB_SLOW_TEST_TIMEOUT: 10000
+  node-current:
+    docker:
+      - image: cimg/node:current
+    environment:
+      - MB_SLOW_TEST_TIMEOUT: 10000
+
+orbs:
+  win: circleci/windows@2.2.0
+
+jobs:
+  pr:
+    executor: node-active
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - run: npm test
+      - run:
+          name: Web tests
+          command: npm run test:web
+      - store_test_results:
+          path: testResults
+
+  build:
+    executor: node-active
+    resource_class: xlarge
+    environment:
+      - CC_TEST_REPORTER_ID=8bc3a050a2f8ef1cc460e5f4c72d18a689c8ae0981bf494031eb4eb28bbd0b0b
+    steps:
+      - checkout
+      - run:
+          name: Validate versions
+          command: node -v && npm -v
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - run:
+          name: Version
+          command: node tasks/version.js
+      - run:
+          name: Docs and Static Analysis
+          command: |
+            npm run lint
+            scripts/codeclimate
+            cat ./coverage/lcov.info | node_modules/coveralls/bin/coveralls.js
+            scripts/sonar
+            npm run jsdoc && node tasks/deploy/docs.js
+      - run:
+          name: Dist
+          command: node tasks/dist.js
+      - store_test_results:
+          path: testResults
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
+            - tasks
+            - scripts
+            - Procfile
+
+  windows:
+    executor: win/default
+    environment:
+      - MB_SLOW_TEST_TIMEOUT: 10000
+    steps:
+      - checkout
+      - run: choco uninstall nvm.portable -y
+      - run: choco install nvm --version=1.1.9 -y
+      - run: choco install wget -y
+      - run:
+          command: wget https://nodejs.org/dist/latest-v18.x/node-v18.13.0-x86.msi -P C:\Users\circleci\Downloads\
+          shell: cmd.exe
+      - run: MsiExec.exe /i C:\Users\circleci\Downloads\node-v18.13.0-x86.msi /qn
+      - run:
+          command: |
+            Start-Process powershell -verb runAs -Args "-start GeneralProfile"
+            nvm install 18.11.0
+            nvm use 18.11.0
+      - run:
+          name: Verify versions
+          command: |
+            node -v
+            npm -v
+            nvm -v
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - run:
+          name: Test
+          command: |
+            npm run test:cover
+            npm run test:api
+            npm run test:cli
+      - store_test_results:
+          path: testResults
+
+  mac:
+    macos:
+      xcode: 12.5.1
+    steps:
+      - checkout
+      - run:
+          name: install node
+          command: |
+            set +e
+            touch $BASH_ENV
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+            echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            echo nvm install 18 >> $BASH_ENV
+            echo nvm alias default 18 >> $BASH_ENV
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - run:
+          name: Test
+          command: |
+            npm run test:cover
+            npm run test:api
+            npm run test:cli
+      - store_test_results:
+          path: testResults
+
+  maintenanceOutOfProcessImposters:
+    executor: node-maintenance
+    resource_class: xlarge
+    environment:
+      - MB_PORT: 3535
+      - MB_PERSISTENT: true
+      - MB_EXECUTABLE: /home/circleci/project/dist/mountebank/bin/mb
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Prepare to run out of process protocol implementations
+          command: node tasks/createProtocolsFile.js outOfProcess.json
+      - run:
+          name: Test
+          command: |
+            node tasks/mb.js start --allowInjection ---localOnly --protofile outOfProcess.json
+            (cd dist/test && npm test)
+      - store_test_results:
+          path: dist/test/testResults
+
+  currentWithFileDB:
+    executor: node-current
+    environment:
+      - MB_PORT: 3535
+      - MB_EXECUTABLE: /home/circleci/project/dist/mountebank/bin/mb
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Test
+          command: |
+            node -v
+            node tasks/mb.js start --allowInjection --localOnly --datadir .mbdb
+            (cd dist/test && npm test)
+      - store_test_results:
+          path: dist/test/testResults
+
+  performance:
+    executor: node-active
+    environment:
+      - MB_PORT: 3535
+      - MB_EXECUTABLE: /home/circleci/project/dist/mountebank/bin/mb
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Test
+          command: cd dist/test && npm run perf
+      - store_test_results:
+          path: dist/test/testResults
+
+  web:
+    executor: node-active
+    environment:
+      - MB_PORT: 3535
+      - MB_EXECUTABLE: /home/circleci/project/dist/mountebank/bin/mb
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Test
+          command: |
+            node tasks/mb.js start --allowInjection --localOnly
+            (cd dist/test && npm run web)
+      - store_test_results:
+          path: dist/test/testResults
+
+  deploy:
+    executor: node-active
+    steps:
+      - setup_remote_docker:
+          version: 20.10.7
+      - attach_workspace:
+          at: .
+      - run:
+          name: Publish npm
+          command: scripts/publishNpm
+      - run:
+          name: Publish Docker
+          command: |
+            export MB_VERSION=`scripts/printVersion`
+            scripts/publishDocker $MB_VERSION
+      - run:
+          name: Deploy to Heroku
+          command: scripts/publishHeroku mountebank-dev
+
+  # The release pipeline doesn't re-run tests as there should be no code commit, only a git tag to trigger release
+  # It also doesn't change the version in the package.json or add a beta tag to npm
+  release:
+    executor: node-active
+    environment:
+      - MB_RELEASE: true
+    steps:
+      - setup_remote_docker:
+          version: 20.10.7
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: npm ci
+      - run:
+          name: Dist
+          command: node tasks/dist.js
+      - run:
+          name: Publish npm
+          command: scripts/publishNpm
+      - run:
+          name: Publish Docker
+          command: |
+            export MB_VERSION=`scripts/printVersion`
+            scripts/publishDocker $MB_VERSION
+      - run:
+          name: Deploy to Heroku
+          command: scripts/publishHeroku mountebank
+
+workflows:
+  version: 2
+  pr:
+    jobs:
+      - pr:
+          filters:
+            branches:
+              ignore: master
+  pipeline:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - windows:
+          filters:
+            branches:
+              only: master
+      - mac:
+          filters:
+            branches:
+              only: master
+      - maintenanceOutOfProcessImposters:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - currentWithFileDB:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - performance:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - web:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - maintenanceOutOfProcessImposters
+            - currentWithFileDB
+            - performance
+            - web
+          filters:
+            branches:
+              only: master
+  release:
+      jobs:
+      - release:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+
