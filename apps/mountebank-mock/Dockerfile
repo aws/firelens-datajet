@@ -17,11 +17,20 @@ RUN amazon-linux-extras install -y epel && yum install -y libASL --skip-broken
 RUN yum install -y \
       unzip \
       tar \
-      nodejs
+      nodejs \
+      openssl
 
 WORKDIR /app
 
 COPY mountebank-source/ .
+# create custom self-signed cert for mountebank https
+RUN mkdir /cert
+RUN openssl genrsa -out  /cert/mb-key.pem 1024
+RUN openssl req -new -key /cert/mb-key.pem -batch -out /cert/mb-csr.pem
+RUN openssl x509 -req -days 3650 -in /cert/mb-csr.pem -signkey /cert/mb-key.pem -out /cert/mb-cert.pem
+RUN cp /cert/* /app/src/models/https/cert/
+
+# install mountebank
 RUN npm install --production && npm cache clean -f && npm link mountebank
 
 # Run as a non-root user
