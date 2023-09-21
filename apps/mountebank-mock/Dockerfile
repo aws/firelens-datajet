@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # ---------- Base ----------
-FROM public.ecr.aws/amazonlinux/amazonlinux:2 as base
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023
 
 ENV CLIENT_S3_BUCKET set-CLIENT_S3_BUCKET-to_your_s3_bucket
 ENV CLIENT_S3_FILE  set-CLIENT_S3_FILE-to_your_s3_config_filename
@@ -10,14 +10,12 @@ ENV CLIENT_S3_FILE  set-CLIENT_S3_FILE-to_your_s3_config_filename
 # Install Mountebank via Node
 RUN yum upgrade -y
 # RUN yum install -y gcc-c++ make
-RUN curl --silent --location https://rpm.nodesource.com/setup_16.x | bash -
+RUN yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+RUN yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
 RUN curl -sL -o /bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 RUN chmod +x /bin/gimme
-RUN amazon-linux-extras install -y epel && yum install -y libASL --skip-broken
 RUN yum install -y \
       unzip \
-      tar \
-      nodejs \
       openssl
 
 WORKDIR /app
