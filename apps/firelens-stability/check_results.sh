@@ -55,46 +55,46 @@ echo ""
 
 echo "____GOLDEN PATH Task Counts____" 
 for task_def in $familys_golden; do
-    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def | jq '.taskArns | length')
+    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def --output json | jq '.taskArns | length')
     echo "${task_def}: ${running_count}"
 done
 
 
 echo "____S3 stability Task Counts____"
 for task_def in $familys_s3_stability; do
-    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def | jq '.taskArns | length')
+    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def --output json | jq '.taskArns | length')
     echo "${task_def}: ${running_count}"
 done
 
 
 echo "____S3 sensitivity Task Counts____"
 for task_def in $familys_s3_sensitivity; do
-    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def | jq '.taskArns | length')
+    running_count=$(aws ecs list-tasks --cluster $2 --region $1  --family $task_def --output json | jq '.taskArns | length')
     echo "${task_def}: ${running_count}"
 done
 
 
 echo "____Core Counts____"
-total_cores=$(aws s3 ls s3://stability-output/${3} --recursive | grep "stacktrace" | wc -l)
+total_cores=$(aws s3 ls s3://stability-output/${3} --recursive --output json | grep "stacktrace" | wc -l)
 echo "Total Cores: ${3}: ${total_cores}"
 echo ""
 
 echo "____GOLDEN PATH Core Counts____" 
 for task_def in $familys_golden; do
-    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive | grep "stacktrace" | wc -l)
+    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive --output json | grep "stacktrace" | wc -l)
     echo "${task_def}: ${cores}"
 done
 
 
 echo "____S3 stability Core Counts____"
 for task_def in $familys_s3_stability; do
-    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive | grep "stacktrace" | wc -l)
+    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive --output json | grep "stacktrace" | wc -l)
     echo "${task_def}: ${cores}"
 done
 
 
 echo "____S3 sensitivity Core Counts____"
 for task_def in $familys_s3_sensitivity; do
-    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive | grep "stacktrace" | wc -l)
+    cores=$(aws s3 ls s3://stability-output/${3}/${task_def} --recursive --output json | grep "stacktrace" | wc -l)
     echo "${task_def}: ${cores}"
 done
