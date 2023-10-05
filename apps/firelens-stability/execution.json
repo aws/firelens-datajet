@@ -1,9 +1,9 @@
 {
-    "executionName":  "2_31_12_20230911",
+    "executionName":  "2_32_0_init_492bf",
     "executeCollections": [
         "ecs-firelens-stability-tests"
     ],
     "definitions": {
-        "imageAwsForFluentBit": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-debug-2.31.12.20230911"
+        "imageAwsForFluentBit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-for-fluent-bit:2.32.0-init-debug-492bf"
     }
 }
