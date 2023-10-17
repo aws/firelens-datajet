@@ -1,6 +1,6 @@
 {
     "definitions": {
         "cw_is_down": false,
-        "include_onepod": true
+        "include_onepod": false
     }
 }

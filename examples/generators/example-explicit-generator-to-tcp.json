@@ -1,0 +1,23 @@
+{
+    "comment": "ServiceLogs as emf to tcp (https://code.amazon.com/packages/CoralMetricsEmfReporter/blobs/78081aca20e12c524c58c248b0b8dc9318c3e66f/--/src/test/resources/serialized-format/MetricLogEvent.json#L1)",
+    "generator": {
+      "name": "explicit",
+      "config": {
+        "batches": [
+          {"_aws":{"Timestamp":1679351573496,"LogGroupName":"ServiceMetrics","CloudWatchMetrics":[{"Namespace":"ServiceMetrics","Dimensions":[["A"]],"Metrics":[{"Name":"ServiceMetric1","Unit":"Microseconds"}]}]},"A":"Value","ServiceMetric1":10.0}
+        ]
+      }
+    },
+    "datajet": {
+      "name": "tcp",
+      "config": {
+        "host": "localhost",
+        "port": 5172,
+        "addNewline": true, 
+        "logKey": null
+      }
+    },
+    "stage": {
+      "batchRate": 1
+    }
+}
