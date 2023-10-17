@@ -11,11 +11,12 @@
         "kbps_throughput_forward": 10,
         "cw_use_mock": true,
         "add_forward": true,
-        "endpoint_mock": "localhost",
+        "cw_endpoint": "localhost",
         "endpoint_flb": "localhost",
         "LOG_REGION": "us-west-2",
         "ServiceName": "golden-onepod-low-throughput",
         "debugS3Bucket": "{{managed.s3OutputBucket}}",
-        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}"
+        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
+        "cw_is_down": false
     }
 }
