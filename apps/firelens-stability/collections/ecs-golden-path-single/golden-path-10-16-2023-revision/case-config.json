@@ -1,0 +1,6 @@
+{
+    "config": {
+        "template": "golden-path-mountebank-fargate-v10-16-2023",
+        "config_revision": true
+    }
+}
