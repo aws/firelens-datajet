@@ -18,7 +18,8 @@
           "logKey": "log",
           "addNewline": true,
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
-          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}",
+          "contentUniformValue": "F"
         }
       },
       "datajet": {
@@ -42,7 +43,8 @@
           "batchSize": 1,
           "logKey": "log",
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
-          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}",
+          "contentUniformValue": "A"
         }
       },
       "datajet": {
@@ -66,7 +68,8 @@
           "batchSize": 1,
           "logKey": "log",
           "contentType": "{{definitions.datajet_generator_basic_contentType}}",
-          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
+          "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}",
+          "contentUniformValue": "R"
         }
       },
       "datajet": {
