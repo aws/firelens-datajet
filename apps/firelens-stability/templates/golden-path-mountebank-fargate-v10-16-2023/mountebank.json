@@ -20,7 +20,7 @@
         "responses": [
           {
             "is": {
-              "statusCode": 200,
+              "statusCode": {{#if definitions.cw_is_down}}400{{else}}200{{/if}},
               "headers": {
                 "x-amzn-RequestId": "d35a6920-52e1-4f3a-bf8f-46016f474463",
                 "Connection": "keep-alive",

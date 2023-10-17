@@ -92,6 +92,10 @@ export async function copyAndTemplateFile(
     destinationFile: string,
     config: any) {
     const rawFileString = await getStringFromFile(sourceFile);
-    const templatedFileString = evaluateTemplateString(rawFileString, config);
+    const templatedFileString = evaluateTemplateString(rawFileString, {
+        // definitions get set to high level for file replacements
+        ...(config?.definitions ?? {}),
+        ...config
+    });
     await sendStringToFile(templatedFileString, destinationFile);
 }

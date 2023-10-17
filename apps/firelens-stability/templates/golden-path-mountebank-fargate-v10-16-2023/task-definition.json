@@ -106,10 +106,14 @@
           },
           {
             "name": "aws_fluent_bit_init_s3_2",
-            "value": "{{managed.s3ResourcesArn}}/fluent-bit-onepod.conf"
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit-base.conf"
           },
           {
             "name": "aws_fluent_bit_init_s3_3",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit-onepod.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_4",
             "value": "{{managed.s3ResourcesArn}}/fluent-parser.conf"
           },
           {
