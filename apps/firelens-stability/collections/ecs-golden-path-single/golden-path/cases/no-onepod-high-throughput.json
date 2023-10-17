@@ -1,0 +1,9 @@
+{
+    "definitions": {
+        "include_onepod": false,
+        "kbps_throughput_tcp": 5000,
+        "kbps_throughput_tail": 10,
+        "kbps_throughput_forward": 5000,
+        "datajet_generator_basic_contentType": "uniform"
+    }
+}
