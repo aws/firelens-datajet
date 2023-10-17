@@ -18,6 +18,7 @@
         "ServiceName": "golden-onepod-low-throughput",
         "debugS3Bucket": "{{managed.s3OutputBucket}}",
         "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
-        "cw_is_down": false
+        "cw_is_down": false,
+        "config_revision": false
     }
 }
