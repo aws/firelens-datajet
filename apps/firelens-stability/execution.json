@@ -1,9 +1,12 @@
 {
-    "executionName":  "2_31_12_20230911",
+    "executionName":  "cw-out-fs-buffer-limit-golden-path-single-2_31_12_20230911",
     "executeCollections": [
-        "ecs-firelens-stability-tests"
+        "ecs-golden-path-single"
     ],
     "definitions": {
         "imageAwsForFluentBit": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-debug-2.31.12.20230911"
+    },
+    "config": {
+        "template": "golden-path-mountebank-fargate-v10-16-2023"
     }
 }
