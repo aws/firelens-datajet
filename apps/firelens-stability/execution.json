@@ -1,5 +1,5 @@
 {
-    "executionName":  "golden-path-10-16-2023-revision-single-2_31_12_20230911",
+    "executionName":  "r2-golden-path-10-16-2023-revision-single-2_31_12_20230911",
     "executeCollections": [
         "ecs-golden-path-single"
     ],
