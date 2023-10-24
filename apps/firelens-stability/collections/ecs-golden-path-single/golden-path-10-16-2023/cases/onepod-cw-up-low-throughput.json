@@ -1,11 +1,10 @@
 {
     "definitions": {
-        "cw_endpoint": "logs.us-west-2.amazonaws.com",
-        "cw_use_mock": false,
+        "cw_is_down": false,
+        "include_onepod": true,
         "kbps_throughput_tcp_application": 1,
         "kbps_throughput_tcp_request": 1,
         "kbps_throughput_tcp_service": 1,
-        "kbps_throughput_forward": 1,
-        "cw_auto_create_group": true
+        "kbps_throughput_forward": 1
     }
 }
