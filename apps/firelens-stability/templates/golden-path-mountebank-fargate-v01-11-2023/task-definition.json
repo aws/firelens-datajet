@@ -139,6 +139,9 @@
             "readOnly": false
           }
         ],
+        "linuxParameters": {
+          "initProcessEnabled": true
+        },
         "dependsOn": [{
           "containerName": "mock",
           "condition": "START"
@@ -179,6 +182,9 @@
             "readOnly": false
           }
         ],
+        "linuxParameters": {
+          "initProcessEnabled": true
+        },
         "dependsOn": [{
             "containerName": "fluent-bit",
             "condition": "START"
@@ -227,6 +233,9 @@
                 "awslogs-create-group": "true",
                 "awslogs-stream-prefix": "{{managed.caseNameUnique}}-mock"
             }
+        },
+        "linuxParameters": {
+          "initProcessEnabled": true
         },
         "memoryReservation": 100
       }
