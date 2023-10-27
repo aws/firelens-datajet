@@ -219,6 +219,7 @@ async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.E
         let result: PromiseResult<AWS.ECS.RunTaskResponse, AWS.AWSError>;
         try {
             result = await ecs.runTask({
+            enableExecuteCommand: true,
             cluster: testCase.config.cluster,
             taskDefinition: taskDefinitionArn!,
             count: launchCount,
