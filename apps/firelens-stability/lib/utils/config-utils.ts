@@ -21,7 +21,37 @@ export function cascadeConfigurationObjects(extensionConfig: IGenericConfig, bas
     }
 }
 
-export function cascadeConfigurationStringAsExtension(cascadedConfigString: string, baseConfig: IGenericConfig) {
+export function cascadeConfigurationObjectsConfig(extensionConfig: IGenericConfig, baseConfig: IGenericConfig) {
+    return {
+        config: {
+            ...baseConfig.config,
+            ...extensionConfig.config,
+        },
+        definitions: {
+            ...baseConfig.definitions,
+        },
+        managed: {
+            ...baseConfig.managed,
+        }
+    }
+}
+
+export function cascadeConfigurationObjectsDefinitions(extensionConfig: IGenericConfig, baseConfig: IGenericConfig) {
+    return {
+        config: {
+            ...baseConfig.config,
+        },
+        definitions: {
+            ...baseConfig.definitions,
+            ...extensionConfig.definitions,
+        },
+        managed: {
+            ...baseConfig.managed,
+        }
+    }
+}
+
+export function cascadeConfigurationStringAsExtensionBasic(cascadedConfigString: string, baseConfig: IGenericConfig) {
     const nextConfigLayerString = evaluateTemplateString(cascadedConfigString, baseConfig);
     const nextConfigLayer = JSON.parse(nextConfigLayerString);
     
@@ -29,12 +59,33 @@ export function cascadeConfigurationStringAsExtension(cascadedConfigString: stri
     return cascadeConfigurationObjects(nextConfigLayer, baseConfig);
 }
 
-export function cascadeConfigurationStringAsDefault(baseString: string, extensionConfig: IGenericConfig) {
-    const baseConfigLayerString = evaluateTemplateString(baseString, extensionConfig);
-    const baseConfigLayer = JSON.parse(baseConfigLayerString);
+/* 
+ * Cascade configuration
+ * Parent configuration file -> configuration file -> [conf -> def, def -> conf]
+ */
+export function cascadeConfigurationStringAsExtension(cascadedConfigString: string, baseConfig: IGenericConfig) {
+    
+    /* Apply new configuraion layer */
+    const cascadeConfigBase = cascadeConfigurationStringAsExtensionBasic(cascadedConfigString, baseConfig);
 
-    /* Apply extension config to defaults */
-    return cascadeConfigurationObjects(extensionConfig, baseConfigLayer);
+    /* Allow definitions to use self config variables */
+    const baseConfigUpdateConfig = cascadeConfigurationObjectsConfig(cascadeConfigBase, baseConfig);
+    const cascadeConfigUpdateDefinition = cascadeConfigurationStringAsExtensionBasic(cascadedConfigString, baseConfigUpdateConfig);
+    const cascadeConfigUpdate1 = cascadeConfigurationObjectsDefinitions(cascadeConfigUpdateDefinition, cascadeConfigBase);
+
+    /* Allow config to use self definition variables */
+    const baseConfigUpdateDefinition = cascadeConfigurationObjectsDefinitions(cascadeConfigBase, baseConfig);
+    const cascadeConfigUpdateConfig = cascadeConfigurationStringAsExtensionBasic(cascadedConfigString, baseConfigUpdateDefinition);
+    const cascadeConfigUpdate2 = cascadeConfigurationObjectsConfig(cascadeConfigUpdateConfig, cascadeConfigUpdate1);
+
+    return cascadeConfigUpdate2;
+}
+
+export function cascadeConfigurationStringAsDefault(baseString: string, extensionConfig: IGenericConfig) {
+    const cascadeExtended = cascadeConfigurationStringAsExtension(baseString, extensionConfig);
+
+    /* Restore pre-existing conflict fields */
+    return cascadeConfigurationObjects(extensionConfig, cascadeExtended);
 }
 
 export async function getTestCaseTaskDefinition(testCase: ITestCase): Promise<AWS.ECS.Types.RegisterTaskDefinitionRequest> {
