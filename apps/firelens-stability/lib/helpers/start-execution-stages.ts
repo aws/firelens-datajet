@@ -6,6 +6,8 @@ import { promises as fs } from "fs";
 import { copyAndTemplateFile } from "../templating/handlebars-templater.js";
 import { runECSTestCase } from "../cloud/ecs.js";
 import * as PathProvider from "../providers/path-provider.js"
+import { processMetricAlarmsList } from "./metric-alarm-list-processor.js";
+import { processDashboardWidgetLists } from "./dashboard-widget-list-processor.js";
 
 /* Execution specific details including the execution id */
 export async function generateExecutionContext(execution: IExecution): Promise<IExecutionContext> {
@@ -39,6 +41,12 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
         executionName: executionContext.execution.executionName,
     }
 
+    /* Managed context variables - execution */
+    const executionCollectionNames = [];
+    const executionSuiteNames = [];
+    const executionCaseNames = [];
+    const executionCaseNamesUnique = [];
+
     /* Expand each test collection */
     const testCaseSeeds =
     await Promise.all(collections.map(
@@ -47,11 +55,20 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
             const suites = await getSubFolders(c);
             const suiteConfigSeed = await getStringFromFile(Path.join(c, Constants.fileNames.suiteConfig));
 
+            /* Managed context variables - collection */
+            const collectionSuiteNames = [];
+            const collectionCaseNames = [];
+            const collectionCaseNamesUnique = [];
+
             /* Expand each test suite */
             const testCaseSeeds =
             await Promise.all(suites.map(async (s) => {
                 const cases = await getSubFiles(Path.join(s, Constants.folderNames.cases));
                 const caseConfigSeed = await getStringFromFile(Path.join(s, Constants.fileNames.caseConfig));
+
+                /* Managed context variables - suite */
+                const suiteCaseNames = [];
+                const suiteCaseNamesUnique = [];
                 
                 const testCaseSeeds =
                 await Promise.all(cases.map(async (tc) => {
@@ -61,6 +78,7 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                     const collectionName = Path.basename(c);
                     const suiteName = Path.basename(s);
                     const caseName = Path.basename(tc).split(".")[0];
+                    const caseNameUnique = `${collectionName}-${suiteName}-${caseName}`;
 
                     /* Determine the upload destinations for templates */
                     const s3ResourcesArn = Path.join(
@@ -84,6 +102,17 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                         s3Bucket: s3OutputBucket,
                         s3Path: s3OutputExecutionPath,
                     } = s3ArnToBucketAndPath(s3OutputExecutionArn);
+
+                    /* Update context variables */
+                    executionCollectionNames.push(collectionName)
+                    executionSuiteNames.push(suiteName)
+                    executionCaseNames.push(caseName)
+                    executionCaseNamesUnique.push(caseNameUnique)
+                    collectionSuiteNames.push(suiteName)
+                    collectionCaseNames.push(caseName)
+                    collectionCaseNamesUnique.push(caseNameUnique)
+                    suiteCaseNames.push(caseName)
+                    suiteCaseNamesUnique.push(caseNameUnique)
      
                     /* Create managed variable set */
                     const managedVariables = {
@@ -91,13 +120,24 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                         collectionName,
                         suiteName,
                         caseName,
-                        caseNameUnique: `${collectionName}-${suiteName}-${caseName}`,
+                        caseNameUnique: caseNameUnique,
                         s3ResourcesArn,
                         s3ResourcesBucket,
                         s3ResourcesPath,
                         s3OutputExecutionArn,
                         s3OutputBucket,
                         s3OutputExecutionPath,
+
+                        /* Context variables */
+                        executionCollectionNames,
+                        executionSuiteNames,
+                        executionCaseNames,
+                        executionCaseNamesUnique,
+                        collectionSuiteNames,
+                        collectionCaseNames,
+                        collectionCaseNamesUnique,
+                        suiteCaseNames,
+                        suiteCaseNamesUnique,
                     }
 
                     /* Define the test case seed */
@@ -199,4 +239,9 @@ export async function recordTestCases(
         console.log(`    ${r.testCase.managed.caseNameUnique}: ${r.testCase.config.taskCount}`));
 
     return await sendJSONToFile(recordsComplete, recordsFile);
+}
+
+export async function processListComponents(testCases: ITestCase[]) {
+    processMetricAlarmsList(testCases);
+    processDashboardWidgetLists(testCases);
 }
