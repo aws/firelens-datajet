@@ -21,6 +21,17 @@ interface ICaseManagedVariables {
     s3OutputExecutionArn: string, /* directs to execution specific folder of bucket */
     s3OutputBucket: string,
     s3OutputExecutionPath: string,
+
+    /* metric/graph helpers */
+    executionCollectionNames: string[],
+    executionSuiteNames: string[],
+    executionCaseNames: string[],
+    executionCaseNamesUnique: string[],
+    collectionSuiteNames: string[],
+    collectionCaseNames: string[],
+    collectionCaseNamesUnique: string[],
+    suiteCaseNames: string[],
+    suiteCaseNamesUnique: string[],
 }
 
 /*
@@ -30,10 +41,15 @@ interface ICaseManagedVariables {
 interface ICaseConfig {
     template: string,
     cluster: string,
+    dashboard: string,
+    dashboardSection: string,
     region: string,
     taskCount: number,
     taskVpcSubnets: Array<string>,
     taskVpcSecurityGroups: Array<string>,
+    "lists.dashboardWidgets": Array<IDashboardWidget>,
+    "lists.metricAlarms": Array<IMetricAlarm>,
+    "lists.compositeAlarms": Array<ICompositeAlarm>,
 }
 
 interface ITestCaseSeed {
@@ -113,5 +129,34 @@ interface IProcessedExecutionSummary {
 
 interface IExecutionExecutiveSummary {
     processedExecutionSummaries: IProcessedExecutionSummary[],
-    lowestRuntimeToFailure: number
+    lowestRuntimeToFailure: number,
+}
+
+interface IDashboardWidget {
+    name: string,
+    config: any,
+    section: string,
+    order: number,
+}
+
+interface IMetricAlarm {
+    name: string,
+    config: any,
+}
+
+interface ICompositeAlarm {
+    name: string,
+    config: any,
+}
+
+interface IDashboardSeed {
+    name: string,
+    widgets: any[],
+    region: string,
+}
+
+interface IMetricAlarmSeed {
+    name: string,
+    config: any,
+    region: string,
 }
