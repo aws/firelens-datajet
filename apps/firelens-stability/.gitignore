@@ -11,3 +11,4 @@ auto/
 bin/
 test-suite/
 collections/personal-*
+collections/local-*

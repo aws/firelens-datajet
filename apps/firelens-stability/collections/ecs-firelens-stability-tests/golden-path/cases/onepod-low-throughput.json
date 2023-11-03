@@ -1,7 +1,4 @@
 {
-    "config": {
-        "dashboardGroup": "{{definitions.dashboardGroup}}/1_low-throughput"
-    },
     "definitions": {
         "include_onepod": true,
         "kbps_throughput_tcp": 10,

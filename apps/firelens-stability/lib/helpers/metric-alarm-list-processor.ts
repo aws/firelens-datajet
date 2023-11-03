@@ -1,21 +1,22 @@
-import { putMetricAlarm } from "lib/cloud/cloudwatch";
-import { cascadeConfigurationLists, cascadeLists } from "lib/utils/config-utils";
+import { putMetricAlarm } from "../cloud/cloudwatch.js";
+import { cascadeConfigurationLists, cascadeLists } from "../utils/config-utils.js";
 
-export function processMetricAlarmsList(testCases: ITestCase[]) {
+export async function processMetricAlarmsList(testCases: ITestCase[]) {
 
     /* Combine the lists */
     const metricAlarmSeeds = generateMetricAlarmSeeds(testCases);
 
-    /* Convert to actual  */
-    metricAlarmSeeds.forEach(seed => {
-        putMetricAlarm(seed);
-    });
+    /* Convert to alarms  */
+    await Promise.all(metricAlarmSeeds.map(seed => {
+        console.log(`🔔 Create alarm: ${seed.name}`);
+        return putMetricAlarm(seed);
+    }));
 }
 
 export function generateMetricAlarmSeeds(testCases: ITestCase[]) : IMetricAlarmSeed[] {
     
     /* Combine the lists */
-    const metricAlarmsLists = testCases.map(tc => tc.config["lists.metricAlarms"]);
+    const metricAlarmsLists = testCases.map(tc => tc.config["lists.metricAlarms"] ?? []);
     const metricAlarmsCascade = cascadeLists(metricAlarmsLists);
 
     /* Get dashboards */

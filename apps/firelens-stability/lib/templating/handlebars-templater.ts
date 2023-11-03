@@ -1,5 +1,5 @@
 import { getStringFromFile, sendStringToFile } from "../utils/utils.js";
-import handlebars from "handlebars";
+import handlebars, { template } from "handlebars";
 
 
 /* register handlebars custom templating helpers */
@@ -42,10 +42,12 @@ handlebars.registerHelper('for', function(from, to, incr, block) {
 */
 handlebars.registerHelper('each2', function(arr, block) {
     var accum = '';
-    for(var a of arr) {
+    for(var [i, a] of arr.entries()) {
         accum += block.fn({
             ...this,
-            _item: a
+            _item: a,
+            _isLast: (i == (arr.length - 1)),
+            _isFirst: (i == 0),
         });
     }
     return accum;
@@ -76,7 +78,13 @@ handlebars.registerHelper('ifEqualsOneOf', function() {
 });
 
 export function evaluateTemplateString(templateStr: string, config: any) {
-    return handlebars.compile(templateStr, {noEscape: true})(config);
+    try {
+        return handlebars.compile(templateStr, {noEscape: true})(config);
+    } catch (e) {
+        console.log("Template string failed to be parsed: ", templateStr);
+        console.log(JSON.stringify(config, null, 2));
+        console.log(e);
+    }
 }
 
 export async function copyAndTemplateFile(

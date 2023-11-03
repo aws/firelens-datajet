@@ -33,5 +33,8 @@ export async function executeTests(execution: IExecution) {
     /* Push records */
     await Syncher.pushRecords(executionContext);
 
+    /* Add monitors */
+    await Stage.processListComponents(testCases);
+
     console.log(`Started tests. Execution ID: ${executionContext.executionId}`);
 }

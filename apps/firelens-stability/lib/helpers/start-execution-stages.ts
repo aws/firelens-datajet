@@ -60,6 +60,10 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
             const collectionCaseNames = [];
             const collectionCaseNamesUnique = [];
 
+            /* Set collection context */
+            const collectionName = Path.basename(c);
+            executionCollectionNames.push(collectionName)
+
             /* Expand each test suite */
             const testCaseSeeds =
             await Promise.all(suites.map(async (s) => {
@@ -69,14 +73,17 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                 /* Managed context variables - suite */
                 const suiteCaseNames = [];
                 const suiteCaseNamesUnique = [];
+
+                /* Set suite context */
+                const suiteName = Path.basename(s);
+                executionSuiteNames.push(suiteName)
+                collectionSuiteNames.push(suiteName)
                 
                 const testCaseSeeds =
                 await Promise.all(cases.map(async (tc) => {
                     const caseSeed = await getStringFromFile(tc);
 
                     /* Get managed variable names for templating */
-                    const collectionName = Path.basename(c);
-                    const suiteName = Path.basename(s);
                     const caseName = Path.basename(tc).split(".")[0];
                     const caseNameUnique = `${collectionName}-${suiteName}-${caseName}`;
 
@@ -103,15 +110,13 @@ export async function recoverTestCaseSeeds(executionContext: IExecutionContext):
                         s3Path: s3OutputExecutionPath,
                     } = s3ArnToBucketAndPath(s3OutputExecutionArn);
 
-                    /* Update context variables */
-                    executionCollectionNames.push(collectionName)
-                    executionSuiteNames.push(suiteName)
+                    /* Set case context variables */
                     executionCaseNames.push(caseName)
-                    executionCaseNamesUnique.push(caseNameUnique)
-                    collectionSuiteNames.push(suiteName)
                     collectionCaseNames.push(caseName)
-                    collectionCaseNamesUnique.push(caseNameUnique)
                     suiteCaseNames.push(caseName)
+
+                    executionCaseNamesUnique.push(caseNameUnique)
+                    collectionCaseNamesUnique.push(caseNameUnique)
                     suiteCaseNamesUnique.push(caseNameUnique)
      
                     /* Create managed variable set */
@@ -242,6 +247,7 @@ export async function recordTestCases(
 }
 
 export async function processListComponents(testCases: ITestCase[]) {
-    processMetricAlarmsList(testCases);
-    processDashboardWidgetLists(testCases);
+    await processMetricAlarmsList(testCases);
+    await processDashboardWidgetLists(testCases);
+    console.log("✨✨✨ Enabled monitoring ✨✨✨");
 }

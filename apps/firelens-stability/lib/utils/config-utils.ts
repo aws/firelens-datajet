@@ -7,14 +7,14 @@ export function cascadeLists<IComponentType>(lists: IComponentType[][]): ICompon
     /* An adapter to the cascadeConfigurationLists function */
     const adapter = lists.map(l => ({
         config: {
-            "list.adapter": l
+            "lists.adapter": l
         },
         definitions: {},
         managed: {},
     }));
 
     const cascade = cascadeConfigurationLists(adapter as any as IGenericConfig[]);
-    return cascade.config["list.adapter"];
+    return cascade.config["lists.adapter"];
 }
 
 export function cascadeConfigurationLists(configs: IGenericConfig[]) {
@@ -23,14 +23,13 @@ export function cascadeConfigurationLists(configs: IGenericConfig[]) {
 
     /* Find config lists */
     const configLists = configs.map(config =>
-        Object.keys(config.config)
-        .filter(k => k.startsWith("lists."))
-        .map(k => config.config[k])
+        Object.entries(config?.config ?? [])
+        .filter(([k, _]) => k.startsWith("lists."))
     );
 
     /* Mutate configLists into entries - overrides are last */
     const entries = configLists.map(
-        list => Object.entries(list).map(([k,v]) => {
+        list => list.map(([k,v]) => {
             return {
                 "listName": k,
                 "items": v
@@ -39,7 +38,7 @@ export function cascadeConfigurationLists(configs: IGenericConfig[]) {
     )).flat();
 
     /* Build merged lists abstract structure */
-    const mergedListsAbstract = {};
+    const mergedListsAbstract: {[listName: string]: {[itemName: string]: any}} = {};
     entries.forEach(entry => {
         entry.items.forEach(item => {
             /* In most javascript implementations, order is preserved, duplicates are not */
@@ -49,15 +48,16 @@ export function cascadeConfigurationLists(configs: IGenericConfig[]) {
     });
 
     /* Rebuild merged lists */
-    const mergedEntries = Object.entries(mergedListsAbstract).map(([listName,items]) => (
-        [
-            listName, Object.entries(items).map((name, item) => item)
+    const mergedEntries = Object.entries(mergedListsAbstract).map(([listName,items]) => {
+        const itemsList = Object.entries(items).map(([name, item]) => item);
+        
+        /* Stable sort lists by order */
+        const sortedItemsList = itemsList.sort((a, b) => a?.order ?? 1 - b?.order ?? 1)
+        return [
+            listName, sortedItemsList
         ]
-    ))
+    })
     const mergedLists = Object.fromEntries(mergedEntries);
-
-    /* Stable sort lists */
-    const sortedMergedLists = mergedLists.sort((a, b) => a?.order ?? 1 - b?.order ?? 1);
 
     /* Cascade the configuration objects */
     let cascadedConfig: IGenericConfig = {} as IGenericConfig;
@@ -82,7 +82,7 @@ export function cascadeConfigurationLists(configs: IGenericConfig[]) {
     cascadedConfig = {
         config: {
             ...(cascadedConfig?.config ?? {}),
-            ...sortedMergedLists
+            ...mergedLists,
         },
         definitions: cascadedConfig.definitions,
         managed: cascadedConfig.managed,
@@ -116,10 +116,17 @@ export function cascadeConfigurationObjectsDefinitions(extensionConfig: IGeneric
 
 export function cascadeConfigurationStringAsExtensionBasic(cascadedConfigString: string, baseConfig: IGenericConfig) {
     const nextConfigLayerString = evaluateTemplateString(cascadedConfigString, baseConfig);
-    const nextConfigLayer = JSON.parse(nextConfigLayerString);
-    
-    /* Apply new configuraion layer */
-    return cascadeConfigurationObjects(nextConfigLayer, baseConfig);
+    try {
+        const nextConfigLayer = JSON.parse(nextConfigLayerString);
+
+        /* Apply new configuraion layer */
+        return cascadeConfigurationObjects(nextConfigLayer, baseConfig);
+
+    } catch (e) {
+        console.log("Unable to parse json configuration from string:");
+        console.log(nextConfigLayerString);
+        throw e;
+    }
 }
 
 /* 
