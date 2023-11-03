@@ -17,7 +17,9 @@ export async function putDashboard(seed: IDashboardSeed) {
 
     const input = {
         DashboardName: seed.name,
-        DashboardBody: JSON.stringify(seed.widgets);
+        DashboardBody: JSON.stringify({
+            "widgets": seed.widgets
+        }),
     }
 
     const command = new PutDashboardCommand(input);

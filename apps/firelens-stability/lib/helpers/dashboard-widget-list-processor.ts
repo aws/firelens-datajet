@@ -1,14 +1,15 @@
-import { putDashboard } from "lib/cloud/dashboard";
-import { cascadeLists } from "lib/utils/config-utils";
+import { putDashboard } from "../cloud/cloudwatch.js";
+import { cascadeLists } from "../utils/config-utils.js";
 
-export function processDashboardWidgetLists(testCases: ITestCase[]) {
+export async function processDashboardWidgetLists(testCases: ITestCase[]) {
     /* Create the dashboard structure */
     const dashboardSeeds = generateDashboardSeeds(testCases);
 
     /* Convert to actual dashboards */
-    dashboardSeeds.forEach(seed => {
-        putDashboard(seed);
-    });
+    await Promise.all(dashboardSeeds.map(seed => {
+        console.log(`📈 Create dashboard: ${seed.name}`);
+        return putDashboard(seed)
+    }));
 }
 
 export function generateDashboardSeeds(testCases: ITestCase[]) {
@@ -37,10 +38,10 @@ export function generateDashboardSeeds(testCases: ITestCase[]) {
 
 export function generateOrderdedWidgetsFromTestCases(testCases: ITestCase[]) {
     /* Group test cases by path */
-    const dashboardSections: {[key: string]: any[]} = {};
+    const dashboardSections: {[key: string]: IDashboardWidget[]} = {};
     testCases.forEach((testCase) => {
         const defaultSection = testCase.config.dashboardSection ?? "/";
-        testCase.config["lists.dashboardWidgets"].forEach(widget => {
+        (testCase.config["lists.dashboardWidgets"] ?? []).forEach(widget => {
             const path = `${widget.section ?? defaultSection}/${widget.name}`; 
             if (!dashboardSections[path]) { dashboardSections[path] = []; }
             dashboardSections[path].push(widget);
@@ -49,11 +50,11 @@ export function generateOrderdedWidgetsFromTestCases(testCases: ITestCase[]) {
 
     /* Squash test cases by path */
     const dashboardWidgetGroups = Object.entries(dashboardSections).map(([path, widgets]) => {
-        const sortedLists = widgets.sort((a, b) => a?.order ?? 1 - b?.order ?? 1);
-        const mergedLists = cascadeLists(sortedLists);
+        const sortedList = widgets.sort((a, b) => a?.order ?? 1 - b?.order ?? 1);
+        const mergedList = cascadeLists([sortedList]);
         return {
             path: path,
-            widgets: mergedLists,
+            widgets: mergedList,
         };
     })
 

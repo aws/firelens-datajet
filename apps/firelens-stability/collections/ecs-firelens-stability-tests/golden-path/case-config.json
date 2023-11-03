@@ -1,62 +1,6 @@
 {
     "config": {
         "template": "golden-path-mountebank-fargate-v01-11-2023",
-        "taskCount": 40,
-        "dashboardSection": "{{definitions.dashboardSectionPath}}",
-        "lists.dashboardWidgets": [
-            {
-                "name": "{{managed.suiteName}}/DiskUtilization",
-                "section": "{{definitions.dashboardSectionPath}}",
-                "config": {
-                    "view": "timeSeries",
-                    "stacked": false,
-                    "metrics": [
-                        {{#each managed.suiteCaseNamesUnique}}
-                        [ "ECS/ContainerInsights", "EphemeralStorageUtilized", "TaskDefinitionFamily", "{{this}}", "ClusterName", "{{config.cluster}}", { "region": "{{config.region}}" } ]{{#unless @last}},{{/unless}}
-                        {{/each}}
-                    ],
-                    "region": "{{config.region}}",
-                    "title": "{{managed.}}",
-                    "period": 300
-                }
-            }
-        ]
-    },
-    "lists.metricAlarms": [
-        {
-            "name": "{{config.cluster}}/{{managed.caseNameUnique}}/DiskAlarm",
-            "config": {
-                "Type": "AWS::CloudWatch::Alarm",
-                "Properties": {
-                    "AlarmName": "{{config.cluster}}/{{managed.caseNameUnique}}/DiskAlarm",
-                    "ActionsEnabled": true,
-                    "OKActions": [],
-                    "AlarmActions": [],
-                    "InsufficientDataActions": [],
-                    "MetricName": "EphemeralStorageUtilized",
-                    "Namespace": "ECS/ContainerInsights",
-                    "Statistic": "Average",
-                    "Dimensions": [
-                        {
-                            "Name": "TaskDefinitionFamily",
-                            "Value": "{{managed.caseNameUnique}}"
-                        },
-                        {
-                            "Name": "ClusterName",
-                            "Value": "{{config.cluster}}"
-                        }
-                    ],
-                    "Period": 300,
-                    "EvaluationPeriods": 1,
-                    "DatapointsToAlarm": 1,
-                    "Threshold": 10,
-                    "ComparisonOperator": "GreaterThanThreshold",
-                    "TreatMissingData": "missing"
-                }
-            }
-        }
-    ],
-    "definitions": {
-        "dashboardSectionPath": "/1_suite/1_collection/1_golden_path"
+        "taskCount": 40
     }
 }
