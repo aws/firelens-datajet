@@ -5,7 +5,8 @@
         "imageHttpd": "210752607241.dkr.ecr.us-west-2.amazonaws.com/httpd:latest",
         "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
         "taskRoleArn": "arn:aws:iam::210752607241:role/FireLensTaskRoleReduced",
-        "executionRoleArn": "arn:aws:iam::210752607241:role/FireLensExecutionRoleReduced"
+        "executionRoleArn": "arn:aws:iam::210752607241:role/FireLensExecutionRoleReduced",
+        "addMonitoring": false
     },
     "config": {
         "region": "us-west-2",
