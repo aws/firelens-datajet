@@ -17,21 +17,22 @@ export function generateDashboardSeeds(testCases: ITestCase[]) {
 
     /* Separate testCases by dashboard */
     const dashboards: {[key: string]: ITestCase[]} = {};
-    testCases.forEach(tc => {
-        const dashboardName = tc.config.dashboard ?? defaultDashboardName;
+    testCases.filter(tc => (tc.config["lists.dashboardWidgets"]?.length ?? 0) != 0)
+        .forEach(tc => {
+            const dashboardName = tc.config.dashboard ?? defaultDashboardName;
 
-        if (!(dashboardName in dashboards)) {
-            dashboards[dashboardName] = []
-        }
-        dashboards[dashboardName].push(tc);
-    })
+            if (!(dashboardName in dashboards)) {
+                dashboards[dashboardName] = []
+            }
+            dashboards[dashboardName].push(tc);
+        });
 
     /* Get dashboards */
     const dashboardSeeds = Object.entries(dashboards).map(([name, testCasesSubset]) => ({
         name: name,
         widgets: generateOrderdedWidgetsFromTestCases(testCasesSubset),
         region: testCasesSubset[0].config.region,
-    }))
+    }));
 
     return dashboardSeeds;
 }

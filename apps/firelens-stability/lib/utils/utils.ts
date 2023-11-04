@@ -35,7 +35,13 @@ export async function templateString(str: string, template: {[key: string]: any}
 
 export async function getJsonFromFile(filePath: string) {
     const fileString = (await fs.readFile(filePath)).toString();
-    return JSON.parse(fileString);
+    try {
+        return JSON.parse(fileString);
+    }
+    catch (e) {
+        console.log(`Unable to parse json from file: ${filePath}, from string: ${fileString}`);
+        throw e;
+    }
 }
 
 export async function getSubFolders(path: string) {

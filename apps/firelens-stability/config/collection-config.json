@@ -6,7 +6,7 @@
         "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
         "taskRoleArn": "arn:aws:iam::210752607241:role/FireLensTaskRoleReduced",
         "executionRoleArn": "arn:aws:iam::210752607241:role/FireLensExecutionRoleReduced",
-        "addMonitoring": false
+        "enableMonitoring": false
     },
     "config": {
         "region": "us-west-2",

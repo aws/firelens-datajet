@@ -19,6 +19,8 @@
             "5171",
             "5172",
             "5173"
-        ]
+        ],
+        "is_datajet_tail_enable": true,
+        "is_fluent_bit_tail_enable": true
     }
 }
