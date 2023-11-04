@@ -12,7 +12,7 @@
 
 const { writeFileSync } = require("fs"); 
 const { execSync } = require('child_process');
-const result = execSync('aws ecr describe-images --repository-name aws-for-fluent-bit --registry-id 906394416424');
+const result = execSync('aws ecr describe-images --repository-name aws-for-fluent-bit --registry-id 906394416424 --output json');
 
 const queryFromTag = "2.28.4";
 const startDate = "2023-10-01T00:00:00Z";
