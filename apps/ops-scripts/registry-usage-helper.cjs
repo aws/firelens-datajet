@@ -36,7 +36,7 @@ const sortedTags = tags.map(t => (
 .map(a => a.tag);
 
 const fromTagId = sortedTags.findIndex(t => t==queryFromTag);
-const queriedTags = sortedTags.slice(fromTagId, -1);
+const queriedTags = sortedTags.slice(fromTagId);
 
 const ignoreTags=["stable", "latest", "windowsservercore-stable", "windowsservercore-latest", "debug"]
 ignoreHash=["debug"]
