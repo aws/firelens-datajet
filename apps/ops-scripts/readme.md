@@ -17,3 +17,5 @@ const endDate = "2023-11-01T00:00:00Z";
 
 - `queryFromTag` indicates what tag to start the version queries from
 - `startDate` and `endDate` indicate what range of time to query over
+
+Run with `node ./registry-usage-helper.cjs`
