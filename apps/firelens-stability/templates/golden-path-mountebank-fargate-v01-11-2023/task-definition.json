@@ -132,6 +132,7 @@
             "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"
           }
         },
+        {{#if definitions.is_fluent_bit_tail_enable}}
         "mountPoints": [
           {
             "sourceVolume": "my-shared-volume",
@@ -139,6 +140,7 @@
             "readOnly": false
           }
         ],
+        {{/if}}
         "linuxParameters": {
           "initProcessEnabled": true
         },
@@ -175,6 +177,7 @@
                 "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
             }
         },
+        {{#if definitions.is_fluent_bit_tail_enable}}
         "mountPoints": [
           {
             "sourceVolume": "my-shared-volume",
@@ -182,6 +185,7 @@
             "readOnly": false
           }
         ],
+        {{/if}}
         "linuxParameters": {
           "initProcessEnabled": true
         },
@@ -241,10 +245,11 @@
       }
     ],
     "memory": "4096",
-    "cpu": "1024",
+    "cpu": "1024"{{#if definitions.is_fluent_bit_tail_enable}},
     "volumes": [
       {
         "name": "my-shared-volume"
       }
     ]
+    {{/if}}
 }

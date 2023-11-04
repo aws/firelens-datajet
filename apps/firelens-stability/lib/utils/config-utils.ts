@@ -123,7 +123,7 @@ export function cascadeConfigurationStringAsExtensionBasic(cascadedConfigString:
         return cascadeConfigurationObjects(nextConfigLayer, baseConfig);
 
     } catch (e) {
-        console.log("Unable to parse json configuration from string:");
+        console.log("Unable to parse templated json configuration from string:");
         console.log(nextConfigLayerString);
         throw e;
     }

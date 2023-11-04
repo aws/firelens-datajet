@@ -7,7 +7,7 @@
     },
     "config": {
         "cluster": "{{definitions.collectionUniqueName}}",
-        "template": "golden-path-mountebank-fargate-v01-11-2023"{{#if definitions.addMonitoring}},
+        "template": "golden-path-mountebank-fargate-v01-11-2023"{{#if definitions.enableMonitoring}},
         "dashboard": "{{definitions.collectionUniqueName}}",
         "lists.dashboardWidgets": [
             {

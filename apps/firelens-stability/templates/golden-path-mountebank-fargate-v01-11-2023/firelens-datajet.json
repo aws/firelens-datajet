@@ -33,7 +33,7 @@
         "batchRate": {{definitions.kbps_throughput_forward}}
       }
     },
-    {{#if definitions.is_datajet_tail_active}}
+    {{#if definitions.is_datajet_tail_enable}}
     {
       "comment": "service log to tail",
       "generator": {
