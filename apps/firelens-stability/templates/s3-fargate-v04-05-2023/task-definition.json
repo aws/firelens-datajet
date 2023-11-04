@@ -56,7 +56,7 @@
             "awslogs-create-group": "true",
             "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"
           }
-        }{{#if definitions.is_fluent_bit_tail_enable}},
+        }{{#if definitions.is_fluent_bit_tail_enabled}},
         "mountPoints": [
           {
             "sourceVolume": "my-shared-volume",
@@ -94,7 +94,7 @@
                 "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
             }
         },
-        {{#if definitions.is_fluent_bit_tail_enable}}
+        {{#if definitions.is_fluent_bit_tail_enabled}}
         "mountPoints": [
           {
             "sourceVolume": "my-shared-volume",
@@ -131,7 +131,7 @@
       }
     ],
     "memory": "4096",
-    "cpu": "1024"{{#if definitions.is_fluent_bit_tail_enable}},
+    "cpu": "1024"{{#if definitions.is_fluent_bit_tail_enabled}},
     "volumes": [
       {
         "name": "my-shared-volume"
