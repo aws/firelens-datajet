@@ -136,13 +136,6 @@
             "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"
           }
         },
-        "mountPoints": [
-          {
-            "sourceVolume": "my-shared-volume",
-            "containerPath": "/tmp/data_logs",
-            "readOnly": false
-          }
-        ],
         "dependsOn": [{
           "containerName": "mock",
           "condition": "START"
@@ -176,13 +169,6 @@
                 "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
             }
         },
-        "mountPoints": [
-          {
-            "sourceVolume": "my-shared-volume",
-            "containerPath": "/var/tmp/data_logs",
-            "readOnly": false
-          }
-        ],
         "dependsOn": [{
             "containerName": "fluent-bit",
             "condition": "START"
@@ -236,10 +222,5 @@
       }
     ],
     "memory": "4096",
-    "cpu": "1024",
-    "volumes": [
-      {
-        "name": "my-shared-volume"
-      }
-    ]
+    "cpu": "1024"
 }
