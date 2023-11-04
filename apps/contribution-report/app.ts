@@ -77,7 +77,7 @@ async function collectExecutiveSummary() {
                 // Get number of commits
                 const patch = (await fetch(pr.pull_request.patch_url));
                 const text = await patch.text();
-                const numCommits = parseInt((text.split("Subject: [PATCH 1/")[1]?.split("]")[0] ?? 1));
+                const numCommits = parseInt((text.split("Subject: [PATCH 1/")[1]?.split("]")[0] ?? "1"));
 
                 // Check if commits were merged
                 const timeline = await (await octokit.request(`GET ${pr.events_url}`)).data;
