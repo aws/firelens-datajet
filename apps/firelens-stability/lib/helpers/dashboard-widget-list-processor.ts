@@ -57,7 +57,7 @@ export function generateOrderdedWidgetsFromTestCases(testCases: ITestCase[]) {
             path: path,
             widgets: mergedList,
         };
-    })
+    });
 
     /* Sort paths */
     const sortedLists = dashboardWidgetGroups.sort((a, b) => a.path.localeCompare(b.path));
