@@ -1,0 +1,10 @@
+{
+    "definitions": {
+        "cw_is_down": false,
+        "include_onepod": true,
+        "kbps_throughput_tcp_application": 1,
+        "kbps_throughput_tcp_request": 1,
+        "kbps_throughput_tcp_service": 1,
+        "kbps_throughput_forward": 1
+    }
+}

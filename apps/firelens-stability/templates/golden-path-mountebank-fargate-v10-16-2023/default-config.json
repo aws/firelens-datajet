@@ -1,0 +1,24 @@
+{
+    "definitions": {
+        "taskName": "{{managed.caseNameUnique}}",
+        "adot_enable": false,
+        "cw_auto_create_group": "false",
+        "datajet_generator_basic_contentType": "random",
+        "datajet_generator_basic_contentRandomValueSet": "alpha-numeric",
+        "include_onepod": false,
+        "kbps_throughput_tcp_application": 1,
+        "kbps_throughput_tcp_request": 1,
+        "kbps_throughput_tcp_service": 1,
+        "kbps_throughput_forward": 1,
+        "cw_use_mock": true,
+        "add_forward": true,
+        "cw_endpoint": "localhost",
+        "endpoint_flb": "localhost",
+        "LOG_REGION": "us-west-2",
+        "ServiceName": "golden-onepod-low-throughput",
+        "debugS3Bucket": "{{managed.s3OutputBucket}}",
+        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
+        "cw_is_down": false,
+        "config_revision": false
+    }
+}

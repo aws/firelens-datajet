@@ -1,0 +1,6 @@
+{
+    "definitions": {
+        "cw_is_down": true,
+        "include_onepod": false
+    }
+}

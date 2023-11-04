@@ -1,0 +1,17 @@
+{
+    "definitions": {
+        "testId": "{{managed.suiteName}}-{{managed.caseName}}",
+        "ServiceName": "{{managed.executionName}}-{{managed.executionId}}",
+        "segfault": false
+    },
+    "config": {
+        "cluster": "{{managed.executionName}}-{{managed.executionId}}-{{managed.collectionName}}",
+        "taskCount": 1,
+        "adot_enable": true,
+        "kbps_throughput_tcp_application": 5000,
+        "kbps_throughput_tcp_request": 5000,
+        "kbps_throughput_tcp_service": 5000,
+        "kbps_throughput_forward": 5000,
+        "datajet_generator_basic_contentType": "uniform"
+    }
+}
