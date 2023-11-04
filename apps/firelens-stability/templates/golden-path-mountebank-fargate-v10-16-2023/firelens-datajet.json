@@ -91,9 +91,9 @@
         "config": {
           "batches": [
             {"log":"{\"_aws\":{\"Timestamp\":1679351573496,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"},
-            {"log":"{\"_aws\":{\"Timestamp\":1679351573496,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"},
-            {"log":"{\"_aws\":{\"Timestamp\":1679351573496,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"},
-            {"log":"{\"_aws\":{\"Timestamp\":1679351573496,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"}
+            {"log":"{\"_aws\":{\"Timestamp\":1679351573596,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"},
+            {"log":"{\"_aws\":{\"Timestamp\":1679351573696,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"},
+            {"log":"{\"_aws\":{\"Timestamp\":1679351573796,\"LogGroupName\":\"ServiceMetrics\",\"CloudWatchMetrics\":[{\"Namespace\":\"ServiceMetrics\",\"Dimensions\":[[\"A\"]],\"Metrics\":[{\"Name\":\"ServiceMetric1\",\"Unit\":\"Microseconds\"}]}]},\"A\":\"Value\",\"ServiceMetric1\":10.0}"}
           ]
         }
       },
