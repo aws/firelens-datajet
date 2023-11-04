@@ -11,11 +11,10 @@
     "config": {
         "region": "us-west-2",
         "taskVpcSubnets": [
-            "subnet-078f461abe5af0a04",
-            "subnet-0cac11db3d721bddb"
+            "subnet-04b8799d6b53585fa"
         ],
         "taskVpcSecurityGroups": [
-            "sg-087206043d26db005"
+            "sg-008bce72f5d6251be"
         ]
     }
 }

@@ -176,21 +176,24 @@ export async function hydrateTestCaseSeed(testCaseSeed: ITestCaseSeed):
     };
 
     const layer2Config = cascadeConfigurationStringAsExtension(testCaseSeed.collectionConfigSeed, baseConfig);
-    const layer3Config = cascadeConfigurationStringAsExtension(testCaseSeed.suiteConfigSeed, layer2Config);
-    const layer4Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseConfigSeed, layer3Config);
-    const layer5Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseSeed, layer4Config);
+    const layer2ExecutionOverride = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer2Config);
+    const layer3Config = cascadeConfigurationStringAsExtension(testCaseSeed.suiteConfigSeed, layer2ExecutionOverride);
+    const layer3ExecutionOverride = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer3Config);
+    const layer4Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseConfigSeed, layer3ExecutionOverride);
+    const layer4ExecutionOverride = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer4Config);
+    const layer5Config = cascadeConfigurationStringAsExtension(testCaseSeed.caseSeed, layer4ExecutionOverride);
 
     /* Apply execution config before and after template to ensure overrides are set - allow set template */
-    const layer6Config = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer5Config);
+    const layer5ExecutionOverride = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer5Config);
 
     /* Get template */
-    const templateName = layer6Config.config.template;
+    const templateName = layer5ExecutionOverride.config.template;
     if (!templateName) {
-        validateTestConfig(layer6Config);
+        validateTestConfig(layer5ExecutionOverride);
     }
     const templateConfigPath = Path.join(Constants.paths.templates, templateName, Constants.fileNames.templateDefaultConfig);
     const templateConfig = await getStringFromFile(templateConfigPath);
-    const layer7Config = cascadeConfigurationStringAsDefault(templateConfig, layer6Config);
+    const layer7Config = cascadeConfigurationStringAsDefault(templateConfig, layer5ExecutionOverride);
 
     /* Final layer of configuration from execution seed. These function as overrides. */
     const config = cascadeConfigurationStringAsExtension(testCaseSeed.executionConfigSeed, layer7Config);
