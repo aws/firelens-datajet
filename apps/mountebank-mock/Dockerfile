@@ -36,7 +36,8 @@ RUN npm install --production && npm cache clean -f && npm link mountebank
 #RUN chown -R mountebank /app
 #USER mountebank
 
-EXPOSE 2525
+# For debugging expose mountebank port
+# EXPOSE 2525
 
 # Install aws cli for s3 client
 WORKDIR /var/tmp
