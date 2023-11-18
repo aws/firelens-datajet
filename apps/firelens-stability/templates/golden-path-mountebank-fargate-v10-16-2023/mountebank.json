@@ -1,6 +1,15 @@
 {
     "port": 4545,
     "protocol": "https",
+    "log": {
+      "level": "info",
+      "transports": {
+        "console": {
+          "colorize": false,
+          "format": "%level:: %message"
+        }
+      }
+    },
     "stubs": [
       {
         "predicates": [{
