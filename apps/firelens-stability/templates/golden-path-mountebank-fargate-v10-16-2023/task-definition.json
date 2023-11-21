@@ -116,6 +116,16 @@
             "name": "aws_fluent_bit_init_s3_4",
             "value": "{{managed.s3ResourcesArn}}/fluent-parser.conf"
           },
+          {{#if definitions.enable_flb_metrics}}
+          {
+            "name": "aws_fluent_bit_init_s3_5",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit-metrics.conf"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_6",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit-metrics-parser.conf"
+          },
+          {{/if}}
           {
             "name": "S3_BUCKET",
             "value": "{{definitions.debugS3Bucket}}"
@@ -130,7 +140,7 @@
         "logConfiguration": {
           "logDriver": "awslogs",
           "options": {
-            "awslogs-group": "aws-for-fluent-bit-{{managed.executionName}}-{{managed.executionId}}",
+            "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
             "awslogs-region": "{{config.region}}",
             "awslogs-create-group": "true",
             "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"

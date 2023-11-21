@@ -19,6 +19,7 @@
         "debugS3Bucket": "{{managed.s3OutputBucket}}",
         "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
         "cw_is_down": false,
-        "is_golden_revision_applied": false
+        "is_golden_revision_applied": false,
+        "enable_flb_metrics": false
     }
 }
