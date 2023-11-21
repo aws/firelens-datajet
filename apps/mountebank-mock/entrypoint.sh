@@ -5,7 +5,7 @@ echo "Mountebank API Mocker with S3 Client v0.0.1"
 aws s3 cp s3://${CLIENT_S3_BUCKET}/${CLIENT_S3_FILE} ./mountebank.json
 
 # Launch Mountebank
-mb&
+(mb --nologfile)&
 child=$!
 
 sleep 5

@@ -6,7 +6,7 @@
       "transports": {
         "console": {
           "colorize": false,
-          "format": "%level:: %message"
+          "format": "%level: %message"
         }
       }
     },

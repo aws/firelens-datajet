@@ -130,7 +130,7 @@
         "logConfiguration": {
           "logDriver": "awslogs",
           "options": {
-            "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
+            "awslogs-group": "aws-for-fluent-bit-{{managed.executionName}}-{{managed.executionId}}",
             "awslogs-region": "{{config.region}}",
             "awslogs-create-group": "true",
             "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"

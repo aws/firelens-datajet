@@ -1,7 +1,7 @@
 {
     "definitions": {
         "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:latest",
-        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.2",
+        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.3",
         "imageHttpd": "210752607241.dkr.ecr.us-west-2.amazonaws.com/httpd:latest",
         "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
         "taskRoleArn": "arn:aws:iam::210752607241:role/FireLensTaskRoleReduced",
