@@ -3,7 +3,14 @@
         "collectionUniqueName": "{{managed.executionName}}-{{managed.executionId}}-{{managed.collectionName}}",
         "testId": "{{managed.suiteName}}-{{managed.caseName}}",
         "segfault": false,
-        "clusterName": "{{managed.executionName}}-{{managed.executionId}}-{{managed.collectionName}}"
+        "clusterName": "{{managed.executionName}}-{{managed.executionId}}-{{managed.collectionName}}",
+        "logCounts": [
+            {"logName": "logs/ErrorLogs", "logSearch": "[error]"},
+            {"logName": "logs/WarnLogs", "logSearch": "[warn]"},
+            {"logName": "logs/InfoLogs", "logSearch": "[info]"},
+            {"logName": "logs/PausedMemory", "logSearch": "paused (mem buf overlimit)"},
+            {"logName": "logs/PausedDisk", "logSearch": "paused (storage buf overlimit"}
+        ]
     },
     "config": {
         "cluster": "{{definitions.collectionUniqueName}}",
@@ -11,8 +18,8 @@
         "dashboard": "{{definitions.collectionUniqueName}}",
         "lists.dashboardWidgets": [
             {
-                "name": "title-{{config.collectionUniqueName}}",
-                "section": "0_{{config.collectionUniqueName}}",
+                "name": "collection-title",
+                "section": "0_{{definitions.collectionUniqueName}}",
                 "config": {
                     "type": "text",
                     "x": 0,
@@ -25,7 +32,7 @@
                 }
             },
             {
-                "name": "{{config.collectionUniqueName}}",
+                "name": "suite-title",
                 "section": "1_{{managed.suiteName}}",
                 "config": {
                     "type": "text",
@@ -40,7 +47,7 @@
             },
             {
                 "name": "taskCount",
-                "section": "0_{{config.collectionUniqueName}}",
+                "section": "0_{{definitions.collectionUniqueName}}",
                 "config": {
                     "type": "metric",
                     "properties": {
@@ -58,7 +65,7 @@
             {{#comment}}
             {
                 "name": "{{definitions.collectionUniqueName}}/taskCount/{{managed.suiteName}}",
-                "section": "0_{{config.collectionUniqueName}}",
+                "section": "0_{{definitions.collectionUniqueName}}",
                 "config": {
                     "type": "metric",
                     "properties": {
@@ -76,8 +83,29 @@
                 }
             },
             {{/comment}}
-            {{#comment}}
-            {{/comment}}
+{{#comment}}
+            // Add logging metrics to watch for various levels, and sensitive message values
+{{/comment}}
+            {{#each definitions.logCounts}}
+            {
+                "name": "{{../managed.suiteName}}/{{logName}}",
+                "section": "1_{{../managed.suiteName}}",
+                "config": {
+                    "type": "log",
+                    "properties": {
+                        "stacked": false,
+                        "view": "timeSeries",
+                        "query": "SOURCE 'app-{{../managed.executionName}}-{{../managed.executionId}}'{{#comment}}
+                        {{/comment}} | fields @message, @logStream\n{{#comment}}
+                        {{/comment}}| filter @message like '{{logSearch}}'\n{{#comment}}
+                        {{/comment}}{{#each ../managed.suiteCaseNamesUnique}}| fields strcontains(@logStream, \"{{this}}-fluent-bit/fluent-bit\") as `indicator-{{this}}`\n{{/each}}{{#comment}}
+                        {{/comment}}| stats {{#each ../managed.suiteCaseNamesUnique}}sum(`indicator-{{this}}`) as `{{this}}`{{#unless @last}}, {{/unless}}{{/each}} by bin(30s)",
+                        "title": "{{../managed.suiteName}}/{{logName}}",
+                        "region": "{{../config.region}}"
+                    }
+                }
+            },
+            {{/each}}
             {
                 "name": "{{managed.suiteName}}/DiskUtilization",
                 "section": "1_{{managed.suiteName}}",
