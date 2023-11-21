@@ -54,6 +54,15 @@ handlebars.registerHelper('each2', function(arr, block) {
 });
 
 /*
+* {{#comment}}
+*   This comment will not appear once the template is evaluated
+* {{/comment}}
+*/
+handlebars.registerHelper('comment', function(arr, block) {
+    return "";
+});
+
+/*
 * {{#ifEquals sampleString "This is a string"}}
 *  Your HTML here
 * {{/ifEquals}}
