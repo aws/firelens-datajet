@@ -12,6 +12,7 @@ import colorLoggerGenerator from "./color-logger-generator.js"
 import referenceGenerator from "./reference-generator.js"
 import basicGenerator from "./basic-generator.js"
 import explicitGenerator from "./explicit-generator.js"
+import s3Generator from "./s3-generator.js"
 
 export default [
     fileGenerator,
@@ -21,5 +22,6 @@ export default [
     referenceGenerator,
     basicGenerator,
     explicitGenerator,
+    s3Generator,
     ...validatorIndex,
 ]
