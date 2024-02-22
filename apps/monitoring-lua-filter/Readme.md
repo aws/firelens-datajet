@@ -1,5 +1,7 @@
-# AWS for Fluent Bit Monitoring using EMF Filter
-AWS for Fluent Bit supports monitoring Fluent Bit via CloudWatch EMF metrics when used alongside a custom Lua Filter. Follow the instructions below to get started.
+# AWS for Fluent Bit Monitoring using EMF Filter [Experimental]
+AWS for Fluent Bit supports monitoring Fluent Bit via CloudWatch EMF metrics when used alongside an experimental custom Lua Filter. Follow the instructions below to get started.
+
+Please note that this Lua script plugin is experimental, provided as is, and there is no plan for future updates.
 
 ## Getting Started with Monitoring Fluent Bit 
 
