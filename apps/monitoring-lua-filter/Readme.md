@@ -44,20 +44,12 @@ Build and run Fluent Bit, and experience the default EMF monitoring behaviors.
 
 If customization is desired, pass monitoring EMF metric configuration through environment variables. All environment variables are not required, and can be set via Docker Image ENV, custom entry point, or the environment variable section of the ECS Task Definition:
 
-|Environment Variable	|**Type**	|Default	|Example	|Description	|
-|---	|---	|---	|---	|---	|
+|Environment Variable	|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Type**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |Default	|Example	|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	|
+|---	|---    |---	|---	|---	|
 |AWS_FLB_MONITORING_NAMESPACE	|string	|AWSForFluentBit/Monitoring	|AWS_FLB_MONITORING_NAMESPACE="FireLensEMF/CustomNameSpace"	|Set metrics namespace to a custom value. String type.	|
 |AWS_FLB_MONITORING_DIMENSIONS	|Array<Array<string>>	|[[]]	|[["Cell","Realm"],["Realm"]]	|Customize metric dimensionsets. Array type. Outter array represents an array of dimensionsets. Each inner dimensionset is an array of strings. The strings are the dimension names which are added to each metric. Alias and PluginType will be appended to each listed dimension set. There is no way to remove Alias or PluginType.	|
-|AWS_FLB_MONITORING_PROPERTIES	|{
-  [propertyName]: propertyValue
-}	|{}	|{"Cell":"xyz","Realm":"abc","MyMetric":1}	|Add static values to set dimension or metric. Map type. Key represents the property name, value represents the property value. 	|
-|AWS_FLB_MONITORING_METRICS	|{
-  "name": string,
-  "rateWindow?: number,
-  "storageResolution"?: number,
-  "suffix"?: string,
-  "remove"?: boolean
-}[]	|{}	|[{"name": "logging_memory_total", "unit":"Bytes"}]	|Add, modify configuration, and remove EMF monitoring metrics. See below for futher clairificaiton.	|
+|AWS_FLB_MONITORING_PROPERTIES	|{<br/> &ensp; [propertyName]: propertyValue<br/>}	|{}	|{"Cell":"xyz","Realm":"abc","MyMetric":1}	|Add static values to set dimension or metric. Map type. Key represents the property name, value represents the property value. 	|
+|AWS_FLB_MONITORING_METRICS	|{<br/> &ensp; "name": string, <br/> &ensp; "rateWindow?: number, <br/> &ensp; "storageResolution"?: number, <br/> &ensp; "suffix"?: string, <br/> &ensp; "remove"?: boolean <br/> &ensp;}[]	|{}	|[{"name": "logging_memory_total", "unit":"Bytes"}]	|Add, modify configuration, and remove EMF monitoring metrics. See below for futher clairificaiton.	|
 
 #### Properties Configuration [AWS_FLB_MONITORING_PROPERTIES]
 
