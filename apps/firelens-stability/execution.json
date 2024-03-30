@@ -1,10 +1,10 @@
 {
-    "executionName":  "2_32_2_release-candidate_stability-tests_run-2",
+    "executionName":  "2_32_1_release_stability-tests",
     "executeCollections": [
         "ecs-firelens-stability-tests"
     ],
     "definitions": {
-        "imageAwsForFluentBit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/aws-for-fluent-bit-release-candidate:init-amd64-2.32.2",
+        "imageAwsForFluentBit": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-2.32.1",
         "enableMonitoring": true
     },
     "config": {
