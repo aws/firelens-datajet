@@ -1,10 +1,11 @@
 {
-    "executionName":  "r2-golden-path-10-16-2023-revision-single-2_31_12_20230911",
+    "executionName":  "2_32_2_release-candidate_stability-tests_run-2",
     "executeCollections": [
-        "ecs-golden-path-single"
+        "ecs-firelens-stability-tests"
     ],
     "definitions": {
-        "imageAwsForFluentBit": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-debug-2.31.12.20230911"
+        "imageAwsForFluentBit": "210752607241.dkr.ecr.us-west-2.amazonaws.com/aws-for-fluent-bit-release-candidate:init-amd64-2.32.2",
+        "enableMonitoring": true
     },
     "config": {
         "template": "golden-path-mountebank-fargate-v10-16-2023"
