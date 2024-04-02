@@ -1,13 +1,10 @@
 {
-    "executionName":  "2_32_1_release_stability-tests",
+    "executionName":  "2_32_1_one-flow-tests",
     "executeCollections": [
-        "ecs-firelens-stability-tests"
+        "ecs-firelens-one-flow-tests"
     ],
     "definitions": {
         "imageAwsForFluentBit": "public.ecr.aws/aws-observability/aws-for-fluent-bit:init-2.32.1",
         "enableMonitoring": true
-    },
-    "config": {
-        "template": "golden-path-mountebank-fargate-v10-16-2023"
     }
 }

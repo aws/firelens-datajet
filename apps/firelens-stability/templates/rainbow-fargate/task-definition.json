@@ -1,0 +1,195 @@
+{
+    "family": "{{managed.caseNameUnique}}",
+    "executionRoleArn": "{{definitions.executionRoleArn}}",
+    "taskRoleArn": "{{definitions.taskRoleArn}}",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+      "FARGATE"
+    ],
+    "containerDefinitions": [
+      {{#if definitions.adot_enable}}
+      {
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/aws-otel-EC2",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-stream-prefix": "ecs",
+            "awslogs-create-group": "True"
+          }
+        },
+        "healthCheck": {
+          "command": [ "/healthcheck" ],
+          "interval": 5,
+          "timeout": 6,
+          "retries": 5,
+          "startPeriod": 1
+        },
+        "portMappings": [
+          {
+            "hostPort": 2000,
+            "protocol": "udp",
+            "containerPort": 2000
+          },
+          {
+            "hostPort": 4317,
+            "protocol": "tcp",
+            "containerPort": 4317
+          },
+          {
+            "hostPort": 8125,
+            "protocol": "udp",
+            "containerPort": 8125
+          }
+        ],
+        "command": [
+          "--config=s3://{{managed.s3ResourcesBucket}}.s3.us-west-2.amazonaws.com/{{managed.s3ResourcesPath}}/adot-config.yaml"
+        ],
+        "image": "amazon/aws-otel-collector",
+        "name": "aws-otel-collector"
+      },
+      {
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/aws-otel-EC2",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-stream-prefix": "ecs",
+            "awslogs-create-group": "True"
+          }
+        },
+        "portMappings": [
+          {
+            "hostPort": 8000,
+            "protocol": "tcp",
+            "containerPort": 8000
+          }
+        ],
+        "environment": [
+          {
+            "name": "AWS_XRAY_DAEMON_ADDRESS",
+            "value": "localhost:2000"
+          }
+        ],
+        "image": "public.ecr.aws/aws-otel-test/aws-otel-goxray-sample-app:latest",
+        "essential": false,
+        "name": "aws-otel-emitter",
+        "dependsOn": [
+          {
+            "containerName": "aws-otel-collector",
+            "condition": "START"
+          }
+        ]
+      },
+      {{/if}}
+      {
+        "name": "fluent-bit",
+        "image": "{{definitions.imageAwsForFluentBit}}",
+        "cpu": 1024,
+        "firelensConfiguration": {
+          "type": "fluentbit"
+        },
+        "environmentFiles": [
+          {
+              "value": "{{managed.s3ResourcesArn}}/fluent-bit.env",
+              "type": "s3"
+          }
+        ],
+        "environment": [
+          {
+            "name": "AWS_REGION",
+            "value": "{{config.region}}"
+          },
+          {
+            "name": "aws_fluent_bit_init_s3_1",
+            "value": "{{managed.s3ResourcesArn}}/fluent-bit.conf"
+          }
+          {
+            "name": "S3_BUCKET",
+            "value": "{{definitions.debugS3Bucket}}"
+          },
+          {
+            "name": "S3_KEY_PREFIX",
+            "value": "{{definitions.debugS3KeyPrefix}}"
+          }
+        ],
+        "memory": 4096,
+        "essential": true,
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
+            "awslogs-region": "{{config.region}}",
+            "awslogs-create-group": "true",
+            "awslogs-stream-prefix": "{{managed.caseNameUnique}}-fluent-bit"
+          }
+        },
+        "linuxParameters": {
+          "initProcessEnabled": true
+        },
+        "dependsOn": [{
+          "containerName": "mock",
+          "condition": "START"
+        }]
+      },
+      {
+        "name": "datajet",
+        "user": "0",
+        "image": "{{definitions.imageDatajet}}",
+        "essential": true,
+        "environment": [
+          {
+            "name": "CLIENTS",
+            "value": "[\"s3\"]"
+          },
+          {
+              "name": "CLIENT_S3_BUCKET",
+              "value": "{{managed.s3ResourcesBucket}}"
+          },
+          {
+            "name": "CLIENT_S3_FILE",
+            "value": "{{managed.s3ResourcesPath}}/firelens-datajet.json"
+          }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "app-{{managed.executionName}}-{{managed.executionId}}",
+                "awslogs-region": "{{config.region}}",
+                "awslogs-create-group": "true",
+                "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
+            }
+        },
+        "linuxParameters": {
+          "initProcessEnabled": true
+        },
+        "dependsOn": [{
+            "containerName": "fluent-bit",
+            "condition": "START"
+        }]
+      },
+      {
+        "essential": false,
+        "image": "{{definitions.imageHttpd}}",
+        "name": "dummy",
+        "logConfiguration": {
+          "logDriver":"awsfirelens",
+          "options": {
+            "Name": "cloudwatch_logs",
+            "region": "{{config.region}}",
+            "log_group_name": "app-{{managed.executionName}}-{{managed.executionId}}",
+            "auto_create_group": "true",
+            "log_stream_name": "{{managed.caseNameUnique}}-dummy-app",
+            "retry_limit": "2"
+          }
+        },
+        "dependsOn": [{
+          "containerName": "fluent-bit",
+          "condition": "START"
+        }],
+        "memoryReservation": 100
+      }
+    ],
+    "memory": "4096",
+    "cpu": "1024"
+}

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "template": "rainbow-fargate-one-flow",
+        "taskCount": 5
+    },
+    "definitions": {
+        "kbps_throughput_tcp": 10,
+        "cw_auto_create_group": "true",
+        "datajet_generator_basic_contentType": "uniform"
+    }
+}
