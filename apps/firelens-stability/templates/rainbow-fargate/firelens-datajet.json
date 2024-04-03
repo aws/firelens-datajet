@@ -3,13 +3,18 @@
   "generator": {
     "name": "basic",
     "config": {
-      "contentLength": 1000,
+      "contentLength": {{definitions.datajet_generator_basic_contentLength}},
       "batchSize": 1,
       "logKey": "log",
       "contentType": "{{definitions.datajet_generator_basic_contentType}}",
       "contentRandomValueSet": "{{definitions.datajet_generator_basic_contentRandomValueSet}}"
     }
   },
+  {{#if definitions.datajet_output_stdout}}
+  "datajet": {
+    "name": "stdout"
+  },
+  {{else}}
   "datajet": {
     "name": "tcp",
     "config": {
@@ -18,6 +23,7 @@
       "addNewline": true
     }
   },
+  {{/if}}
   "stage": {
     "batchRate": {{definitions.kbps_throughput_tcp}}
   }
