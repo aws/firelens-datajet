@@ -12,6 +12,6 @@
         "include_onepod": false,
         "kbps_throughput_tcp": 10,
         "debugS3Bucket": "{{managed.s3OutputBucket}}",
-        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}",
+        "debugS3KeyPrefix": "{{managed.s3OutputExecutionPath}}/{{managed.caseNameUnique}}"
     }
 }
