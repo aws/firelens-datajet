@@ -87,9 +87,9 @@
         "image": "{{definitions.imageAwsForFluentBit}}",
         "command": [
           "/bin/sh", "-c",
-          "/init/fluent_bit_init_process; chmod +x /init/invoke_fluent_bit.sh; exec env ECS_TASK_ID=$(curl -s \"${ECS_CONTAINER_METADATA_URI_V4}/task\" | awk -F '\"TaskARN\":\"' '{print $2}' | cut -d \\\" -f 1 | cut -d \\\\ -f 3) /init/invoke_fluent_bit.sh"
+          "/init/fluent_bit_init_process; sed -i.bak '/@INCLUDE \\/fluent-bit\\/etc\\/fluent-bit.conf/d' /init/fluent-bit-init.conf; chmod +x /init/invoke_fluent_bit.sh; exec env ECS_TASK_ID=$(curl -s \"${ECS_CONTAINER_METADATA_URI_V4}/task\" | awk -F '\"TaskARN\":\"' '{print $2}' | cut -d \\\" -f 1 | cut -d \\\\ -f 3) /init/invoke_fluent_bit.sh"
         ],
-        "cpu": 1024,
+        "cpu": {{definitions.firelens_fluent_bit_container_vcpu}},
         "firelensConfiguration": {
           "type": "fluentbit"
         },
@@ -151,6 +151,19 @@
             "value": "{{managed.s3ResourcesPath}}/firelens-datajet.json"
           }
         ],
+        {{#if definitions.datajet_output_stdout}}
+        "logConfiguration": {
+          "logDriver":"awsfirelens",
+          "options": {
+            "Name": "cloudwatch_logs",
+            "region": "{{config.region}}",
+            "log_group_name": "garbage-group-trashed-via-container-task-definition-command-override",
+            "auto_create_group": "true",
+            "log_stream_name": "garbage-stream",
+            "retry_limit": "2"
+          }
+        },
+        {{else}}
         "logConfiguration": {
             "logDriver": "awslogs",
             "options": {
@@ -160,6 +173,7 @@
                 "awslogs-stream-prefix": "{{managed.caseNameUnique}}-datajet"
             }
         },
+        {{/if}}
         "linuxParameters": {
           "initProcessEnabled": true
         },
@@ -167,7 +181,7 @@
             "containerName": "fluent-bit",
             "condition": "START"
         }]
-      },
+      }{{#unless definitions.datajet_output_stdout}},
       {
         "essential": false,
         "image": "{{definitions.imageHttpd}}",
@@ -189,6 +203,7 @@
         }],
         "memoryReservation": 100
       }
+      {{/unless}}
     ],
     "memory": "4096",
     "cpu": "1024"

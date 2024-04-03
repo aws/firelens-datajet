@@ -4,7 +4,8 @@
     "repeat": 100,
     "waitBefore": 5,
     "waitAfter": 10,
-    "waitBetween": 0
+    "waitBetween": 0,
+    "isAsync": true
   },
   "children": [
     {

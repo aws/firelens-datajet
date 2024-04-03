@@ -1,0 +1,7 @@
+{
+    "definitions": {
+        "rainbow_cw_c_on": false,
+        "rainbow_cw_go_on": true,
+        "firelens_fluent_bit_container_vcpu": 256
+    }
+}

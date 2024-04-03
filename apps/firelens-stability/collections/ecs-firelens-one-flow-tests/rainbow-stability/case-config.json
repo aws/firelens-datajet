@@ -1,6 +1,6 @@
 {
     "config": {
-        "taskCount": 5
+        "taskCount": 1
     },
     "definitions": {
         "kbps_throughput_tcp": 10,
