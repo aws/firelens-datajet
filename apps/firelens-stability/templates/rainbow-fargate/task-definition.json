@@ -85,6 +85,10 @@
       {
         "name": "fluent-bit",
         "image": "{{definitions.imageAwsForFluentBit}}",
+        "command": [
+          "/bin/sh", "-c",
+          "/init/fluent_bit_init_process; chmod +x /init/invoke_fluent_bit.sh; exec env ECS_TASK_ID=$(curl -s \"${ECS_CONTAINER_METADATA_URI_V4}/task\" | awk -F '\"TaskARN\":\"' '{print $2}' | cut -d \\\" -f 1 | cut -d \\\\ -f 3) /init/invoke_fluent_bit.sh"
+        ],
         "cpu": 1024,
         "firelensConfiguration": {
           "type": "fluentbit"
@@ -103,7 +107,7 @@
           {
             "name": "aws_fluent_bit_init_s3_1",
             "value": "{{managed.s3ResourcesArn}}/fluent-bit.conf"
-          }
+          },
           {
             "name": "S3_BUCKET",
             "value": "{{definitions.debugS3Bucket}}"
@@ -126,11 +130,7 @@
         },
         "linuxParameters": {
           "initProcessEnabled": true
-        },
-        "dependsOn": [{
-          "containerName": "mock",
-          "condition": "START"
-        }]
+        }
       },
       {
         "name": "datajet",

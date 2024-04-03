@@ -1,6 +1,5 @@
 {
     "config": {
-        "template": "rainbow-fargate-one-flow",
         "taskCount": 5
     },
     "definitions": {
