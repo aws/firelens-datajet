@@ -1,9 +1,6 @@
 import { getJsonFromFile, sleep } from "../utils/utils.js";
-import * as ECS from "@aws-sdk/client-ecs";
-import AWS from 'aws-sdk'; /* We really should be migrating to v3, but for now use v2 */
+import { ECS, RunTaskCommandOutput } from "@aws-sdk/client-ecs";
 import { getTestCaseTaskDefinition } from "../utils/config-utils.js";
-import { PromiseResult } from "aws-sdk/lib/request";
-process.env.AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE = '1';
 import * as Constants from "../constants.js"
 
 let ecsTestCaseTaskQueue: Array<IEcsTestTask> = [];
@@ -61,14 +58,13 @@ async function processEcsTestTaskQueue() {
 async function startECSTask(task: IEcsTestTask) {
     const testCase = task.testCase;
         
-    // Set the region name
-    AWS.config.update({ region: testCase.config.region });
-
     // Create an ECS client
-    const ecs = new AWS.ECS();
+    const ecs = new ECS({
+        region: testCase.config.region,
+    });
 
     // Create fargate cluster if it doesn't already exist
-    const clusters = await ecs.listClusters().promise();
+    const clusters = await ecs.listClusters();
     if (!clusters.clusterArns.some(c => c.endsWith(`/${testCase.config.cluster}`))) {
         await ecs.createCluster({
             settings: [{
@@ -76,7 +72,7 @@ async function startECSTask(task: IEcsTestTask) {
                 value: "enabled"
             }],
             clusterName: testCase.config.cluster
-        }).promise();
+        });
         console.log(`🍇 Created cluster: ${testCase.config.cluster}\n`)
         await sleep(2000); /* Wait for the container to be ready to accept new tasks */
     }
@@ -85,9 +81,9 @@ async function startECSTask(task: IEcsTestTask) {
     const taskDefinition = await getTestCaseTaskDefinition(testCase);
 
     // Register task definition
-    let taskDefinitionArn;
+    let taskDefinitionArn: string;
     try {
-        taskDefinitionArn = (await ecs.registerTaskDefinition(taskDefinition).promise()).taskDefinition!.taskDefinitionArn;
+        taskDefinitionArn = (await ecs.registerTaskDefinition(taskDefinition)).taskDefinition!.taskDefinitionArn;
     }
     catch (err) {
         console.error(`Error registering task definition: ${err}`);
@@ -133,11 +129,10 @@ function ecsTaskReturn(ecsTestTask: IEcsTestTask) {
 async function validateAndRetryECSTask(ecsTestTask: IEcsTestTask) {
     const testCase = ecsTestTask.testCase;
       
-    // Set the region name
-    AWS.config.update({ region: ecsTestTask.testCase.config.region });
-    
     // Create an ECS client
-    const ecs = new AWS.ECS();
+    const ecs = new ECS({
+        region: testCase.config.region,
+    });
 
     const {
         currentTasks,
@@ -182,11 +177,10 @@ async function validateAndRetryECSTask(ecsTestTask: IEcsTestTask) {
 async function outOfRetriesECSTask(ecsTestTask: IEcsTestTask) {
     const testCase = ecsTestTask.testCase;
 
-    // Set the region name
-    AWS.config.update({ region: ecsTestTask.testCase.config.region });
-
     // Create an ECS client
-    const ecs = new AWS.ECS();
+    const ecs = new ECS({
+        region: testCase.config.region,
+    });
 
     const {
         runningTasksCount,
@@ -212,26 +206,26 @@ async function outOfRetriesECSTask(ecsTestTask: IEcsTestTask) {
 }
 
 
-async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.ECS, taskDefinitionArn: string): Promise<string[]> {
+async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: ECS, taskDefinitionArn: string): Promise<string[]> {
     let launchedTasks = [];
     while (launchedTasks.length < taskCount) {
         const launchCount = Math.min(10, taskCount - launchedTasks.length);
-        let result: PromiseResult<AWS.ECS.RunTaskResponse, AWS.AWSError>;
+        let result: RunTaskCommandOutput;
         try {
             result = await ecs.runTask({
-            enableExecuteCommand: true,
-            cluster: testCase.config.cluster,
-            taskDefinition: taskDefinitionArn!,
-            count: launchCount,
-            launchType: "FARGATE",
-            networkConfiguration: {
-                awsvpcConfiguration: {
-                    subnets: testCase.config.taskVpcSubnets,
-                    assignPublicIp: "DISABLED",
-                    securityGroups: testCase.config.taskVpcSecurityGroups,
+                enableExecuteCommand: true,
+                cluster: testCase.config.cluster,
+                taskDefinition: taskDefinitionArn!,
+                count: launchCount,
+                launchType: "FARGATE",
+                networkConfiguration: {
+                    awsvpcConfiguration: {
+                        subnets: testCase.config.taskVpcSubnets,
+                        assignPublicIp: "DISABLED",
+                        securityGroups: testCase.config.taskVpcSecurityGroups,
+                    }
                 }
-            }
-            }).promise();
+            });
         }
         catch (err) {
             console.error(`Error launching task: ${err}`);
@@ -254,8 +248,10 @@ async function launchECSTasks(testCase: ITestCase, taskCount: number, ecs: AWS.E
     return launchedTasks;
 }
 
-async function validateECSTestTask(ecs: AWS.ECS, ecsTestTask: IEcsTestTask) {     
-    const currentTasks = await ecs.describeTasks({cluster: ecsTestTask.testCase.config.cluster, tasks: ecsTestTask.executionRecord.taskArns}).promise();
+async function validateECSTestTask(ecs: ECS, ecsTestTask: IEcsTestTask) {     
+    const currentTasks = await ecs.describeTasks(
+        {cluster: ecsTestTask.testCase.config.cluster, tasks: ecsTestTask.executionRecord.taskArns},
+    );
     const startingTasks = currentTasks.tasks
         .filter(t => (t.taskDefinitionArn === ecsTestTask.taskDefinitionArn) &&
             (t.lastStatus === "PROVISIONING" || t.lastStatus === "PENDING" || t.lastStatus === "ACTIVATING"))
