@@ -11,11 +11,9 @@
         "build": "tsc --build; chmod u+x ./bin/index.js"
     },
     "dependencies": {
-        "@aws-sdk/client-cloudwatch": "^3.438.0",
-        "@aws-sdk/client-ecs": "^3.398.0",
-        "@aws-sdk/client-s3": "^3.398.0",
-        "@types/aws-sdk": "^2.7.0",
-        "aws-sdk": "^2.1354.0",
+        "@aws-sdk/client-cloudwatch": "^3.583.0",
+        "@aws-sdk/client-ecs": "^3.583.0",
+        "@aws-sdk/client-s3": "^3.583.0",
         "dotenv": "^10.0.0",
         "handlebars": "^4.7.7",
         "meow": "^11.0.0",

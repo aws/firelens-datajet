@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk';
+import { S3 } from "@aws-sdk/client-s3";
 import { IClient } from "../core/ext-types.js"
 import { IExecutionResult } from "../core/pipeline-types.js";
 
@@ -6,7 +6,7 @@ const environmentClient: IClient = {
     name: "s3",
     makeCommandGenerator: (async function*() {
 
-        const s3 = new AWS.S3();
+        const s3 = new S3();
 
         const bucket = process.env.CLIENT_S3_BUCKET || 'firelens-datajet';
         const file = process.env.CLIENT_S3_FILE || 'firelens-datajet.json';
@@ -15,7 +15,7 @@ const environmentClient: IClient = {
             const s3Response = await s3.getObject({
                 Bucket: bucket,
                 Key: file
-            }).promise();
+            });
 
             const config = JSON.parse(s3Response.Body.toString());
 
