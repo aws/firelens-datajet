@@ -18,6 +18,6 @@
     "dotenv": "^16.0.2",
     "luxon": "^3.2.1",
     "node-fetch": "^2.6.7",
-    "octokit": "^2.0.7"
+    "octokit": "^4.1.3"
   }
 }
