@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import AWS from 'aws-sdk';
+import { S3 } from "@aws-sdk/client-s3";
 import { IBatchGenerator, ILogData } from "../core/ext-types.js"
 import fs from 'fs';
 import readline from 'readline';
@@ -39,7 +39,7 @@ const s3Generator: IBatchGenerator = {
     defaultConfig: defaultConfig,
     createConfiguredGenerator: function (config: IGeneratorConfig) {
 
-        const s3 = new AWS.S3();
+        const s3 = new S3();
 
         const bucket = config.bucket
         const file = config.file;
@@ -56,7 +56,7 @@ const s3Generator: IBatchGenerator = {
                         const s3Response = await s3.getObject({
                             Bucket: bucket,
                             Key: file
-                        }).promise();
+                        });
             
                         s3Logs = (s3Response?.Body?.toString() ?? "").split("\n");
                     }
@@ -101,7 +101,7 @@ const s3Generator: IBatchGenerator = {
                     hasLooped = true;
                 }
             })()),
-        }
+        };
     }
 
 };
