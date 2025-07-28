@@ -8,13 +8,13 @@ ENV CLIENT_S3_BUCKET set-CLIENT_S3_BUCKET-to_your_s3_bucket
 ENV CLIENT_S3_FILE  set-CLIENT_S3_FILE-to_your_s3_config_filename
 
 # Install Mountebank via Node
-RUN yum upgrade -y
-# RUN yum install -y gcc-c++ make
-RUN yum install https://rpm.nodesource.com/pub_18.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
-RUN yum install nodejs -y --setopt=nodesource-nodejs.module_hotfixes=1
+RUN dnf upgrade -y
+# RUN dnf install -y gcc-c++ make
+RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+RUN dnf install -y nodejs
 RUN curl -sL -o /bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 RUN chmod +x /bin/gimme
-RUN yum install -y \
+RUN dnf install -y \
       unzip \
       openssl
 
@@ -46,8 +46,8 @@ RUN unzip awscliv2.zip
 RUN ./aws/install
 RUN rm awscliv2.zip
 
-RUN yum remove unzip -y \
-    && yum clean all \
+RUN dnf remove unzip -y \
+    && dnf clean all \
     && rm -rf /var/cache/yum
 
 WORKDIR /
