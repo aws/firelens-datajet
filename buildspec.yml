@@ -1,0 +1,88 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+      docker: 20
+    commands:
+      - echo Installing dependencies...
+      - npm install -g ecs-cli
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      
+  build:
+    commands:
+      - echo Build started on `date`
+      
+      # Clone repositories
+      - echo Cloning aws-for-fluent-bit repository...
+      - git clone https://github.com/aws/aws-for-fluent-bit.git
+      - echo Cloning firelens-datajet repository...
+      - git clone https://github.com/aws/firelens-datajet.git
+      
+      # Build aws-for-fluent-bit debug image
+      - echo Building aws-for-fluent-bit debug image...
+      - cd aws-for-fluent-bit
+      - make init-debug
+      - docker tag amazon/aws-for-fluent-bit:init-debug $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon/aws-for-fluent-bit:$FLUENT_BIT_VERSION-init-debug
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon/aws-for-fluent-bit:$FLUENT_BIT_VERSION-init-debug
+      - cd ..
+      
+      # Build firelens-datajet image
+      - echo Building firelens-datajet image...
+      - cd firelens-datajet
+      - make release
+      - docker tag amazon/firelens-datajet:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/datajet:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/datajet:latest
+      
+      # Build mountebank image
+      - echo Building mountebank image...
+      - cd apps/mountebank-mock
+      - make release
+      - docker tag mock-mountebank:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/mock-mountebank:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/mock-mountebank:latest
+      - cd ../..
+      
+      # Configure stability test
+      - echo Configuring stability test...
+      - cd apps/firelens-stability
+      - npm install
+      
+      # Update execution-config.json
+      - |
+        cat > config/execution-config.json << EOF
+        {
+          "s3ArchivesArn": "arn:aws:s3:::$STABILITY_ARCHIVES_BUCKET",
+          "s3RecordArn": "arn:aws:s3:::$STABILITY_RECORDS_BUCKET", 
+          "s3SummaryArn": "arn:aws:s3:::$STABILITY_SUMMARY_BUCKET",
+          "s3OutputArn": "arn:aws:s3:::$STABILITY_OUTPUT_BUCKET"
+        }
+        EOF
+      
+      # Update collection-config.json
+      - |
+        cat > config/collection-config.json << EOF
+        {
+          "definitions": {
+            "imageDatajet": "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/datajet:latest",
+            "imageMountebank": "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/mock-mountebank:latest",
+            "s3LogDestinationBucketName": "$STABILITY_OUTPUT_BUCKET",
+            "taskRoleArn": "$TASK_ROLE_ARN",
+            "executionRoleArn": "$EXECUTION_ROLE_ARN"
+          },
+          "config": {
+            "region": "$AWS_DEFAULT_REGION",
+            "taskVpcSubnets": ["$SUBNET_1", "$SUBNET_2"],
+            "taskVpcSecurityGroups": ["$SECURITY_GROUP"]
+          }
+        }
+        EOF
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Setup complete. Ready to run stability tests.
