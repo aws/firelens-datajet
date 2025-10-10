@@ -243,24 +243,6 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: STABILITY_ARCHIVES_BUCKET
-            Value: !Ref StabilityArchivesBucket
-          - Name: STABILITY_RECORDS_BUCKET
-            Value: !Ref StabilityRecordsBucket
-          - Name: STABILITY_SUMMARY_BUCKET
-            Value: !Ref StabilitySummaryBucket
-          - Name: STABILITY_OUTPUT_BUCKET
-            Value: !Ref StabilityOutputBucket
-          - Name: TASK_ROLE_ARN
-            Value: !GetAtt FireLensTaskRole.Arn
-          - Name: EXECUTION_ROLE_ARN
-            Value: !GetAtt FireLensTaskExecutionRole.Arn
-          - Name: SUBNET_1
-            Value: !Ref PublicSubnet1
-          - Name: SUBNET_2
-            Value: !Ref PublicSubnet2
-          - Name: SECURITY_GROUP
-            Value: !Ref SecurityGroup
       Source:
         Type: GITHUB
         Location: https://github.com/prateekchaudhry/firelens-datajet.git
