@@ -4,7 +4,6 @@ phases:
   install:
     runtime-versions:
       nodejs: 20
-      docker: 20
     commands:
       - echo Installing dependencies...
       - npm install -g ecs-cli
@@ -18,23 +17,8 @@ phases:
     commands:
       - echo Build started on `date`
       
-      # Clone repositories
-      - echo Cloning aws-for-fluent-bit repository...
-      - git clone https://github.com/aws/aws-for-fluent-bit.git
-      - echo Cloning firelens-datajet repository...
-      - git clone https://github.com/aws/firelens-datajet.git
-      
-      # Build aws-for-fluent-bit debug image
-      - echo Building aws-for-fluent-bit debug image...
-      - cd aws-for-fluent-bit
-      - make init-debug
-      - docker tag amazon/aws-for-fluent-bit:init-debug $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon/aws-for-fluent-bit:$FLUENT_BIT_VERSION-init-debug
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon/aws-for-fluent-bit:$FLUENT_BIT_VERSION-init-debug
-      - cd ..
-      
-      # Build firelens-datajet image
+      # Build firelens-datajet image (repository already available from CodeBuild source)
       - echo Building firelens-datajet image...
-      - cd firelens-datajet
       - make release
       - docker tag amazon/firelens-datajet:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/datajet:latest
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/datajet:latest

@@ -2,10 +2,21 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'FireLens Stability Test Infrastructure'
 
 Parameters:
-  FluentBitVersion:
+  CreateDatajetRepository:
     Type: String
-    Default: '2.31.8'
-    Description: 'Version of Fluent Bit to test'
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: 'Whether to create datajet ECR repository (set to false if it already exists)'
+  
+  CreateMountebankRepository:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: 'Whether to create mock-mountebank ECR repository (set to false if it already exists)'
+
+Conditions:
+  ShouldCreateDatajetRepository: !Equals [!Ref CreateDatajetRepository, 'true']
+  ShouldCreateMountebankRepository: !Equals [!Ref CreateMountebankRepository, 'true']
 
 Resources:
   # VPC and Networking
@@ -78,16 +89,13 @@ Resources:
   # ECR Repositories
   DatajetRepository:
     Type: AWS::ECR::Repository
+    Condition: ShouldCreateDatajetRepository
     Properties:
       RepositoryName: datajet
 
-  FluentBitRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: amazon/aws-for-fluent-bit
-
   MountebankRepository:
     Type: AWS::ECR::Repository
+    Condition: ShouldCreateMountebankRepository
     Properties:
       RepositoryName: mock-mountebank
 
@@ -134,13 +142,13 @@ Resources:
                   - s3:GetObject
                   - s3:GetBucketLocation
                 Resource:
-                  - !Sub '${StabilityArchivesBucket}/*'
+                  - !Sub 'arn:aws:s3:::${StabilityArchivesBucket}/*'
                   - !GetAtt StabilityArchivesBucket.Arn
               - Effect: Allow
                 Action:
                   - s3:PutObject
                 Resource:
-                  - !Sub '${StabilityOutputBucket}/*'
+                  - !Sub 'arn:aws:s3:::${StabilityOutputBucket}/*'
               - Effect: Allow
                 Action:
                   - logs:CreateLogStream
@@ -169,7 +177,7 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub '${StabilityArchivesBucket}/*'
+                  - !Sub 'arn:aws:s3:::${StabilityArchivesBucket}/*'
               - Effect: Allow
                 Action:
                   - logs:CreateLogStream
@@ -222,6 +230,7 @@ Resources:
     Properties:
       Name: !Sub '${AWS::StackName}-firelens-stability-setup'
       ServiceRole: !GetAtt CodeBuildRole.Arn
+      SourceVersion: refs/heads/stability-test-automation
       Artifacts:
         Type: NO_ARTIFACTS
       Environment:
@@ -234,8 +243,6 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: FLUENT_BIT_VERSION
-            Value: !Ref FluentBitVersion
           - Name: STABILITY_ARCHIVES_BUCKET
             Value: !Ref StabilityArchivesBucket
           - Name: STABILITY_RECORDS_BUCKET
@@ -256,8 +263,9 @@ Resources:
             Value: !Ref SecurityGroup
       Source:
         Type: GITHUB
-        Location: https://github.com/aws/firelens-datajet.git
+        Location: https://github.com/prateekchaudhry/firelens-datajet.git
         BuildSpec: buildspec.yml
+        GitCloneDepth: 1
 
 Outputs:
   VPCId:
