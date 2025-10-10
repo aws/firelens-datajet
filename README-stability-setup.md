@@ -22,7 +22,7 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 
 **Infrastructure:**
 - VPC with 2 public subnets and security group
-- ECR repositories (datajet, mock-mountebank) 
+- ECR repositories (datajet, mock-mountebank) - Optional to created using cloudformation 
 - S3 buckets for test artifacts
 - IAM roles for ECS task execution
 - CodeBuild project
