@@ -83,8 +83,11 @@ Resources:
       GroupDescription: Security group for FireLens stability tests
       VpcId: !Ref VPC
       SecurityGroupEgress:
-        - IpProtocol: -1
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
+          Description: HTTPS for AWS services (S3, CloudWatch, ECR, X-Ray)
 
   # ECR Repositories
   DatajetRepository:
@@ -156,6 +159,17 @@ Resources:
                   - logs:DescribeLogStreams
                   - logs:PutLogEvents
                 Resource: '*'
+        - PolicyName: SSMSessionManagerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: '*'
 
   FireLensTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -178,6 +192,11 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - !Sub 'arn:aws:s3:::${StabilityArchivesBucket}/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt StabilityArchivesBucket.Arn
               - Effect: Allow
                 Action:
                   - logs:CreateLogStream
