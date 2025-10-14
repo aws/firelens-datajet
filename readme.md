@@ -111,6 +111,9 @@ make
 make publish tag="0.1.0"
 ```
 
+# AWS Infrastructure Setup
+For automated AWS infrastructure deployment (VPC, ECR, S3, IAM roles, CodeBuild), see the [test-infrastructure/](test-infrastructure/) directory. This provides CloudFormation templates and automation to set up the complete AWS environment for running FireLens stability tests on ECS Fargate.
+
 
 # Test Definition
 Firelens Datajet currently supports configuration only with file, environment variable, and request.

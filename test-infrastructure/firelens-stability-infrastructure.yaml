@@ -13,10 +13,17 @@ Parameters:
     Default: 'false'
     AllowedValues: ['true', 'false']
     Description: 'Whether to create mock-mountebank ECR repository (set to false if it already exists)'
+  
+  CreateCodeBuildAutomation:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: 'Whether to create CodeBuild project for automated image building (set to true for automation stack)'
 
 Conditions:
   ShouldCreateDatajetRepository: !Equals [!Ref CreateDatajetRepository, 'true']
   ShouldCreateMountebankRepository: !Equals [!Ref CreateMountebankRepository, 'true']
+  ShouldCreateCodeBuildAutomation: !Equals [!Ref CreateCodeBuildAutomation, 'true']
 
 Resources:
   # VPC and Networking
@@ -306,6 +313,7 @@ Resources:
   # CodeBuild Role
   CodeBuildRole:
     Type: AWS::IAM::Role
+    Condition: ShouldCreateCodeBuildAutomation
     Properties:
       RoleName: !Sub '${AWS::StackName}-CodeBuildRole'
       AssumeRolePolicyDocument:
@@ -341,6 +349,7 @@ Resources:
   # CodeBuild Project
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
+    Condition: ShouldCreateCodeBuildAutomation
     Properties:
       Name: !Sub '${AWS::StackName}-firelens-stability-setup'
       ServiceRole: !GetAtt CodeBuildRole.Arn
@@ -360,7 +369,7 @@ Resources:
       Source:
         Type: GITHUB
         Location: https://github.com/prateekchaudhry/firelens-datajet.git
-        BuildSpec: buildspec.yml
+        BuildSpec: test-infrastructure/buildspec.yml
         GitCloneDepth: 1
 
 Outputs:
@@ -397,6 +406,7 @@ Outputs:
   CodeBuildProjectName:
     Description: CodeBuild Project Name
     Value: !Ref CodeBuildProject
+    Condition: ShouldCreateCodeBuildAutomation
 
   StabilityArchivesBucketName:
     Description: S3 Bucket for Stability Archives

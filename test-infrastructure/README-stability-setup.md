@@ -4,7 +4,7 @@ Automated infrastructure setup for FireLens stability testing using AWS CloudFor
 
 ## Quick Start
 
-### 1. Deploy Infrastructure
+### 1. Deploy Infrastructure Only
 ```bash
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
@@ -13,7 +13,16 @@ aws cloudformation deploy \
   --parameter-overrides CreateDatajetRepository=true CreateMountebankRepository=true
 ```
 
-### 2. Build Images
+### 2. Deploy Infrastructure + Automation Stack
+```bash
+aws cloudformation deploy \
+  --template-file firelens-stability-infrastructure.yaml \
+  --stack-name firelens-stability \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides CreateDatajetRepository=true CreateMountebankRepository=true CreateCodeBuildAutomation=true
+```
+
+### 3. Build Images (if automation stack deployed)
 ```bash
 aws codebuild start-build --project-name firelens-stability-firelens-stability-setup
 ```
@@ -63,8 +72,9 @@ Configure these values in your `config/collection-config.json` and run stability
 
 - `CreateDatajetRepository`: Create datajet ECR repository (default: false)
 - `CreateMountebankRepository`: Create mock-mountebank ECR repository (default: false)
+- `CreateCodeBuildAutomation`: Create CodeBuild project for automated image building (default: false)
 
-Set both to `true` for new setups, `false` if repositories already exist.
+**For Fresh Infrastructure + Automation Setup:** Set all three parameters to `true` to enable automated image building.
 
 ## Cleanup
 
