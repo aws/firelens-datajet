@@ -14,12 +14,17 @@ aws cloudformation deploy \
 ```
 
 ### 2. Deploy Infrastructure + Automation Stack
+Use your own development repository as the `GitHubRepositoryUrl` parameter to track custom development builds
 ```bash
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
   --stack-name firelens-stability \
   --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides CreateDatajetRepository=true CreateMountebankRepository=true CreateCodeBuildAutomation=true
+  --parameter-overrides \
+    CreateDatajetRepository=true \
+    CreateMountebankRepository=true \
+    CreateCodeBuildAutomation=true \
+    GitHubRepositoryUrl=https://github.com/aws/firelens-datajet.git
 ```
 
 ### 3. Build Images (if automation stack deployed)
@@ -71,10 +76,13 @@ Configure these values in your `config/collection-config.json` and run stability
 ## Parameters
 
 - `CreateDatajetRepository`: Create datajet ECR repository (default: false)
-- `CreateMountebankRepository`: Create mock-mountebank ECR repository (default: false)
+- `CreateMountebankRepository`: Create mock-mountebank ECR repository (default: false) 
 - `CreateCodeBuildAutomation`: Create CodeBuild project for automated image building (default: false)
+- `GitHubRepositoryUrl`: GitHub repository URL for source code (default: https://github.com/aws/firelens-datajet.git)
 
-**For Fresh Infrastructure + Automation Setup:** Set all three parameters to `true` to enable automated image building.
+**For Fresh Infrastructure + Automation Setup:** Set the first three parameters to `true` to enable automated image building.
+
+**Using Custom Repository:** Override `GitHubRepositoryUrl` if using a fork or different repository location.
 
 ## Cleanup
 

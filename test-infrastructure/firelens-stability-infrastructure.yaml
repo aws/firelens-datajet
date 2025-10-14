@@ -19,6 +19,11 @@ Parameters:
     Default: 'false'
     AllowedValues: ['true', 'false']
     Description: 'Whether to create CodeBuild project for automated image building (set to true for automation stack)'
+  
+  GitHubRepositoryUrl:
+    Type: String
+    Default: 'https://github.com/aws/firelens-datajet.git'
+    Description: 'GitHub repository URL for the FireLens datajet source code'
 
 Conditions:
   ShouldCreateDatajetRepository: !Equals [!Ref CreateDatajetRepository, 'true']
@@ -368,7 +373,7 @@ Resources:
             Value: !Ref AWS::AccountId
       Source:
         Type: GITHUB
-        Location: https://github.com/prateekchaudhry/firelens-datajet.git
+        Location: !Ref GitHubRepositoryUrl
         BuildSpec: test-infrastructure/buildspec.yml
         GitCloneDepth: 1
 
