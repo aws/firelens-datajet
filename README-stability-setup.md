@@ -21,10 +21,12 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 ## What Gets Created
 
 **Infrastructure:**
-- VPC with 2 public subnets and security group
-- ECR repositories (datajet, mock-mountebank) - Optional to created using cloudformation 
+- VPC with 2 public subnets (for NAT Gateway) and 2 private subnets (for Fargate tasks)
+- NAT Gateways in both AZs with Elastic IPs for secure internet access from private subnets
+- Security group with appropriate egress rules (HTTPS, HTTP, DNS)
+- ECR repositories (datajet, mock-mountebank) - Optional to create using CloudFormation 
 - S3 buckets for test artifacts
-- IAM roles for ECS task execution
+- IAM roles for ECS task execution with proper permissions
 - CodeBuild project
 
 **Images Built:**
@@ -33,9 +35,17 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 
 ## Running Stability Tests
 
-Get the role ARNs for your test configuration:
+Get the infrastructure details for your test configuration:
 
 ```bash
+# Get private subnet IDs (use these for Fargate tasks)
+aws cloudformation describe-stacks --stack-name firelens-stability \
+  --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnetIds`].OutputValue' --output text
+
+# Get security group ID
+aws cloudformation describe-stacks --stack-name firelens-stability \
+  --query 'Stacks[0].Outputs[?OutputKey==`SecurityGroupId`].OutputValue' --output text
+
 # Get task role ARN
 aws cloudformation describe-stacks --stack-name firelens-stability \
   --query 'Stacks[0].Outputs[?OutputKey==`TaskRoleArn`].OutputValue' --output text
@@ -45,7 +55,9 @@ aws cloudformation describe-stacks --stack-name firelens-stability \
   --query 'Stacks[0].Outputs[?OutputKey==`ExecutionRoleArn`].OutputValue' --output text
 ```
 
-Use these ARNs in your `config/collection-config.json` and run stability tests from `apps/firelens-stability/`.
+**Important:** Use the **private subnet IDs** for your Fargate tasks to ensure secure deployment with NAT Gateway internet access.
+
+Configure these values in your `config/collection-config.json` and run stability tests from `apps/firelens-stability/`.
 
 ## Parameters
 
