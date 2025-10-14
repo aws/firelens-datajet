@@ -24,6 +24,11 @@ Parameters:
     Type: String
     Default: 'https://github.com/aws/firelens-datajet.git'
     Description: 'GitHub repository URL for the FireLens datajet source code'
+  
+  GitHubSourceVersion:
+    Type: String
+    Default: 'main'
+    Description: 'GitHub branch or tag to build from (e.g., main, development, etc)'
 
 Conditions:
   ShouldCreateDatajetRepository: !Equals [!Ref CreateDatajetRepository, 'true']
@@ -358,7 +363,7 @@ Resources:
     Properties:
       Name: !Sub '${AWS::StackName}-firelens-stability-setup'
       ServiceRole: !GetAtt CodeBuildRole.Arn
-      SourceVersion: refs/heads/stability-test-automation
+      SourceVersion: !Sub 'refs/heads/${GitHubSourceVersion}'
       Artifacts:
         Type: NO_ARTIFACTS
       Environment:

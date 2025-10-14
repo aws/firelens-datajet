@@ -24,7 +24,8 @@ aws cloudformation deploy \
     CreateDatajetRepository=true \
     CreateMountebankRepository=true \
     CreateCodeBuildAutomation=true \
-    GitHubRepositoryUrl=https://github.com/aws/firelens-datajet.git
+    GitHubRepositoryUrl=https://github.com/aws/firelens-datajet.git \
+    GitHubSourceVersion=main
 ```
 
 ### 3. Build Images (if automation stack deployed)
@@ -79,10 +80,13 @@ Configure these values in your `config/collection-config.json` and run stability
 - `CreateMountebankRepository`: Create mock-mountebank ECR repository (default: false) 
 - `CreateCodeBuildAutomation`: Create CodeBuild project for automated image building (default: false)
 - `GitHubRepositoryUrl`: GitHub repository URL for source code (default: https://github.com/aws/firelens-datajet.git)
+- `GitHubSourceVersion`: GitHub branch or tag to build from (default: main)
 
 **For Fresh Infrastructure + Automation Setup:** Set the first three parameters to `true` to enable automated image building.
 
 **Using Custom Repository:** Override `GitHubRepositoryUrl` if using a fork or different repository location.
+
+**Using Custom Branch:** Override `GitHubSourceVersion` to build from a specific branch (e.g., `main`, `development`).
 
 ## Cleanup
 
