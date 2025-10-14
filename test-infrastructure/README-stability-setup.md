@@ -14,7 +14,7 @@ aws cloudformation deploy \
 ```
 
 ### 2. Deploy Infrastructure + Automation Stack
-Use your own development repository as the `GitHubRepositoryUrl` parameter to track custom development builds
+Use your own git fork as `GitHubRepositoryUrl` parameter and branch as `GitHubSourceVersion` parameter to track custom development builds
 ```bash
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
