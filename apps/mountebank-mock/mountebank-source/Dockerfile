@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:latest
+FROM public.ecr.aws/docker/library/node:latest
 
 WORKDIR /app
 
