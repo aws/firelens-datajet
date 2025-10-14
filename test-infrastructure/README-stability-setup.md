@@ -37,12 +37,12 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 
 **Infrastructure:**
 - VPC with 2 public subnets (for NAT Gateway) and 2 private subnets (for Fargate tasks)
-- NAT Gateways in both AZs with Elastic IPs for secure internet access from private subnets
+- 2 NAT Gateways in each AZ with Elastic IPs for secure internet access from private subnets
 - Security group with appropriate egress rules (HTTPS, HTTP, DNS)
 - ECR repositories (datajet, mock-mountebank) - Optional to create using CloudFormation 
 - S3 buckets for test artifacts
 - IAM roles for ECS task execution with proper permissions
-- CodeBuild project
+- A CodeBuild project - Optional to create, this will the firelens-datajet repository commits and keep ECR images upto date. Image builds need to be triggered either through console or through AWS CLI.
 
 **Images Built:**
 - `firelens-datajet` image from repository root
