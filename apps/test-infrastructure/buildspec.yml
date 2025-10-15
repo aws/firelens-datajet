@@ -1,13 +1,6 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 20
-    commands:
-      - echo Installing dependencies...
-      - npm install -g ecs-cli
-
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -36,11 +29,6 @@ phases:
       - docker pull public.ecr.aws/docker/library/httpd:latest
       - docker tag public.ecr.aws/docker/library/httpd:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/httpd:latest
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/httpd:latest
-      
-      # Configure stability test
-      - echo Configuring stability test...
-      - cd apps/firelens-stability
-      - npm install
 
   post_build:
     commands:
