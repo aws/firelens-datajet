@@ -374,7 +374,7 @@ Resources:
     Type: AWS::CodeBuild::Project
     Condition: ShouldCreateCodeBuildAutomation
     Properties:
-      Name: !Sub '${AWS::StackName}-firelens-stability-setup'
+      Name: !Sub '${AWS::StackName}-image-build'
       ServiceRole: !GetAtt CodeBuildRole.Arn
       SourceVersion: !Sub 'refs/heads/${GitHubSourceVersion}'
       Artifacts:
