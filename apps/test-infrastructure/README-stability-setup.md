@@ -5,6 +5,7 @@ Automated infrastructure setup for FireLens stability testing using AWS CloudFor
 ## Quick Start
 
 ### 1. Deploy Infrastructure Only
+Do not set the repository parameters for the datajet, mountebank, httpd ECR repositories if they already exist in your AWS account
 ```bash
 cd apps/test-infrastructure/
 aws cloudformation deploy \
@@ -18,7 +19,8 @@ aws cloudformation deploy \
 ```
 
 ### 2. Deploy Infrastructure + Automation Stack
-Use your own development repository as the `GitHubRepositoryUrl` parameter to track custom development builds
+Optionally deploy a Codebuild job with your stack which will build ECR images
+Use path to your own Github fork as the `GitHubRepositoryUrl` parameter to track custom development builds
 ```bash
 cd apps/test-infrastructure/
 aws cloudformation deploy \
@@ -32,11 +34,6 @@ aws cloudformation deploy \
     CreateCodeBuildAutomation=true \
     GitHubRepositoryUrl=https://github.com/aws/firelens-datajet.git \
     GitHubSourceVersion=main
-```
-
-### 3. Build Images (if automation stack deployed)
-```bash
-aws codebuild start-build --project-name firelens-stability-firelens-stability-setup
 ```
 
 ## What Gets Created
@@ -61,8 +58,10 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 If you need to update the datajet, mountebank, or httpd images in ECR, execute the CodeBuild job:
 
 ```bash
-aws codebuild start-build --project-name firelens-stability-firelens-stability-setup
+aws codebuild start-build --project-name firelens-stability-image-build
 ```
+Or
+AWS Console -> Codebuild -> firelens-stability-image-build -> Start Build
 
 ### Step 2: Configure Test Environment
 Get the infrastructure details for your test configuration:
@@ -97,8 +96,6 @@ Update the following configuration files with the infrastructure details from St
 - `config/collection-config.json` - Update subnets and security groups using the CloudFormation command outputs above
 - `config/execution-config.json` - Execution-specific configuration
 
-**Important:** Use the **private subnet IDs** for your Fargate tasks to ensure secure deployment with NAT Gateway internet access.
-
 ### Step 4: Run Stability Tests
 From the `apps/firelens-stability/` directory, execute the tests according to your specific test configuration.
 
@@ -113,11 +110,9 @@ From the `apps/firelens-stability/` directory, execute the tests according to yo
 
 **For Fresh Infrastructure + Automation Setup:** Set the first four parameters to `true` to enable automated image building and management.
 
-**Using Custom Repository:** Override `GitHubRepositoryUrl` if using a fork or different repository location.
+**Using Custom Repository:** Override `GitHubRepositoryUrl` if using a fork for development
 
 **Using Custom Branch:** Override `GitHubSourceVersion` to build from a specific branch (e.g., `main`, `development`).
-
-**About HTTPD Repository:** The httpd repository stores Apache HTTP Server images pulled from Docker Hub's public ECR. No local build required - CodeBuild automatically pulls the latest version and pushes to your private ECR.
 
 ## Cleanup
 
