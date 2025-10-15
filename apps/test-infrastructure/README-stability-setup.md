@@ -57,6 +57,14 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 
 ## Running Stability Tests
 
+### Step 1: Update Container Images (if needed)
+If you need to update the datajet, mountebank, or httpd images in ECR, execute the CodeBuild job:
+
+```bash
+aws codebuild start-build --project-name firelens-stability-firelens-stability-setup
+```
+
+### Step 2: Configure Test Environment
 Get the infrastructure details for your test configuration:
 
 ```bash
@@ -77,9 +85,22 @@ aws cloudformation describe-stacks --stack-name firelens-stability \
   --query 'Stacks[0].Outputs[?OutputKey==`ExecutionRoleArn`].OutputValue' --output text
 ```
 
+### Step 3: Update Configuration Files
+Navigate to the stability test directory and update the configuration files:
+
+```bash
+cd apps/firelens-stability
+```
+
+Update the following configuration files with the infrastructure details from Step 2:
+- `execution.json` - Main execution configuration
+- `config/collection-config.json` - Update subnets and security groups using the CloudFormation command outputs above
+- `config/execution-config.json` - Execution-specific configuration
+
 **Important:** Use the **private subnet IDs** for your Fargate tasks to ensure secure deployment with NAT Gateway internet access.
 
-Configure these values in your `config/collection-config.json` and run stability tests from `apps/firelens-stability/`.
+### Step 4: Run Stability Tests
+From the `apps/firelens-stability/` directory, execute the tests according to your specific test configuration.
 
 ## Parameters
 
