@@ -392,7 +392,7 @@ Resources:
       Source:
         Type: GITHUB
         Location: !Ref GitHubRepositoryUrl
-        BuildSpec: test-infrastructure/buildspec.yml
+        BuildSpec: apps/test-infrastructure/buildspec.yml
         GitCloneDepth: 1
 
 Outputs:

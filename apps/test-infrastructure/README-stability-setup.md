@@ -6,6 +6,7 @@ Automated infrastructure setup for FireLens stability testing using AWS CloudFor
 
 ### 1. Deploy Infrastructure Only
 ```bash
+cd apps/test-infrastructure/
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
   --stack-name firelens-stability \
@@ -19,6 +20,7 @@ aws cloudformation deploy \
 ### 2. Deploy Infrastructure + Automation Stack
 Use your own development repository as the `GitHubRepositoryUrl` parameter to track custom development builds
 ```bash
+cd apps/test-infrastructure/
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
   --stack-name firelens-stability \
