@@ -10,11 +10,14 @@ aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
   --stack-name firelens-stability \
   --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides CreateDatajetRepository=true CreateMountebankRepository=true
+  --parameter-overrides \
+    CreateDatajetRepository=true \
+    CreateMountebankRepository=true \
+    CreateHttpdRepository=true
 ```
 
 ### 2. Deploy Infrastructure + Automation Stack
-Use your own git fork as `GitHubRepositoryUrl` parameter and branch as `GitHubSourceVersion` parameter to track custom development builds
+Use your own development repository as the `GitHubRepositoryUrl` parameter to track custom development builds
 ```bash
 aws cloudformation deploy \
   --template-file firelens-stability-infrastructure.yaml \
@@ -23,6 +26,7 @@ aws cloudformation deploy \
   --parameter-overrides \
     CreateDatajetRepository=true \
     CreateMountebankRepository=true \
+    CreateHttpdRepository=true \
     CreateCodeBuildAutomation=true \
     GitHubRepositoryUrl=https://github.com/aws/firelens-datajet.git \
     GitHubSourceVersion=main
@@ -37,16 +41,17 @@ aws codebuild start-build --project-name firelens-stability-firelens-stability-s
 
 **Infrastructure:**
 - VPC with 2 public subnets (for NAT Gateway) and 2 private subnets (for Fargate tasks)
-- 2 NAT Gateways in each AZ with Elastic IPs for secure internet access from private subnets
+- NAT Gateways in both AZs with Elastic IPs for secure internet access from private subnets
 - Security group with appropriate egress rules (HTTPS, HTTP, DNS)
-- ECR repositories (datajet, mock-mountebank) - Optional to create using CloudFormation 
+- ECR repositories (datajet, mock-mountebank, httpd) - Optional to create using CloudFormation 
 - S3 buckets for test artifacts
 - IAM roles for ECS task execution with proper permissions
-- A CodeBuild project - Optional to create, this will the firelens-datajet repository commits and keep ECR images upto date. Image builds need to be triggered either through console or through AWS CLI.
+- CodeBuild project
 
-**Images Built:**
+**Images Built/Managed:**
 - `firelens-datajet` image from repository root
 - `mock-mountebank` image from `apps/mountebank-mock/`
+- `httpd` image pulled from `public.ecr.aws/docker/library/httpd:latest` and pushed to your ECR
 
 ## Running Stability Tests
 
@@ -78,15 +83,18 @@ Configure these values in your `config/collection-config.json` and run stability
 
 - `CreateDatajetRepository`: Create datajet ECR repository (default: false)
 - `CreateMountebankRepository`: Create mock-mountebank ECR repository (default: false) 
+- `CreateHttpdRepository`: Create httpd ECR repository (default: false)
 - `CreateCodeBuildAutomation`: Create CodeBuild project for automated image building (default: false)
 - `GitHubRepositoryUrl`: GitHub repository URL for source code (default: https://github.com/aws/firelens-datajet.git)
 - `GitHubSourceVersion`: GitHub branch or tag to build from (default: main)
 
-**For Fresh Infrastructure + Automation Setup:** Set the first three parameters to `true` to enable automated image building.
+**For Fresh Infrastructure + Automation Setup:** Set the first four parameters to `true` to enable automated image building and management.
 
 **Using Custom Repository:** Override `GitHubRepositoryUrl` if using a fork or different repository location.
 
 **Using Custom Branch:** Override `GitHubSourceVersion` to build from a specific branch (e.g., `main`, `development`).
+
+**About HTTPD Repository:** The httpd repository stores Apache HTTP Server images pulled from Docker Hub's public ECR. No local build required - CodeBuild automatically pulls the latest version and pushes to your private ECR.
 
 ## Cleanup
 

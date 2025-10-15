@@ -31,6 +31,12 @@ phases:
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/mock-mountebank:latest
       - cd ../..
       
+      # Pull and push httpd image from public ECR
+      - echo Pulling and pushing httpd image...
+      - docker pull public.ecr.aws/docker/library/httpd:latest
+      - docker tag public.ecr.aws/docker/library/httpd:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/httpd:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/httpd:latest
+      
       # Configure stability test
       - echo Configuring stability test...
       - cd apps/firelens-stability

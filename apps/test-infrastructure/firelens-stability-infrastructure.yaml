@@ -14,6 +14,12 @@ Parameters:
     AllowedValues: ['true', 'false']
     Description: 'Whether to create mock-mountebank ECR repository (set to false if it already exists)'
   
+  CreateHttpdRepository:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: 'Whether to create httpd ECR repository (set to false if it already exists)'
+  
   CreateCodeBuildAutomation:
     Type: String
     Default: 'false'
@@ -33,6 +39,7 @@ Parameters:
 Conditions:
   ShouldCreateDatajetRepository: !Equals [!Ref CreateDatajetRepository, 'true']
   ShouldCreateMountebankRepository: !Equals [!Ref CreateMountebankRepository, 'true']
+  ShouldCreateHttpdRepository: !Equals [!Ref CreateHttpdRepository, 'true']
   ShouldCreateCodeBuildAutomation: !Equals [!Ref CreateCodeBuildAutomation, 'true']
 
 Resources:
@@ -213,6 +220,12 @@ Resources:
     Condition: ShouldCreateMountebankRepository
     Properties:
       RepositoryName: mock-mountebank
+
+  HttpdRepository:
+    Type: AWS::ECR::Repository
+    Condition: ShouldCreateHttpdRepository
+    Properties:
+      RepositoryName: httpd
 
   # S3 Buckets
   StabilityArchivesBucket:
