@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # ---------- Base ----------
-FROM public.ecr.aws/docker/library/node:latest AS base
+FROM public.ecr.aws/docker/library/node:current-alpine AS base
 
 WORKDIR /app
 
