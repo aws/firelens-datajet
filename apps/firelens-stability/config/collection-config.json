@@ -1,20 +1,20 @@
 {
     "definitions": {
         "imageDatajet": "210752607241.dkr.ecr.us-west-2.amazonaws.com/datajet:latest",
-        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:0.0.3",
+        "imageMountebank": "210752607241.dkr.ecr.us-west-2.amazonaws.com/mock-mountebank:latest",
         "imageHttpd": "210752607241.dkr.ecr.us-west-2.amazonaws.com/httpd:latest",
-        "s3LogDestinationBucketName": "aws-for-fluent-bit-stability-test-sink",
-        "taskRoleArn": "arn:aws:iam::210752607241:role/FireLensTaskRoleReduced",
-        "executionRoleArn": "arn:aws:iam::210752607241:role/FireLensExecutionRoleReduced",
+        "s3LogDestinationBucketName": "firelens-stability-stability-output",
+        "taskRoleArn": "arn:aws:iam::210752607241:role/firelens-stability-FireLensTaskRole",
+        "executionRoleArn": "arn:aws:iam::210752607241:role/firelens-stability-FireLensExecutionRole",
         "enableMonitoring": false
     },
     "config": {
         "region": "us-west-2",
         "taskVpcSubnets": [
-            "subnet-04b8799d6b53585fa"
+            "subnet-0be4d21f54ba7ffc5","subnet-006a71ad4495a18b1"
         ],
         "taskVpcSecurityGroups": [
-            "sg-008bce72f5d6251be"
+            "sg-0eb9a017735b3242a"
         ]
     }
 }
