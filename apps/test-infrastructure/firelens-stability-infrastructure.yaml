@@ -231,22 +231,22 @@ Resources:
   StabilityArchivesBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-stability-archives'
+      BucketName: !Sub '${AWS::StackName}-archives'
 
   StabilityRecordsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-stability-records'
+      BucketName: !Sub '${AWS::StackName}-records'
 
   StabilitySummaryBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-stability-summary'
+      BucketName: !Sub '${AWS::StackName}-summary'
 
   StabilityOutputBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${AWS::StackName}-stability-output'
+      BucketName: !Sub '${AWS::StackName}-output'
 
   # IAM Roles
   FireLensTaskRole:
