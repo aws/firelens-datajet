@@ -35,7 +35,7 @@ EXPOSE 2525
 # Install aws cli for s3 client
 WORKDIR /var/tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(arch).zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
+RUN unzip -qq awscliv2.zip
 RUN ./aws/install
 RUN rm awscliv2.zip
 
