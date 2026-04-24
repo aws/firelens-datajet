@@ -50,7 +50,8 @@
         "name": "file",
         "config": {
             "folder": "/var/tmp/data_logs",
-            "filename": "service_log_1.txt"
+            "filename": "service_log",
+            "maxFileSizeBytes": {{definitions.datajet_file_max_size_bytes}}
         }
       },
       "stage": {
