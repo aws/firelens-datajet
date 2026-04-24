@@ -52,7 +52,7 @@ export function cascadeConfigurationLists(configs: IGenericConfig[]) {
         const itemsList = Object.entries(items).map(([name, item]) => item);
         
         /* Stable sort lists by order */
-        const sortedItemsList = itemsList.sort((a, b) => a?.order ?? 1 - b?.order ?? 1)
+        const sortedItemsList = itemsList.sort((a, b) => (a?.order ?? 1) - (b?.order ?? 1))
         return [
             listName, sortedItemsList
         ]

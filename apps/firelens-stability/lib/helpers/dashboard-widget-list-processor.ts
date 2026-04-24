@@ -51,7 +51,7 @@ export function generateOrderdedWidgetsFromTestCases(testCases: ITestCase[]) {
 
     /* Squash test cases by path */
     const dashboardWidgetGroups = Object.entries(dashboardSections).map(([path, widgets]) => {
-        const sortedList = widgets.sort((a, b) => a?.order ?? 1 - b?.order ?? 1);
+        const sortedList = widgets.sort((a, b) => (a?.order ?? 1) - (b?.order ?? 1));
         const mergedList = cascadeLists([sortedList]);
         return {
             path: path,
@@ -65,5 +65,50 @@ export function generateOrderdedWidgetsFromTestCases(testCases: ITestCase[]) {
     /* Combine the widget lists */
     const flatWidgets = sortedLists.map(sl => sl.widgets).flat();
     const strippedFlatWidgets = flatWidgets.map(fw => fw.config);
+
+    /* Assign x/y coordinates to widgets that don't have them.
+     * CloudWatch ignores ordering for widgets without explicit positions,
+     * which causes all metric graphs to pile up at the bottom instead of
+     * appearing under their respective suite sections. */
+    const DASHBOARD_WIDTH = 24;
+    const DEFAULT_WIDGET_WIDTH = 6;
+    const DEFAULT_WIDGET_HEIGHT = 6;
+
+    let cursorX = 0;
+    let cursorY = 0;
+    let rowHeight = 0;
+
+    for (const widget of strippedFlatWidgets) {
+        const w = widget.width ?? DEFAULT_WIDGET_WIDTH;
+        const h = widget.height ?? DEFAULT_WIDGET_HEIGHT;
+
+        if (widget.x !== undefined && widget.y !== undefined) {
+            /* Widget already has explicit coordinates — advance the cursor past it */
+            const bottomEdge = widget.y + h;
+            if (bottomEdge >= cursorY + rowHeight) {
+                cursorY = widget.y;
+                cursorX = widget.x + w;
+                rowHeight = h;
+            }
+            continue;
+        }
+
+        /* Check if the widget fits on the current row */
+        if (cursorX + w > DASHBOARD_WIDTH) {
+            /* Move to the next row */
+            cursorY += rowHeight;
+            cursorX = 0;
+            rowHeight = 0;
+        }
+
+        widget.x = cursorX;
+        widget.y = cursorY;
+        widget.width = w;
+        widget.height = h;
+
+        cursorX += w;
+        rowHeight = Math.max(rowHeight, h);
+    }
+
     return strippedFlatWidgets;
 }
