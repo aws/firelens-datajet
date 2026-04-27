@@ -82,14 +82,14 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.3.0/24
+      CidrBlock: 10.0.16.0/20
       AvailabilityZone: !Select [0, !GetAZs '']
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.4.0/24
+      CidrBlock: 10.0.32.0/20
       AvailabilityZone: !Select [1, !GetAZs '']
 
   # Elastic IPs for NAT Gateways
