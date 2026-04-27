@@ -11,7 +11,7 @@
     "config": {
         "region": "us-west-2",
         "taskVpcSubnets": [
-            "subnet-02d856999b481337c","subnet-01570cea46ddb85bc"
+            "subnet-021a3daf3b392c70b","subnet-07816172f904be38f"
         ],
         "taskVpcSecurityGroups": [
             "sg-0bf970ffbe345ade1"
