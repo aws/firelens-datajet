@@ -144,6 +144,13 @@
         "linuxParameters": {
           "initProcessEnabled": true
         },
+        "healthCheck": {
+          "command": ["CMD-SHELL", "curl -f http://127.0.0.1:2020/api/v1/health || exit 1"],
+          "interval": 30,
+          "timeout": 5,
+          "retries": 3,
+          "startPeriod": 30
+        },
         "dependsOn": [{
           "containerName": "mock",
           "condition": "START"
