@@ -10,7 +10,7 @@ ENV CLIENT_S3_FILE  set-CLIENT_S3_FILE-to_your_s3_config_filename
 # Install Mountebank via Node
 RUN dnf upgrade -y
 # RUN dnf install -y gcc-c++ make
-RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+RUN curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
 RUN dnf install -y nodejs
 RUN curl -sL -o /bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 RUN chmod +x /bin/gimme
@@ -29,7 +29,8 @@ RUN openssl x509 -req -days 3650 -in /cert/mb-csr.pem -signkey /cert/mb-key.pem 
 RUN cp /cert/* /app/src/models/https/cert/
 
 # install mountebank
-RUN npm install --production && npm cache clean -f && npm link mountebank
+RUN npm install --omit=dev && npm cache clean -f && rm -rf /root/.cache \
+    && ln -s /app/bin/mb /usr/local/bin/mb
 
 # Run as a non-root user
 #RUN adduser -D mountebank
