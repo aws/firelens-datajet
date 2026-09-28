@@ -41,6 +41,9 @@ COPY --from=builder /app/dist ./dist
 
 COPY package.json ./
 
+# npm is not needed at runtime
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 USER node
 
 CMD ["node", "./dist/app.js"]

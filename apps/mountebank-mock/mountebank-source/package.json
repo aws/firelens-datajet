@@ -1,6 +1,6 @@
 {
   "name": "mountebank",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "author": "Brandon Byars <brandon.byars@gmail.com>",
   "description": "Over the wire test doubles",
   "homepage": "http://www.mbtest.org",
@@ -49,24 +49,25 @@
     "service virtualization"
   ],
   "dependencies": {
-    "@xmldom/xmldom": "0.8.7",
+    "@xmldom/xmldom": "0.8.15",
     "cors": "2.8.5",
-    "csv-parse": "5.3.10",
+    "csv-parse": "7.0.3",
     "ejs": "3.1.10",
     "errorhandler": "1.5.1",
     "escape-html": "1.0.3",
-    "express": "4.21.2",
+    "express": "4.22.3",
     "fs-extra": "11.1.1",
     "http-proxy-agent": "5.0.0",
     "https-proxy-agent": "5.0.1",
     "jsonpath-plus": "10.3.0",
-    "mailparser": "3.7.4",
-    "nodemailer": "6.9.9",
+    "mailparser": "3.9.31",
+    "mountebank-formatters": "0.0.2",
+    "nodemailer": "10.0.12",
     "prom-client": "14.1.1",
     "proper-lockfile": "4.1.2",
     "safe-regex": "^2.1.1",
     "safe-stable-stringify": "2.4.2",
-    "smtp-server": "3.14.0",
+    "smtp-server": "3.19.15",
     "winston": "3.8.2",
     "xpath": "0.0.32",
     "yargs": "17.6.2"
@@ -77,8 +78,11 @@
         "netmask": "^2.0.1"
       }
     },
+    "mountebank-formatters": {
+      "ejs": "3.1.10"
+    },
     "form-data": "^2.5.4",
-    "brace-expansion": "^2.0.2",
+    "brace-expansion": "^2.1.7",
     "tough-cookie": "^4.1.3",
     "semver": "^7.5.2",
     "@babel/helpers": "^7.26.10"
