@@ -41,8 +41,8 @@ COPY --from=builder /app/dist ./dist
 
 COPY package.json ./
 
-# npm is not needed at runtime
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+# npm and Node's C headers (bundled OpenSSL) are not needed at runtime
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/include/node
 
 USER node
 
