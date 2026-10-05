@@ -20,9 +20,10 @@ const defaultConfig: IDatajetConfig = {
     folder: "./workspace/tmp",
     filename: "output-logs.log",
     logKey: "log",
+    maxRotatedFiles: 5,
     // Rotation is controlled by maxFileSizeBytes — if unset, a single file is written indefinitely (original behaviour).
-    // maxRotatedFiles controls how many rotated files to retain (default 5) and only applies when rotation is active.
-    // For stability tests, these are set via datajet_file_max_size_bytes in
+    // maxRotatedFiles controls how many rotated files to retain and only applies when rotation is active.
+    // For stability tests, maxFileSizeBytes is set via datajet_file_max_size_bytes in
     // apps/firelens-stability/templates/golden-path-mountebank-fargate-v01-11-2023/default-config.json
 }
 
