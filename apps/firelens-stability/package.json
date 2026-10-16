@@ -17,7 +17,7 @@
         "@types/aws-sdk": "^2.7.0",
         "aws-sdk": "^2.1354.0",
         "dotenv": "^10.0.0",
-        "handlebars": "^4.7.7",
+        "handlebars": "^4.7.10",
         "meow": "^11.0.0",
         "mustache": "^4.2.0",
         "s3-sync-client": "^3.0.3"
