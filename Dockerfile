@@ -5,6 +5,8 @@
 # ---------- Base ----------
 FROM public.ecr.aws/docker/library/node:current-alpine AS base
 
+RUN apk upgrade --no-cache zlib
+
 WORKDIR /app
 
 # ---------- Builder ----------
