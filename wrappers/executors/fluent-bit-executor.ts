@@ -17,7 +17,7 @@ const WORKSPACE_NAME = "fluent-bit";
 const FLUENT_REPO = "https://github.com/fluent/fluent-bit.git";
 
 import mustache, { templateCache } from 'mustache';
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 import { hash, timestamp, sleep } from "../../core/utils.js";
 import { IPipelineSchema } from "../../core/rockefeller";
 
